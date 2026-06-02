@@ -89,6 +89,15 @@ function main()
     println("Graph loading took: ", @sprintf("%.4f", t_load), " seconds.")
     println("Running KADABRA with err=", err, ", delta=", delta, ", k=", k, " on ", Threads.nthreads(), " thread(s)...")
     
+    # Warmup compiler with a tiny dummy graph of the exact same type
+    print("Warming up Julia compiler... ")
+    dummy_g = typeof(g)(3)
+    add_edge!(dummy_g, 1, 2)
+    add_edge!(dummy_g, 2, 3)
+    # Run a microscopic iteration to compile everything
+    kadabra_centrality(dummy_g, 0, 0.5, 0.5; start_factor=10)
+    println("Done.\n")
+
     # Run KADABRA and measure execution time
     t_start = time()
     approx_bet = kadabra_centrality(g, k, err, delta; start_factor=start_factor)
