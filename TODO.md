@@ -1,48 +1,28 @@
-# Julia Implementation of KADABRA for Graphs.jl
+# KADABRA.jl Contribution to Graphs.jl - Tasks & Roadmap
 
-This document outlines the strategy for porting the KADABRA betweenness centrality algorithm from C++ to Julia, intended for contribution to the `Graphs.jl` ecosystem.
+This checklist tracks the implementation, bug fixes, and preparation of the KADABRA betweenness centrality algorithm in Julia for official contribution to the `Graphs.jl` ecosystem.
 
-## 📋 Implementation Roadmap
+## 📋 Implementation & Contribution Roadmap
 
-### Phase 1: Environment & Standards Research
-- [ ] Study existing centrality implementations in `Graphs.jl`.
-- [ ] Define the `AbstractGraph` and `AbstractDiGraph` interface support.
-- [ ] Determine the best approach for multi-threading (Threads vs. Atomics).
+### Phase 1: Core Sampling Engine & Workspaces (Completed)
+- [x] **State Management**: Design and implement the `KadabraWorkspace` struct to hold pre-allocated arrays (`n_paths`, `dist`, `preds`, frontier queues) to avoid dynamic allocations during sampling.
+- [x] **Balanced Bidirectional BFS**: Port the frontier-aware bidirectional search with local frontier-weight heuristics to Julia (`_bb_bfs_sample!`).
+- [x] **Uniform Path Selection**: Implement backtracking and randomized selection of paths across collision edge weights (`_backtrack!`).
 
-### Phase 2: Core Algorithm Porting (The "Engine")
-- [ ] **Bidirectional BFS:** Implement the frontier-aware search in Julia.
-- [ ] **State Management:** Design a `KadabraState` struct to hold `n_paths`, `dist`, and visit indicators.
-- [ ] **Path Sampling:** Implement the uniform random path selection and backtracking logic.
+### Phase 2: Statistical Bounds & Convergence Heuristics (In Progress)
+- [x] **Chernoff Bounds**: Port `compute_f` and `compute_g` mathematical bounds from Borassi & Natale (2019).
+- [/] **Diameter Estimation**: Implement the `AllCCUpperBound` technique to calculate diameter bounds across connected/strongly connected components.
+- [/] **Relative Top-K Stopping Condition**: Refactor `check_finished` and `kadabra_centrality` to track `union_sample` nodes, preventing `BoundsError` (such as at $k=1$) and ensuring mathematically correct top-k separation.
 
-### Phase 3: Statistical Bounds (The "Brain")
-- [ ] **Chernoff Bounds:** Port `compute_f` and `compute_g` logic.
-- [ ] **Diameter Estimation:** Implement the `AllCCUpperBound` technique for diameter upper-bounding.
-- [ ] **Convergence Logic:** Implement the stopping condition based on epsilon and delta.
+### Phase 3: Parallelization & Performance Optimization (In Progress)
+- [x] **Thread-Safe Accumulation**: Use `Threads.Atomic` for sampling and coordination counters (`n_pairs`, `stop_flag`).
+- [/] **Cooperative Parallel Loop**: Streamline parallel sampling by launching a clean `while` loop inside a structured `Threads.@threads` loop across thread IDs instead of partitioning `1:typemax(Int)`.
+- [/] **Memory Reuse Cleanup**: Eliminate redundant double initialization of `KadabraWorkspace`.
 
-### Phase 4: Parallelization & Optimization
-- [ ] **Thread-Safe Counters:** Use `Threads.Atomic` for centrality accumulation.
-- [ ] **Memory Reuse:** Pre-allocate thread-local buffers to minimize garbage collection overhead.
-- [ ] **Performance Profiling:** Use `BenchmarkTools.jl` and `@code_warntype` for optimization.
-
-### Phase 5: Validation & Integration
-- [ ] **Unit Tests:** Verify the sampler on small known graphs (cycle, star, path).
-- [ ] **Cross-Validation:** Compare results with the C++ implementation on `facebook_combined.txt`.
-- [ ] **Documentation:** Write docstrings and examples in line with `Graphs.jl` standards.
-
----
-
-## 🏗️ Proposed Folder Structure
-
-```
-GraphsKADABRA.jl/
-├── src/
-│   ├── GraphsKADABRA.jl  # Main module entry and public API
-│   ├── sampler.jl        # Bidirectional BFS and path sampling
-│   ├── bounds.jl         # Statistical calculations and stopping rules
-│   └── utils.jl          # Diameter estimation and helper functions
-├── test/
-│   └── runtests.jl       # Comprehensive test suite
-├── docs/                 # Documentation and usage examples
-├── Project.toml          # Julia package dependencies
-└── README.md             # Project overview and installation
-```
+### Phase 4: Validation & Graphs.jl Standards (Next Steps)
+- [ ] **Extended Test Suite**:
+  - [x] Add path, star, and disconnected graph unit tests.
+  - [ ] Add explicit tests for relative top-k mode (`k > 0`) at different sizes (including $k=1$ and $k=3$) to prevent future regressions.
+- [ ] **Interface & API Standardization**:
+  - [ ] Standardize the public API to match the `Graphs.jl` centrality interface structure.
+  - [ ] Document all methods with clean Julia docstrings, parameter explanations, and complexity remarks.

@@ -98,4 +98,18 @@ include("kadabra.jl")
             @test approx_bet[i] > 0.2                  # But strictly above 0 due to endpoint selection
         end
     end
+
+    @testset "5. Relative Top-K Mode Validation" begin
+        # Star Graph: Node 1 is the absolute center (highest BC).
+        g = star_graph(5)
+        
+        # Test relative top-1
+        approx_bet_1 = kadabra_centrality(g, 1, 0.1, 0.1; start_factor=10)
+        @test argmax(approx_bet_1) == 1
+        
+        # Test relative top-3
+        approx_bet_3 = kadabra_centrality(g, 3, 0.1, 0.1; start_factor=10)
+        # The center node 1 should be the highest
+        @test argmax(approx_bet_3) == 1
+    end
 end

@@ -1,26 +1,126 @@
 # kadabra.jl
 using Graphs
 
+"""
+    estimate_diameter(g::AbstractGraph)
+
+Computes an upper bound on the diameter of the graph using the AllCCUpperBound technique
+(Borassi et al. 2015). Highly efficient for both directed and undirected graphs.
+"""
+function estimate_diameter(g::AbstractGraph)
+    n = nv(g)
+    n == 0 && return 0.0
+    n == 1 && return 0.0
+    
+    # 1. Compute strongly/connected components
+    sccs = is_directed(g) ? strongly_connected_components(g) : connected_components(g)
+    n_components = length(sccs)
+    
+    # Map each vertex to its component index
+    cc = zeros(Int, n)
+    for (i, component) in enumerate(sccs)
+        for v in component
+            cc[v] = i
+        end
+    end
+    
+    # 2. Compute pivots for each component
+    # The pivot vertex is the vertex maximizing the sum of the out-degree and the in-degree.
+    pivots = zeros(Int, n_components)
+    for i in 1:n_components
+        component = sccs[i]
+        best_v = component[1]
+        best_deg = outdegree(g, best_v) + indegree(g, best_v)
+        for v in component
+            deg = outdegree(g, v) + indegree(g, v)
+            if deg > best_deg
+                best_v = v
+                best_deg = deg
+            end
+        end
+        pivots[i] = best_v
+    end
+    
+    # 3. Compute SCC adjacency graph (DAG of components)
+    cc_adj = [Set{Int}() for _ in 1:n_components]
+    for u in 1:n
+        for v in outneighbors(g, u)
+            if cc[u] != cc[v]
+                push!(cc_adj[cc[u]], cc[v])
+            end
+        end
+    end
+    
+    # 4. Helper BFS to compute eccentricity of pivot in its SCC
+    function compute_ecc_in_scc(start::Int, backward::Bool)
+        dist = fill(-1, n)
+        q = Int[]
+        push!(q, start)
+        dist[start] = 0
+        
+        head = 1
+        while head <= length(q)
+            u = q[head]
+            head += 1
+            
+            neighbors = backward ? inneighbors(g, u) : outneighbors(g, u)
+            for v in neighbors
+                if dist[v] == -1 && cc[v] == cc[u]
+                    dist[v] = dist[u] + 1
+                    push!(q, v)
+                end
+            end
+        end
+        
+        return isempty(q) ? 0 : dist[q[end]]
+    end
+    
+    # 5. Compute forward and backward eccentricities of pivots in their SCCs
+    ecc_f_pivots_scc = zeros(Float64, n_components)
+    ecc_b_pivots_scc = zeros(Float64, n_components)
+    for i in 1:n_components
+        ecc_f_pivots_scc[i] = compute_ecc_in_scc(pivots[i], false)
+        ecc_b_pivots_scc[i] = compute_ecc_in_scc(pivots[i], true)
+    end
+    
+    # 6. DP to compute bounds across components (memoized DFS)
+    ecc_f_pivots = fill(-1.0, n_components)
+    
+    function get_ecc_f_pivot(i::Int)
+        ecc_f_pivots[i] != -1.0 && return ecc_f_pivots[i]
+        
+        val = ecc_f_pivots_scc[i]
+        for cc_dest in cc_adj[i]
+            val = max(val, ecc_f_pivots_scc[i] + 1 + ecc_b_pivots_scc[cc_dest] + get_ecc_f_pivot(cc_dest))
+        end
+        ecc_f_pivots[i] = val
+        return val
+    end
+    
+    diam = 0.0
+    for i in 1:n_components
+        diam = max(diam, get_ecc_f_pivot(i) + ecc_b_pivots_scc[i])
+    end
+    
+    return max(diam, 1.0)
+end
+
 function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100)
     n = nv(g)
     absolute = (k == 0)
     k = k == 0 ? n : min(k, n)
     
-    # Estimate diameter (In C++, they use estimate_diameter() with AllCCUpperBound)
-    # For now, placeholder to a known upper bound or basic estimate
-    diam_est = 5.0 
+    # Estimate diameter using AllCCUpperBound
+    diam_est = max(estimate_diameter(g), 2.0)
     
     # Calculate initial omega
     omega = 0.5 / (err^2) * (log2(diam_est - 1.0) + 1.0 + log(0.5 / delta))
-    tau = round(Int, omega / start_factor)
+    tau = max(round(Int, omega / start_factor), 1)
     
     # Thread-local storage to avoid locking when updating centralities
-    nthreads = max(Threads.nthreads(), 4)
+    nthreads = Threads.nthreads()
     approx_local = [zeros(Int, n) for _ in 1:nthreads]
     workspaces = [KadabraWorkspace(g) for _ in 1:nthreads]
-    for i in 1:nthreads
-        workspaces[i] = KadabraWorkspace(g)
-    end
     n_pairs = Threads.Atomic{Int}(0)
     
     # Arrays for delta optimization (using uniform delta as baseline)
@@ -30,65 +130,60 @@ function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float
     # ---------------------------------------------------------
     # PHASE 1: Initial burn-in sampling (Tau iterations)
     # ---------------------------------------------------------
-    Threads.@threads for _ in 1:tau
-        tid = min(Threads.threadid(), nthreads)
+    Threads.@threads for tid in 1:nthreads
         ws = workspaces[tid]
-        
-        # Pick random distinct s, t
-        s, t = rand(1:n), rand(1:n)
-        while s == t; t = rand(1:n); end
-        
-        path = sample_shortest_path!(ws, g, s, t)
-        
-        # Update thread-local path counts
-        for v in path
-            approx_local[tid][v] += 1
+        while n_pairs[] < tau
+            # Pick random distinct s, t
+            s, t = rand(1:n), rand(1:n)
+            while s == t; t = rand(1:n); end
+            
+            path = sample_shortest_path!(ws, g, s, t)
+            
+            # Update thread-local path counts
+            for v in path
+                approx_local[tid][v] += 1
+            end
+            Threads.atomic_add!(n_pairs, 1)
         end
-        Threads.atomic_add!(n_pairs, 1)
     end
-    
-    # NOTE: In C++, compute_delta_guess() runs here to optimize the delta arrays.
-    # You can plug that heuristic in here later.
     
     # ---------------------------------------------------------
     # PHASE 2: Main loop until stopping condition is met
     # ---------------------------------------------------------
     stop_flag = Threads.Atomic{Bool}(false)
     
-    Threads.@threads for _ in 1:typemax(Int)
-        if stop_flag[] || n_pairs[] >= omega
-            break
-        end
-        
-        tid = min(Threads.threadid(), nthreads)
+    Threads.@threads for tid in 1:nthreads
         ws = workspaces[tid]
         
-        # Do a small batch of work before checking status (C++ uses a batch of 10)
-        for _ in 1:10
-            s, t = rand(1:n), rand(1:n)
-            while s == t; t = rand(1:n); end
-            
-            path = sample_shortest_path!(ws, g, s, t)
-            
-            for v in path
-                approx_local[tid][v] += 1
-            end
-            Threads.atomic_add!(n_pairs, 1)
-        end
-        
-        # Only thread 1 handles the heavy stopping calculation to avoid overhead
-        if tid == 1
-            # Aggregate centralities across threads
-            global_approx = zeros(Int, n)
-            for t_approx in approx_local
-                global_approx .+= t_approx
+        while !stop_flag[] && n_pairs[] < omega
+            # Do a small batch of work before checking status
+            for _ in 1:10
+                s, t = rand(1:n), rand(1:n)
+                while s == t; t = rand(1:n); end
+                
+                path = sample_shortest_path!(ws, g, s, t)
+                
+                for v in path
+                    approx_local[tid][v] += 1
+                end
+                Threads.atomic_add!(n_pairs, 1)
             end
             
-            # Sort to find top k
-            top_k_nodes = sortperm(global_approx, rev=true)[1:min(k, n)]
-            
-            if check_finished(global_approx, top_k_nodes, n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute)
-                Threads.atomic_xchg!(stop_flag, true)
+            # Only task 1 handles the heavy stopping calculation to avoid overhead
+            if tid == 1
+                # Aggregate centralities across threads
+                global_approx = zeros(Int, n)
+                for t_approx in approx_local
+                    global_approx .+= t_approx
+                end
+                
+                # Sort to find tracked top nodes
+                union_sample = absolute ? k : min(n, k + 20)
+                top_k_nodes = sortperm(global_approx, rev=true)[1:union_sample]
+                
+                if check_finished(global_approx, top_k_nodes, n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute)
+                    Threads.atomic_xchg!(stop_flag, true)
+                end
             end
         end
     end
@@ -143,37 +238,48 @@ function check_finished(
     omega::Float64, 
     absolute::Bool
 )
-    # Get current betweenness approximations for the top k
+    # Get current betweenness approximations for the tracked nodes
     bet = [approx_counts[v] / n_pairs for v in top_k_nodes]
     
-    err_l = zeros(Float64, length(top_k_nodes))
-    err_u = zeros(Float64, length(top_k_nodes))
+    n_tracked = length(top_k_nodes)
+    err_l = zeros(Float64, n_tracked)
+    err_u = zeros(Float64, n_tracked)
     
-    all_finished = true
-    
-    # Calculate bounds
-    for i in 1:length(top_k_nodes)
+    for i in 1:n_tracked
         v = top_k_nodes[i]
         err_l[i] = compute_f(bet[i], n_pairs, delta_l_guess[v], omega)
         err_u[i] = compute_g(bet[i], n_pairs, delta_u_guess[v], omega)
     end
     
+    all_finished = true
+    
     if absolute
-        # Absolute error mode (k=0 in C++)
+        # Absolute error mode: all k nodes must have error < err
         for i in 1:k
             finished = (err_l[i] < err) && (err_u[i] < err)
             all_finished = all_finished && finished
         end
     else
         # Relative Top-K ranking mode
-        for i in 1:k
+        for i in 1:n_tracked
             if i == 1
-                finished = (bet[i] - err_l[i]) > (bet[i+1] + err_u[i+1])
+                if n_tracked > 1
+                    finished = (bet[1] - err_l[1]) > (bet[2] + err_u[2])
+                else
+                    finished = true
+                end
             elseif i < k
                 finished = ((bet[i-1] - err_l[i-1]) > (bet[i] + err_u[i])) && 
                            ((bet[i] - err_l[i]) > (bet[i+1] + err_u[i+1]))
+            elseif i == k
+                if k < n_tracked
+                    finished = ((bet[k-1] - err_l[k-1]) > (bet[k] + err_u[k])) &&
+                               ((bet[k] - err_l[k]) > (bet[k+1] + err_u[k+1]))
+                else
+                    finished = (bet[k-1] - err_l[k-1]) > (bet[k] + err_u[k])
+                end
             else
-                finished = (bet[k-1] - err_u[k-1]) > (bet[i] + err_u[i])
+                finished = (bet[k] - err_l[k]) > (bet[i] + err_u[i])
             end
             
             # Also valid if error strictly falls below threshold
@@ -190,6 +296,7 @@ end
 """
 
 Sampling Things
+
 """
 
 
