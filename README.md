@@ -106,4 +106,4 @@ In a back-to-back 4-thread execution on the `facebook_combined` graph ($\epsilon
 
 This confirms that the Julia port achieves **near-native, identical speed** and **100% mathematical correctness** compared to the reference implementation.
 
-For more details on correctness and scaling benchmarks, please consult **[`COMPARISON.md`](file:///Users/martinschlaier/Documents/10_Universitaet/Master/Lab-CA/Lab-CA-SS26-node-importance/COMPARISON.md)**.
+For more details on correctness and scaling benchmarks, consult **[`COMPARISON.md`](file:///Users/martinschlaier/Documents/10_Universitaet/Master/Lab-CA/Lab-CA-SS26-node-importance/COMPARISON.md)**.
