@@ -1,5 +1,8 @@
 # simexpal experiments.yml for KADABRA Benchmarks
 
+# Configure simexpal to use your local Instances directory
+instance_dir: Instances/SNAP_Instances
+
 # 1. Define Builds (compiles the C++ binary)
 builds:
   kadabra-cpp:
@@ -13,12 +16,10 @@ revisions:
     build_version:
       kadabra-cpp: local
 
-# 3. Instances (downloads SNAP datasets dynamically)
+# 3. Instances (local SNAP datasets inside Instances/SNAP_Instances)
 instances:
-  - name: facebook_combined
-    url: https://snap.stanford.edu/data/facebook_combined.txt.gz
-  - name: p2p-Gnutella08
-    url: https://snap.stanford.edu/data/p2p-Gnutella08.txt.gz
+  - name: facebook_combined.txt
+  - name: p2p-Gnutella08.txt
 
 # 4. Parameter Variants & Environments
 variants:
@@ -67,12 +68,12 @@ matrix:
   include:
     # Undirected Graph Benchmarks (No -d flag)
     - experiments: [kadabra-cpp, kadabra-julia]
-      instances: [facebook_combined]
+      instances: [facebook_combined.txt]
       variants: [undirected, t1, t4, k3, k10]
       revisions: [local]
 
     # Directed Graph Benchmarks (With -d flag)
     - experiments: [kadabra-cpp, kadabra-julia]
-      instances: [p2p-Gnutella08]
+      instances: [p2p-Gnutella08.txt]
       variants: [directed, t1, t4, k3, k10]
       revisions: [local]

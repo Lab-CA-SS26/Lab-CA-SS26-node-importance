@@ -78,14 +78,11 @@ Install the `simexpal` package using pip:
 pip install simexpal
 ```
 
-### 2. Discover & Download Instances
-Use `simexpal` to automatically fetch and uncompress the SNAP graph datasets:
+### 2. Verify Local Instances
+Use `simexpal` to verify that your local SNAP graph datasets are successfully detected inside your `Instances/SNAP_Instances` directory:
 ```bash
-# List all configured instances
+# List all configured instances (should show green/available)
 simex instances list
-
-# Download and install the datasets
-simex instances install
 ```
 
 ### 3. Run the Benchmark Matrix
