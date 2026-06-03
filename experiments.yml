@@ -3,22 +3,183 @@
 # Configure simexpal to use your local Instances directory
 instdir: "Instances"
 
-# 1. Instances (grouped into instance sets from local SNAP directory)
+# 1. Instances (grouped into instance sets from local directories)
 instances:
   - repo: local
     set:
       - snap-undirected
+      - SNAP
     subdir: SNAP_Instances
     items:
       - facebook_combined.txt
+
   - repo: local
     set:
       - snap-directed
+      - SNAP
     subdir: SNAP_Instances
     items:
       - p2p-Gnutella08.txt
 
-# 2. Parameter Variants & Environments
+  - repo: local
+    set:
+      - test
+    items:
+      - graph
+      - youtube
+
+  - repo: local
+    set:
+      - test2
+    items:
+      - testgraph
+
+  - repo: local
+    set:
+      - SNAP
+    subdir: SNAP_Instances
+    items:
+      - wiki-topcats.txt
+      - cit-Patents.txt
+      - ego-gplus.txt
+      - com-dblp.ungraph.txt
+      - web-BerkStan.txt
+      - wiki-Talk.txt
+      - web-Google.txt
+      - com-youtube.ungraph.txt
+      - roadNet-CA.txt
+      - web-Stanford.txt
+      - roadNet-TX.txt
+      - roadNet-PA.txt
+      - Ego-twitter.txt
+      - com-amazon.ungraph.txt
+      - soc-Slashdot0902.txt
+      - soc-Slashdot0811.txt
+      - email-Enron.txt
+      - soc-sign-Slashdot081106.txt
+      - soc-sign-Slashdot090216.txt
+      - soc-sign-Slashdot090221.txt
+      - soc-Epinions1.txt
+
+  - repo: local
+    set:
+      - SCMP
+    subdir: SCMP_instances
+    items:
+      - mouse_gene.txt
+      - cond-mat-2005.txt
+      - cond-mat-2003.txt
+      - human_gene1.txt
+      - cond-mat.txt
+      - astro-ph.txt
+      - human_gene2.txt
+      - Reuters911.txt
+      - hep-th.txt
+      - geom.txt
+      - netscience.txt
+      - USAir97.txt
+      - Journals.txt
+      - Sandi_authors.txt
+      - lesmis.txt
+      - GD97_b.txt
+      - Stranke94.txt
+
+  - repo: local
+    set:
+      - weightedSnap
+    subdir: weightedSnap
+    items:
+      - soc-sign-bitcoinalpha.csv
+      - soc-sign-bitcoinotc.csv
+
+  - repo: local
+    set:
+      - weightedToreOpsahl
+    subdir: weighted_sets_tore_opsahl
+    items:
+      - Cross_Parker-Consulting_info.txt
+      - celegans_n306.txt
+      - OClinks_w.txt
+      - Davis_southern_club_women-cooccurance.txt
+      - USpowergrid_n4941.txt
+      - OF_two-mode_weightedchar.txt
+      - Freemans_EIES-3_n32.txt
+      - Cross_Parker-Manufacturing_info.txt
+      - Newman-Cond_mat_95-99-Newman.txt
+      - USairport500.txt
+      - OClinks_w_chars.txt
+      - OF_one-mode_weightedchar_sum.txt
+      - OF_one-mode_weightedmsg_sum.txt
+      - Freemans_EIES-1_n48.txt
+      - Newman-Cond_mat_95-99-co_occurrence.txt
+      - Davis_southern_club_women-Newman.txt
+      - OF_one-mode_weightedmsg_Newman.txt
+      - Cross_Parker-Manufacturing_aware.txt
+      - Cross_Parker-Consulting_value.txt
+      - OF_one-mode_weightedchar_Newman.txt
+      - OF_two-mode_weightedmsg.txt
+      - Freemans_EIES-2_n48.txt
+      - openflights.txt
+
+  - repo: local
+    set:
+      - KONECT
+    subdir: KONECT
+    items:
+      - trackers.txt
+      - actor-collaboration.txt
+
+  - repo: local
+    set:
+      - KONECT_not_run
+    subdir: KONECT
+    items:
+      - livejournal-groupmemberships.txt
+      - orkut-links.txt
+
+  - repo: local
+    set:
+      - Zafarani
+    subdir: Zafarani
+    items:
+      - BlogCatalog3.csv
+
+  - repo: local
+    set:
+      - Twitter
+    subdir: The_Twitter_Mancer_Project-master
+    items:
+      - twitter-retweets.txt
+      - twitter-follows.txt
+      - twitter-quotes.txt
+      - twitter-replies.txt
+
+# 2. Builds Configuration
+builds:
+  - name: kadabra
+    git: ./kadabra
+    compile:
+      - args:
+          - 'make'
+          - 'build'
+        workdir: '@THIS_SOURCE_DIR@'
+    install:
+      - args:
+          - 'mkdir'
+          - '-p'
+          - '@THIS_PREFIX_DIR@/bin'
+      - args:
+          - 'cp'
+          - '@THIS_SOURCE_DIR@/kadabra'
+          - '@THIS_PREFIX_DIR@/bin/kadabra'
+
+# 3. Revisions Configuration
+revisions:
+  - name: 'main-head'
+    build_version:
+      'kadabra': 'refs/heads/master'
+
+# 4. Parameter Variants & Environments
 variants:
   # Thread configuration (via environment variables)
   - axis: 'threads'
@@ -48,11 +209,12 @@ variants:
       - name: 'directed'
         extra_args: ['-d']
 
-# 3. Define Experiments (C++ binary and Julia driver)
+# 5. Define Experiments (C++ binary and Julia driver)
 experiments:
   - name: kadabra-cpp
+    use_builds: [ kadabra ]
     args:
-      - "kadabra/kadabra"
+      - "kadabra"
       - "@EXTRA_ARGS@"
       - "0.01"
       - "0.1"
@@ -69,7 +231,7 @@ experiments:
       - "@INSTANCE@"
     stdout: out
 
-# 4. Run Matrix (maps instances to directed/undirected flags and parameters)
+# 6. Run Matrix (maps instances to directed/undirected flags and parameters)
 matrix:
   include:
     # Undirected Graph Benchmarks (No -d flag)
