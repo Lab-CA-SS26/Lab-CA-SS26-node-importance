@@ -1,27 +1,24 @@
 # simexpal experiments.yml for KADABRA Benchmarks
 
 # Configure simexpal to use your local Instances directory
-instance_dir: Instances/SNAP_Instances
+instdir: "Instances"
 
-# 1. Define Builds (compiles the C++ binary)
-builds:
-  kadabra-cpp:
-    compile: |
-      cd kadabra
-      g++ -Xpreprocessor -fopenmp -std=c++11 -O3 -Wall -g -Iinclude -I/opt/homebrew/opt/libomp/include -L/opt/homebrew/opt/libomp/lib -lomp main.cpp src/* -lm -o kadabra
-
-# 2. Revisions (local development revision)
-revisions:
-  - name: local
-    build_version:
-      kadabra-cpp: local
-
-# 3. Instances (local SNAP datasets inside Instances/SNAP_Instances)
+# 1. Instances (grouped into instance sets from local SNAP directory)
 instances:
-  - name: facebook_combined.txt
-  - name: p2p-Gnutella08.txt
+  - repo: local
+    set:
+      - snap-undirected
+    subdir: SNAP_Instances
+    items:
+      - facebook_combined.txt
+  - repo: local
+    set:
+      - snap-directed
+    subdir: SNAP_Instances
+    items:
+      - p2p-Gnutella08.txt
 
-# 4. Parameter Variants & Environments
+# 2. Parameter Variants & Environments
 variants:
   # Thread configuration (via environment variables)
   - axis: 'threads'
@@ -51,29 +48,36 @@ variants:
       - name: 'directed'
         extra_args: ['-d']
 
-# 5. Define Experiments (C++ binary and Julia driver)
+# 3. Define Experiments (C++ binary and Julia driver)
 experiments:
   - name: kadabra-cpp
-    args: |
-      @BUILD_DIR_FOR:kadabra-cpp@/kadabra/kadabra \
-      @EXTRA_ARGS@ 0.01 0.1 @INSTANCE@
+    args:
+      - "kadabra/kadabra"
+      - "@EXTRA_ARGS@"
+      - "0.01"
+      - "0.1"
+      - "@INSTANCE@"
+    stdout: out
 
   - name: kadabra-julia
-    args: |
-      julia compare_kadabra.jl \
-      @EXTRA_ARGS@ 0.01 0.1 @INSTANCE@
+    args:
+      - "julia"
+      - "compare_kadabra.jl"
+      - "@EXTRA_ARGS@"
+      - "0.01"
+      - "0.1"
+      - "@INSTANCE@"
+    stdout: out
 
-# 6. Run Matrix (maps instances to directed/undirected flags and parameters)
+# 4. Run Matrix (maps instances to directed/undirected flags and parameters)
 matrix:
   include:
     # Undirected Graph Benchmarks (No -d flag)
     - experiments: [kadabra-cpp, kadabra-julia]
-      instances: [facebook_combined.txt]
+      instsets: [snap-undirected]
       variants: [undirected, t1, t4, k3, k10]
-      revisions: [local]
 
     # Directed Graph Benchmarks (With -d flag)
     - experiments: [kadabra-cpp, kadabra-julia]
-      instances: [p2p-Gnutella08.txt]
+      instsets: [snap-directed]
       variants: [directed, t1, t4, k3, k10]
-      revisions: [local]
