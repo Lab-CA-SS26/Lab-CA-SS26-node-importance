@@ -3,7 +3,7 @@
 using Test
 using Graphs
 
-include("kadabra.jl")
+include("../src/kadabra.jl")
 
 @testset "KADABRA Centrality Test Suite" begin
 

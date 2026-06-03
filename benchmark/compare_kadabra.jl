@@ -2,7 +2,7 @@
 using Graphs
 using Printf
 
-include("kadabra.jl")
+include("../src/kadabra.jl")
 
 function load_snap_graph(filepath::String, directed::Bool)
     edges = Tuple{Int, Int}[]

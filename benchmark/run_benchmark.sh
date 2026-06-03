@@ -27,8 +27,8 @@ fi
 
 # Locate directories and scripts
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
-CPP_BIN="$BASE_DIR/kadabra/kadabra"
-CPP_DIR="$BASE_DIR/kadabra"
+CPP_BIN="$BASE_DIR/../cpp_reference/kadabra"
+CPP_DIR="$BASE_DIR/../cpp_reference"
 JL_SCRIPT="$BASE_DIR/compare_kadabra.jl"
 
 # 1. Compile C++ if binary is missing

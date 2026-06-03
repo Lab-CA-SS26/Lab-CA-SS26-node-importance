@@ -55,10 +55,10 @@ __pycache__/
 .ipynb_checkpoints/
 
 # simexpal execution files and results
-output/
-aux/
-builds/
-develop/
-dev-builds/
-*.cache
-experiments_BA.yml
+benchmark/output/
+benchmark/aux/
+benchmark/builds/
+benchmark/develop/
+benchmark/dev-builds/
+benchmark/*.cache
+benchmark/experiments_BA.yml

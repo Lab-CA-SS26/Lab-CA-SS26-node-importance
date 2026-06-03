@@ -1,7 +1,7 @@
 # simexpal experiments.yml for KADABRA Benchmarks
 
 # Configure simexpal to use your local Instances directory
-instdir: "Instances"
+instdir: "../Instances"
 
 # 1. Instances (grouped into instance sets from local directories)
 instances:
@@ -157,7 +157,7 @@ instances:
 # 2. Builds Configuration
 builds:
   - name: kadabra
-    git: ./kadabra
+    git: ../cpp_reference
     compile:
       - args:
           - 'make'
