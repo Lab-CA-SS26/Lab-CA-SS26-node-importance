@@ -34,3 +34,6 @@ JuliaLocalPreferences.toml
 .idea/
 scratch/
 .DS_Store
+
+
+/Instances
