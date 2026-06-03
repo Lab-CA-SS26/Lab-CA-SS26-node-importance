@@ -1,0 +1,78 @@
+# simexpal experiments.yml for KADABRA Benchmarks
+
+# 1. Define Builds (compiles the C++ binary)
+builds:
+  kadabra-cpp:
+    compile: |
+      cd kadabra
+      g++ -Xpreprocessor -fopenmp -std=c++11 -O3 -Wall -g -Iinclude -I/opt/homebrew/opt/libomp/include -L/opt/homebrew/opt/libomp/lib -lomp main.cpp src/* -lm -o kadabra
+
+# 2. Revisions (local development revision)
+revisions:
+  - name: local
+    build_version:
+      kadabra-cpp: local
+
+# 3. Instances (downloads SNAP datasets dynamically)
+instances:
+  - name: facebook_combined
+    url: https://snap.stanford.edu/data/facebook_combined.txt.gz
+  - name: p2p-Gnutella08
+    url: https://snap.stanford.edu/data/p2p-Gnutella08.txt.gz
+
+# 4. Parameter Variants & Environments
+variants:
+  # Thread configuration (via environment variables)
+  - axis: 'threads'
+    items:
+      - name: 't1'
+        environ:
+          OMP_NUM_THREADS: '1'
+          JULIA_NUM_THREADS: '1'
+      - name: 't4'
+        environ:
+          OMP_NUM_THREADS: '4'
+          JULIA_NUM_THREADS: '4'
+          
+  # Top-K vertex selection
+  - axis: 'k-val'
+    items:
+      - name: 'k3'
+        extra_args: ['-k', '3']
+      - name: 'k10'
+        extra_args: ['-k', '10']
+
+  # Graph type (Directed vs Undirected)
+  - axis: 'graph-type'
+    items:
+      - name: 'undirected'
+        extra_args: []
+      - name: 'directed'
+        extra_args: ['-d']
+
+# 5. Define Experiments (C++ binary and Julia driver)
+experiments:
+  - name: kadabra-cpp
+    args: |
+      @BUILD_DIR_FOR:kadabra-cpp@/kadabra/kadabra \
+      @EXTRA_ARGS@ 0.01 0.1 @INSTANCE@
+
+  - name: kadabra-julia
+    args: |
+      julia compare_kadabra.jl \
+      @EXTRA_ARGS@ 0.01 0.1 @INSTANCE@
+
+# 6. Run Matrix (maps instances to directed/undirected flags and parameters)
+matrix:
+  include:
+    # Undirected Graph Benchmarks (No -d flag)
+    - experiments: [kadabra-cpp, kadabra-julia]
+      instances: [facebook_combined]
+      variants: [undirected, t1, t4, k3, k10]
+      revisions: [local]
+
+    # Directed Graph Benchmarks (With -d flag)
+    - experiments: [kadabra-cpp, kadabra-julia]
+      instances: [p2p-Gnutella08]
+      variants: [directed, t1, t4, k3, k10]
+      revisions: [local]

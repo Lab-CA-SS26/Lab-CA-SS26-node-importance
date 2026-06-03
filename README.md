@@ -63,3 +63,37 @@ Run the automated test suite to verify the sampler, backtracking, and convergenc
 ```bash
 julia test_kadabra.jl
 ```
+
+---
+
+## 📊 Algorithmic Experiments with simexpal
+
+We have integrated a declarative experimental setup using **`simexpal`** (an algorithmic experiment management tool developed by the MACSy group at HU Berlin). This allows you to automatically download datasets, compile code, and run structured benchmark combinations (cross-product of threads and $k$-values) with a single command.
+
+The configuration is defined in **[`experiments.yml`](file:///Users/martinschlaier/Documents/10_Universitaet/Master/Lab-CA/Lab-CA-SS26-node-importance/experiments.yml)**.
+
+### 1. Installation
+Install the `simexpal` package using pip:
+```bash
+pip install simexpal
+```
+
+### 2. Discover & Download Instances
+Use `simexpal` to automatically fetch and uncompress the SNAP graph datasets:
+```bash
+# List all configured instances
+simex instances list
+
+# Download and install the datasets
+simex instances install
+```
+
+### 3. Run the Benchmark Matrix
+You can run and track all experiment permutations (C++ and Julia, 1 vs 4 threads, $k=3$ vs $k=10$):
+```bash
+# Display the combinations in the run matrix
+simex matrix
+
+# Execute all experiments
+simex run
+```
