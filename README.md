@@ -25,12 +25,18 @@ This repository contains a high-performance, multi-threaded Julia implementation
 
 ## 📂 File Directory
 
-- **`kadabra.jl`**: Core Julia implementation containing the sampler, BFS workspace, and mathematical bounds.
-- **`test_kadabra.jl`**: Automated unit test suite verifying correctness, sampling, and convergence.
-- **`compare_kadabra.jl`**: Julia command-line driver script for loading SNAP datasets and running benchmarks.
-- **`run_benchmark.sh`**: Bash script to compile the C++ binary and run both implementations back-to-back under identical thread counts.
-- **`COMPARISON.md`**: Guide describing the benchmark parameters, execution workflow, and results.
-- **`ROADMAP.md`**: Guide detailing instructions for contributing code to the open-source `Graphs.jl` library.
+The repository is structured as follows:
+
+- **`src/kadabra.jl`**: Core Julia implementation. Fully optimized with zero-allocation path sampling and O(N log K) convergence checking.
+- **`test/`**: Contains `test_kadabra_graphs_style.jl`, the automated unit test suite verifying correctness, sampling, and convergence against the Graphs.jl ecosystem.
+- **`benchmark/`**: Contains all benchmarking utilities:
+  - `compare_kadabra.jl`: Julia command-line driver script for loading SNAP datasets.
+  - `run_benchmark.sh`: Bash script to compile the C++ binary and run both implementations back-to-back.
+  - `experiments.yml`: Simexpal configuration matrix for structured benchmarks.
+- **`cpp_reference/`**: The original Borassi C++ implementation for baseline comparisons.
+- **`docs/`**: Additional reading materials:
+  - `COMPARISON.md`: Guide describing the benchmark parameters and results.
+  - `ROADMAP.md`: Guide detailing instructions for contributing code to `Graphs.jl`.
 
 ---
 
@@ -40,6 +46,7 @@ The benchmark runner script compiles the C++ program (if needed), configures thr
 
 ### Usage:
 ```bash
+cd benchmark
 ./run_benchmark.sh <err> <delta> <k> <threads> <filepath> [-d]
 ```
 *Options:*
@@ -48,20 +55,20 @@ The benchmark runner script compiles the C++ program (if needed), configures thr
 ### Examples:
 ```bash
 # Benchmark 4 threads on the Facebook undirected dataset:
-./run_benchmark.sh 0.01 0.1 3 4 kadabra/example_input/facebook_combined.txt
+./run_benchmark.sh 0.01 0.1 3 4 ../Instances/SNAP_Instances/facebook_combined.txt
 
 # Benchmark 4 threads on the Gnutella directed dataset:
-./run_benchmark.sh 0.01 0.1 3 4 kadabra/example_input/p2p-Gnutella08.txt -d
+./run_benchmark.sh 0.01 0.1 3 4 ../Instances/SNAP_Instances/p2p-Gnutella08.txt -d
 ```
 
 ---
 
 ## 🧪 How to Run Tests
 
-Run the automated test suite to verify the sampler, backtracking, and convergence criteria:
+Run the automated test suite to verify the sampler, backtracking, and convergence criteria. Make sure to run it with the `Graphs.jl` test environment active:
 
 ```bash
-julia test_kadabra.jl
+julia --project=../Graphs.jl/test test/test_kadabra_graphs_style.jl
 ```
 
 ---
