@@ -108,7 +108,7 @@ end
 function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100)
     n = nv(g)
     absolute = (k == 0)
-    k = k == 0 ? n : min(k, n)
+    k = Int(k == 0 ? n : min(k, n))
     
     # Estimate diameter using AllCCUpperBound
     diam_est = max(estimate_diameter(g), 2.0)
@@ -178,7 +178,7 @@ function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float
                 end
                 
                 # Sort to find tracked top nodes
-                union_sample = absolute ? k : min(n, k + 20)
+                union_sample = Int(absolute ? k : min(n, k + 20))
                 top_k_nodes = sortperm(global_approx, rev=true)[1:union_sample]
                 
                 if check_finished(global_approx, top_k_nodes, n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute)
@@ -368,6 +368,8 @@ function _bb_bfs_sample!(
     neighborfn_s::Function, 
     neighborfn_t::Function
 ) where {T}
+    s = T(s)
+    t = T(t)
     
     # Extract arrays from workspace
     ball_indicator = ws.ball_indicator

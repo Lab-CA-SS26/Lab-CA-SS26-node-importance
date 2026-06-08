@@ -243,3 +243,7 @@ matrix:
     - experiments: [kadabra-cpp, kadabra-julia]
       instsets: [snap-directed]
       variants: [directed, t1, t4, k3, k10]
+
+    - experiments: [kadabra-cpp, kadabra-julia]
+      instsets: [SNAP]
+      variants: [directed, t1, t4, k3, k10]
