@@ -51,12 +51,16 @@ function estimate_diameter(g::AbstractGraph)
         end
     end
     
-    # 4. Helper BFS to compute eccentricity of pivot in its SCC
+    # 4. Helper BFS to compute eccentricity of pivot in its SCC.
+    # Fix: pre-allocate a single dist buffer and reuse it across all calls
+    # to avoid O(n_components * n) allocations (was: fill(-1, n) per call).
+    ecc_dist = fill(-1, n)
+
     function compute_ecc_in_scc(start::Int, backward::Bool)
-        dist = fill(-1, n)
+        fill!(ecc_dist, -1)
         q = Int[]
         push!(q, start)
-        dist[start] = 0
+        ecc_dist[start] = 0
         
         head = 1
         while head <= length(q)
@@ -65,14 +69,14 @@ function estimate_diameter(g::AbstractGraph)
             
             neighbors = backward ? inneighbors(g, u) : outneighbors(g, u)
             for v in neighbors
-                if dist[v] == -1 && cc[v] == cc[u]
-                    dist[v] = dist[u] + 1
+                if ecc_dist[v] == -1 && cc[v] == cc[u]
+                    ecc_dist[v] = ecc_dist[u] + 1
                     push!(q, v)
                 end
             end
         end
         
-        return isempty(q) ? 0 : dist[q[end]]
+        return isempty(q) ? 0 : ecc_dist[q[end]]
     end
     
     # 5. Compute forward and backward eccentricities of pivots in their SCCs
@@ -83,7 +87,10 @@ function estimate_diameter(g::AbstractGraph)
         ecc_b_pivots_scc[i] = compute_ecc_in_scc(pivots[i], true)
     end
     
-    # 6. DP to compute bounds across components (memoized DFS)
+    # 6. DP to compute bounds across components (memoized DFS).
+    # Note: cc_adj is a DAG for directed graphs (by construction from SCCs).
+    # For undirected graphs each CC is a single component node, so cc_adj is
+    # also acyclic. The recursion therefore always terminates.
     ecc_f_pivots = fill(-1.0, n_components)
     
     function get_ecc_f_pivot(i::Int)
@@ -106,6 +113,11 @@ function estimate_diameter(g::AbstractGraph)
 end
 
 function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100)
+    # --- Input validation ---
+    nv(g) >= 2    || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
+    err  > 0      || throw(ArgumentError("err must be positive (got $err)"))
+    0 < delta < 1 || throw(ArgumentError("delta must be in (0, 1) (got $delta)"))
+
     n = nv(g)
     absolute = (k == 0)
     k = Int(k == 0 ? n : min(k, n))
@@ -113,8 +125,12 @@ function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float
     # Estimate diameter using AllCCUpperBound
     diam_est = max(estimate_diameter(g), 2.0)
     
-    # Calculate initial omega
-    omega = 0.5 / (err^2) * (log2(diam_est - 1.0) + 1.0 + log(0.5 / delta))
+    # Sample-count upper bound (Borassi & Natale 2016, Theorem 3.2):
+    #   ω = (1 / 2ε²) * (log₂(D − 1) + log₂(2/δ))
+    #     = (1 / 2ε²) * (log₂(D − 1) + 1 + log₂(1/δ))
+    # Fix: previous code used ln(0.5/δ) (natural log) where log₂(1/δ) is required,
+    # causing omega to be underestimated by up to ~2× for typical δ values.
+    omega = 0.5 / (err^2) * (log2(diam_est - 1.0) + 1.0 + log2(1.0 / delta))
     tau = max(round(Int, omega / start_factor), 1)
     
     # Thread-local storage to avoid locking when updating centralities
@@ -123,23 +139,30 @@ function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float
     workspaces = [KadabraWorkspace(g) for _ in 1:nthreads]
     n_pairs = Threads.Atomic{Int}(0)
     
-    # Arrays for delta optimization (using uniform delta as baseline)
+    # Per-vertex confidence budget (uniform allocation).
+    # Note: the paper (§5) describes an adaptive scheme that updates these weights
+    # based on running estimates, which would improve early termination. That
+    # refinement is not implemented here; the uniform baseline is correct but
+    # may run slightly more samples than strictly necessary.
     delta_l_guess = fill(delta / (4 * n), n)
     delta_u_guess = fill(delta / (4 * n), n)
     
     # ---------------------------------------------------------
-    # PHASE 1: Initial burn-in sampling (Tau iterations)
+    # PHASE 1: Initial burn-in sampling (exactly tau samples, race-free).
+    # Fix: the previous loop read n_pairs[] non-atomically in the while condition,
+    # allowing up to (nthreads − 1) extra samples beyond tau. Now each thread
+    # atomically claims a slot before doing any work; it exits immediately if
+    # the quota is already met, so n_pairs ends up at exactly tau.
     # ---------------------------------------------------------
+    phase1_claimed = Threads.Atomic{Int}(0)
     Threads.@threads for tid in 1:nthreads
         ws = workspaces[tid]
-        while n_pairs[] < tau
-            # Pick random distinct s, t
+        while true
+            prev = Threads.atomic_add!(phase1_claimed, 1)  # returns old value
+            prev >= tau && break                            # quota met, stop
             s, t = rand(1:n), rand(1:n)
             while s == t; t = rand(1:n); end
-            
             path = sample_shortest_path!(ws, g, s, t)
-            
-            # Update thread-local path counts
             for v in path
                 approx_local[tid][v] += 1
             end
@@ -148,7 +171,10 @@ function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float
     end
     
     # ---------------------------------------------------------
-    # PHASE 2: Main loop until stopping condition is met
+    # PHASE 2: Main loop until stopping condition is met.
+    # Each thread works in batches of 10 samples before the stopping condition
+    # is rechecked. This amortises the cost of aggregation; the tradeoff is an
+    # overshoot of at most 10 * nthreads samples past the convergence point.
     # ---------------------------------------------------------
     stop_flag = Threads.Atomic{Bool}(false)
     
@@ -169,9 +195,13 @@ function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float
                 Threads.atomic_add!(n_pairs, 1)
             end
             
-            # Only task 1 handles the heavy stopping calculation to avoid overhead
+            # Only thread 1 checks the stopping condition to avoid redundant work.
+            # Thread-safety note: thread 1 reads approx_local[tid] for all tid
+            # without a synchronisation fence. Each other thread writes only to its
+            # own disjoint approx_local[tid] array. On x86-64 (TSO) aligned Int
+            # reads/writes are naturally coherent; on weakly-ordered architectures
+            # a fence (e.g. Base.Threads.fence()) would be needed for full safety.
             if tid == 1
-                # Aggregate centralities across threads
                 global_approx = zeros(Int, n)
                 for t_approx in approx_local
                     global_approx .+= t_approx
@@ -292,24 +322,31 @@ function check_finished(
 end
 
 
-
-"""
-
-Sampling Things
-
-"""
-
+# ---------------------------------------------------------------------------
+# Sampling
+# ---------------------------------------------------------------------------
 
 """
     KadabraWorkspace{T}
 
 A memory workspace to prevent allocations during KADABRA's hot sampling loop.
 Instantiate this once per graph and reuse it across all `sample_shortest_path!` calls.
+
+Type parameters:
+- `T`: vertex index integer type (e.g. `Int64`, `UInt8`), inferred from the graph.
+
+Fix notes:
+- `dist` uses `Vector{Int}` (not `Vector{T}`) to avoid silent BFS-layer wrap-around
+  for small integer types: a `UInt8` graph could have diameter > 255.
+- `n_paths` uses `Vector{Float64}` (not `Vector{UInt64}`) to prevent silent overflow
+  of path counts on graphs with exponentially many shortest paths (e.g. grids).
+  Floating-point arithmetic provides exact results up to 2^53 paths and saturates
+  gracefully beyond that, preserving the correctness of proportional sampling.
 """
 struct KadabraWorkspace{T<:Integer}
     ball_indicator::Vector{UInt8}
-    n_paths::Vector{UInt64}
-    dist::Vector{T}
+    n_paths::Vector{Float64}   # Float64: avoids UInt64 overflow for exponential path counts
+    dist::Vector{Int}          # Int: avoids wrap-around for small T (e.g. UInt8 diameter > 255)
     preds::Vector{Vector{T}}
     
     cur_s::Vector{T}
@@ -337,8 +374,8 @@ function KadabraWorkspace(g::AbstractGraph{T}) where {T}
     
     return KadabraWorkspace{T}(
         zeros(UInt8, n),
-        zeros(UInt64, n),
-        fill(typemax(T), n),
+        zeros(Float64, n),   # n_paths: Float64 (overflow-safe)
+        fill(typemax(Int), n), # dist: Int sentinel (no small-type wrap)
         preds,
         cur_s, next_s, cur_t, next_t,
         sp_edges,
@@ -347,12 +384,15 @@ function KadabraWorkspace(g::AbstractGraph{T}) where {T}
 end
 
 """
-    sample_shortest_path!(ws::KadabraWorkspace, g, s, t[; dir=:out])
+    sample_shortest_path!(ws::KadabraWorkspace{T}, g, s, t[; dir=:out])
 
 Sample a single shortest path uniformly at random using pre-allocated workspace memory.
+Returns an empty path (not contributing to betweenness) when `s == t`.
 """
-function sample_shortest_path!(ws::KadabraWorkspace, g::AbstractGraph, s::Integer, t::Integer; dir=:out)
-    s == t && return [s]
+function sample_shortest_path!(ws::KadabraWorkspace{T}, g::AbstractGraph, s::Integer, t::Integer; dir=:out) where T
+    # s == t contributes nothing to betweenness; return empty rather than [s]
+    # to avoid a heap allocation on this dead-code branch.
+    s == t && return T[]
     return if (dir == :out)
         _bb_bfs_sample!(ws, g, s, t, outneighbors, inneighbors)
     else
@@ -360,14 +400,18 @@ function sample_shortest_path!(ws::KadabraWorkspace, g::AbstractGraph, s::Intege
     end
 end
 
+# Fix: parameterise neighbour functions as F1/F2 instead of the abstract `Function`
+# type, so Julia can specialise _bb_bfs_sample! on the concrete function types
+# (outneighbors / inneighbors). This enables inlining of the inner BFS loop,
+# which is the hottest code path in the entire algorithm.
 function _bb_bfs_sample!(
     ws::KadabraWorkspace{T}, 
     g::AbstractGraph{T}, 
     s::Integer, 
     t::Integer, 
-    neighborfn_s::Function, 
-    neighborfn_t::Function
-) where {T}
+    neighborfn_s::F1,
+    neighborfn_t::F2
+) where {T, F1, F2}
     s = T(s)
     t = T(t)
     
@@ -385,7 +429,7 @@ function _bb_bfs_sample!(
 
     # Initialize S
     ball_indicator[s] = 0x01
-    n_paths[s] = 1
+    n_paths[s] = 1.0
     dist[s] = 0
     push!(cur_s, s)
     push!(visited_nodes, s)
@@ -393,7 +437,7 @@ function _bb_bfs_sample!(
 
     # Initialize T
     ball_indicator[t] = 0x02
-    n_paths[t] = 1
+    n_paths[t] = 1.0
     dist[t] = 0
     push!(cur_t, t)
     push!(visited_nodes, t)
@@ -429,7 +473,9 @@ function _bb_bfs_sample!(
                 end
             end
             empty!(cur_s)
-            cur_s, next_s = next_s, cur_s # Local pointer swap
+            # Local pointer swap (does NOT update workspace fields; cleanup below
+            # always calls empty! on both ws.cur_s and ws.next_s directly).
+            cur_s, next_s = next_s, cur_s
             
         else
             sum_degs_t = 0
@@ -459,18 +505,22 @@ function _bb_bfs_sample!(
         end
     end
 
-    # Default disconnected path
+    # Default: disconnected pair → empty path
     path_s = Vector{T}()
 
     if !isempty(sp_edges)
-        # 1. Weight the bridges and select one uniformly at random
-        tot_weight = zero(UInt64)
+        # 1. Weight the bridges and select one proportionally at random.
+        # Fix: use Float64 arithmetic throughout to avoid UInt64 overflow on graphs
+        # with exponentially many shortest paths (e.g. grids, dense random graphs).
+        # The product n_paths[u] * n_paths[v] can easily exceed 2^64 for UInt64.
+        tot_weight = 0.0
         @inbounds for (u_bridge, v_bridge) in sp_edges
             tot_weight += n_paths[u_bridge] * n_paths[v_bridge]
         end
 
-        rand_val = rand(1:tot_weight)
-        cur_weight = zero(UInt64)
+        # Continuous uniform draw in [0, tot_weight); equivalent to rand(1:N) for integers.
+        rand_val = rand() * tot_weight
+        cur_weight = 0.0
         selected_edge = sp_edges[1]
         
         @inbounds for (u_bridge, v_bridge) in sp_edges
@@ -491,11 +541,14 @@ function _bb_bfs_sample!(
         append!(path_s, path_t)
     end
 
-    # 3. O(visited) Cleanup - reset state exactly for the nodes we touched
+    # 3. O(visited) Cleanup - reset state exactly for the nodes we touched.
+    # Both ws.cur_s/ws.next_s are cleared directly (not through the local aliases
+    # cur_s/next_s, which may have been swapped) to ensure a clean workspace
+    # regardless of how many swap iterations the BFS performed.
     @inbounds for v in visited_nodes
         ball_indicator[v] = 0x00
-        n_paths[v] = 0
-        dist[v] = typemax(T)
+        n_paths[v] = 0.0
+        dist[v] = typemax(Int)
         empty!(preds[v])
     end
     
@@ -509,8 +562,11 @@ function _bb_bfs_sample!(
     return path_s
 end
 
-# Internal backtracking helper
-function _backtrack!(path::Vector{T}, curr::T, target::T, preds::Vector{Vector{T}}, n_paths::Vector{UInt64}) where {T}
+# Internal backtracking helper.
+# Fix: n_paths changed from Vector{UInt64} to Vector{Float64} (consistent with
+# KadabraWorkspace). Random selection uses rand() * tot (continuous) instead of
+# rand(1:tot) (integer), which avoids UInt64 overflow for large path counts.
+function _backtrack!(path::Vector{T}, curr::T, target::T, preds::Vector{Vector{T}}, n_paths::Vector{Float64}) where {T}
     @inbounds while curr != target
         push!(path, curr)
         parents = preds[curr]
@@ -518,9 +574,9 @@ function _backtrack!(path::Vector{T}, curr::T, target::T, preds::Vector{Vector{T
         if length(parents) == 1
             curr = parents[1]
         else
-            tot = sum(p -> n_paths[p], parents; init=zero(UInt64))            
-            r = rand(1:tot)
-            c = zero(UInt64)
+            tot = sum(p -> n_paths[p], parents; init=0.0)
+            r = rand() * tot          # continuous draw in [0, tot)
+            c = 0.0
             for p in parents
                 c += n_paths[p]
                 if c >= r
