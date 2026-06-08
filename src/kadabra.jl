@@ -107,6 +107,25 @@ function estimate_diameter(g::AbstractGraph)
     return max(diam, 1.0)
 end
 
+"""
+    kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100)
+
+Estimates the betweenness centrality of vertices in graph `g` using the KADABRA algorithm 
+(Borassi & Natale, 2016). KADABRA is an adaptive sampling algorithm that guarantees the 
+estimated betweenness is within an additive error bound with high probability.
+
+# Arguments
+- `g::AbstractGraph`: The input graph (directed or undirected).
+- `k::Int`: If `k = 0`, guarantees absolute error `err` for all vertices. If `k > 0`, 
+  guarantees the relative ranking of the top `k` vertices is correct within the error bound.
+- `err::Float64`: The maximum additive error tolerance (e.g., 0.01).
+- `delta::Float64`: The confidence parameter. Results are guaranteed with probability `1 - delta`.
+- `start_factor::Int`: Keyword argument to scale the initial burn-in phase duration (default: 100).
+
+# Returns
+- `Vector{Float64}`: A vector of length `nv(g)` containing the estimated betweenness centrality 
+  for each vertex, normalized between 0.0 and 1.0.
+"""
 function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100)
     # --- Input validation ---
     nv(g) >= 2    || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
@@ -207,6 +226,10 @@ end
 
 """
     compute_f(btilde, iter_num, delta_l, omega)
+
+Computes the Chernoff bound error function `f` that bounds the betweenness of a vertex from below.
+Evaluated dynamically during Phase 2 to determine if the lower bound of the confidence interval
+satisfies the stopping condition.
 """
 function compute_f(btilde::Float64, iter_num::Int, delta_l::Float64, omega::Float64)
     tmp = (omega / iter_num) - (1.0 / 3.0)
@@ -216,6 +239,10 @@ end
 
 """
     compute_g(btilde, iter_num, delta_u, omega)
+
+Computes the Chernoff bound error function `g` that bounds the betweenness of a vertex from above.
+Evaluated dynamically during Phase 2 to determine if the upper bound of the confidence interval
+satisfies the stopping condition.
 """
 function compute_g(btilde::Float64, iter_num::Int, delta_u::Float64, omega::Float64)
     tmp = (omega / iter_num) + (1.0 / 3.0)
@@ -224,7 +251,11 @@ function compute_g(btilde::Float64, iter_num::Int, delta_u::Float64, omega::Floa
 end
 
 """
-    check_finished(...)
+    check_finished(approx_counts, top_k_nodes, n_pairs, k, err, delta_l_guess, delta_u_guess, omega, absolute)
+
+Evaluates whether the KADABRA algorithm has met the stopping criteria based on the current samples.
+Supports both absolute error mode (all vertices have error < err) and relative mode (the gap between 
+the top-k rankings is strictly larger than their overlapping error bounds).
 """
 function check_finished(
     approx_counts::Vector{Int}, 
@@ -346,6 +377,15 @@ function sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g::
     end
 end
 
+"""
+    _bb_bfs_sample!(counts, ws, g, s, t, neighborfn_s, neighborfn_t)
+
+Internal helper function that performs a Balanced Bidirectional BFS from source `s` and target `t`.
+The search expands the frontier with the smallest sum of out-degrees to minimize edge traversals.
+When the frontiers intersect, it selects a single bridge edge uniformly at random (weighted by 
+the number of shortest paths crossing it) and backtracks to construct the sampled path.
+The nodes on the resulting path are incremented directly in the `counts` array without allocating memory.
+"""
 function _bb_bfs_sample!(
     counts::Vector{Int},
     ws::KadabraWorkspace{T}, 
@@ -479,6 +519,15 @@ function _bb_bfs_sample!(
     return
 end
 
+"""
+    _backtrack!(counts, curr, target, preds, n_paths)
+
+Internal helper that reconstructs a single shortest path by backtracking from the `curr` node 
+towards the `target` node using the predecessor map `preds` generated during the BFS.
+If multiple optimal predecessors exist, one is selected randomly weighted by the number of 
+shortest paths `n_paths` arriving through that predecessor.
+The thread-local `counts` buffer is incremented in-place for every node visited.
+"""
 function _backtrack!(counts::Vector{Int}, curr::T, target::T, preds::Vector{Vector{T}}, n_paths::Vector{Float64}) where {T}
     @inbounds while curr != target
         counts[curr] += 1
