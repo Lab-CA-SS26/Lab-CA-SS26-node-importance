@@ -121,12 +121,13 @@ estimated betweenness is within an additive error bound with high probability.
 - `err::Float64`: The maximum additive error tolerance (e.g., 0.01).
 - `delta::Float64`: The confidence parameter. Results are guaranteed with probability `1 - delta`.
 - `start_factor::Int`: Keyword argument to scale the initial burn-in phase duration (default: 100).
+- `endpoints::Bool`: If true, include the endpoints of the sampled shortest paths in the centrality counts (default: false).
 
 # Returns
 - `Vector{Float64}`: A vector of length `nv(g)` containing the estimated betweenness centrality 
   for each vertex, normalized between 0.0 and 1.0.
 """
-function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100)
+function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100, endpoints::Bool=false)
     # --- Input validation ---
     nv(g) >= 2    || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
     err  > 0      || throw(ArgumentError("err must be positive (got $err)"))
@@ -173,7 +174,7 @@ function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float
             while s == t; t = rand(1:n); end
             
             # Zero-allocation increment
-            sample_shortest_path!(counts, ws, g, s, t)
+            sample_shortest_path!(counts, ws, g, s, t; endpoints=endpoints)
             Threads.atomic_add!(n_pairs, 1)
         end
     end
@@ -193,7 +194,7 @@ function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float
                 s, t = rand(1:n), rand(1:n)
                 while s == t; t = rand(1:n); end
                 
-                sample_shortest_path!(counts, ws, g, s, t)
+                sample_shortest_path!(counts, ws, g, s, t; endpoints=endpoints)
                 Threads.atomic_add!(n_pairs, 1)
             end
             
@@ -363,22 +364,22 @@ function KadabraWorkspace(g::AbstractGraph{T}) where {T}
 end
 
 """
-    sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g, s, t[; dir=:out])
+    sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g, s, t[; dir=:out, endpoints=false])
 
 Sample a single shortest path uniformly at random using pre-allocated workspace memory,
 and directly increment `counts` for every vertex on the path. No heap allocations occur.
 """
-function sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g::AbstractGraph, s::Integer, t::Integer; dir=:out) where T
+function sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g::AbstractGraph, s::Integer, t::Integer; dir=:out, endpoints::Bool=false) where T
     s == t && return
     if (dir == :out)
-        _bb_bfs_sample!(counts, ws, g, s, t, outneighbors, inneighbors)
+        _bb_bfs_sample!(counts, ws, g, s, t, outneighbors, inneighbors, endpoints)
     else
-        _bb_bfs_sample!(counts, ws, g, s, t, inneighbors, outneighbors)
+        _bb_bfs_sample!(counts, ws, g, s, t, inneighbors, outneighbors, endpoints)
     end
 end
 
 """
-    _bb_bfs_sample!(counts, ws, g, s, t, neighborfn_s, neighborfn_t)
+    _bb_bfs_sample!(counts, ws, g, s, t, neighborfn_s, neighborfn_t, endpoints)
 
 Internal helper function that performs a Balanced Bidirectional BFS from source `s` and target `t`.
 The search expands the frontier with the smallest sum of out-degrees to minimize edge traversals.
@@ -393,7 +394,8 @@ function _bb_bfs_sample!(
     s::Integer, 
     t::Integer, 
     neighborfn_s::F1,
-    neighborfn_t::F2
+    neighborfn_t::F2,
+    endpoints::Bool
 ) where {T, F1, F2}
     s = T(s)
     t = T(t)
@@ -498,8 +500,8 @@ function _bb_bfs_sample!(
             end
         end
 
-        _backtrack!(counts, selected_edge[1], s, preds, n_paths)
-        _backtrack!(counts, selected_edge[2], t, preds, n_paths)
+        _backtrack!(counts, selected_edge[1], s, preds, n_paths, endpoints)
+        _backtrack!(counts, selected_edge[2], t, preds, n_paths, endpoints)
     end
 
     @inbounds for v in visited_nodes
@@ -520,7 +522,7 @@ function _bb_bfs_sample!(
 end
 
 """
-    _backtrack!(counts, curr, target, preds, n_paths)
+    _backtrack!(counts, curr, target, preds, n_paths, endpoints)
 
 Internal helper that reconstructs a single shortest path by backtracking from the `curr` node 
 towards the `target` node using the predecessor map `preds` generated during the BFS.
@@ -528,7 +530,7 @@ If multiple optimal predecessors exist, one is selected randomly weighted by the
 shortest paths `n_paths` arriving through that predecessor.
 The thread-local `counts` buffer is incremented in-place for every node visited.
 """
-function _backtrack!(counts::Vector{Int}, curr::T, target::T, preds::Vector{Vector{T}}, n_paths::Vector{Float64}) where {T}
+function _backtrack!(counts::Vector{Int}, curr::T, target::T, preds::Vector{Vector{T}}, n_paths::Vector{Float64}, endpoints::Bool) where {T}
     @inbounds while curr != target
         counts[curr] += 1
         parents = preds[curr]
@@ -548,5 +550,7 @@ function _backtrack!(counts::Vector{Int}, curr::T, target::T, preds::Vector{Vect
             end
         end
     end
-    @inbounds counts[target] += 1
+    if endpoints
+        @inbounds counts[target] += 1
+    end
 end
