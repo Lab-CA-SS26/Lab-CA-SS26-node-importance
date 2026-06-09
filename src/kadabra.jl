@@ -122,12 +122,13 @@ estimated betweenness is within an additive error bound with high probability.
 - `delta::Float64`: The confidence parameter. Results are guaranteed with probability `1 - delta`.
 - `start_factor::Int`: Keyword argument to scale the initial burn-in phase duration (default: 100).
 - `endpoints::Bool`: If true, include the endpoints of the sampled shortest paths in the centrality counts (default: false).
+- `normalize::Bool`: If true, normalizes the betweenness values to match Graphs.jl standard (default: true).
 
 # Returns
 - `Vector{Float64}`: A vector of length `nv(g)` containing the estimated betweenness centrality 
-  for each vertex, normalized between 0.0 and 1.0.
+  for each vertex.
 """
-function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100, endpoints::Bool=false)
+function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100, endpoints::Bool=false, normalize::Bool=true)
     # --- Input validation ---
     nv(g) >= 2    || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
     err  > 0      || throw(ArgumentError("err must be positive (got $err)"))
@@ -221,7 +222,28 @@ function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float
         global_approx .+= t_approx
     end
     
-    return [global_approx[v] / n_pairs[] for v in 1:n]
+    res = [global_approx[v] / n_pairs[] for v in 1:n]
+    
+    scale = 1.0
+    if normalize
+        if n > 2
+            scale = (n * (n - 1.0)) / ((n - 1.0) * (n - 2.0))
+        else
+            scale = 0.0
+        end
+    else
+        scale = is_directed(g) ? (n * (n - 1.0)) : (n * (n - 1.0)) / 2.0
+    end
+    
+    if scale != 1.0
+        res .*= scale
+    end
+    
+    return res
+end
+
+function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64, distmx::AbstractMatrix; kwargs...)
+    throw(ArgumentError("KADABRA centrality does not support weighted graphs. Please do not provide a distmx argument."))
 end
 
 
