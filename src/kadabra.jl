@@ -246,6 +246,24 @@ function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float
     throw(ArgumentError("KADABRA centrality does not support weighted graphs. Please do not provide a distmx argument."))
 end
 
+"""
+    kadabra_top_k(g::AbstractGraph, k::Int, err::Float64, delta::Float64; kwargs...)
+
+Convenience wrapper that runs KADABRA and efficiently extracts only the top `k` most central nodes.
+Returns a vector of `NamedTuple`s containing the `node` ID and its `centrality` score, sorted in descending order.
+"""
+function kadabra_top_k(g::AbstractGraph, k::Int, err::Float64, delta::Float64; kwargs...)
+    k > 0 || throw(ArgumentError("k must be greater than 0 to extract top k nodes"))
+    
+    # Run the standard Kadabra algorithm
+    centralities = kadabra_centrality(g, k, err, delta; kwargs...)
+    
+    # Efficiently find the indices of the top k nodes without doing a full sort
+    top_nodes = partialsortperm(centralities, 1:k, rev=true)
+    
+    return [(node = v, centrality = centralities[v]) for v in top_nodes]
+end
+
 
 """
     compute_f(btilde, iter_num, delta_l, omega)
