@@ -21,6 +21,10 @@ This repository contains a high-performance, multi-threaded Julia implementation
 - Safe against task migration and dynamic thread-pool scaling in Julia.
 - Implements concurrent sampling loops coordinated via thread-safe atomic counters (`n_pairs` and `stop_flag`).
 
+### 4. Full Graphs.jl API Compatibility
+- Implements the exact same `normalize` and `endpoints` keyword arguments as `Graphs.jl`'s standard `betweenness_centrality`.
+- By default, KADABRA's outputs are perfectly scaled using the standard `Graphs.jl` normalization scalars for directed/undirected graphs, rather than the raw probabilistic expected values output by the original C++ reference paper.
+
 ---
 
 ## 📂 File Directory
