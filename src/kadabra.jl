@@ -122,13 +122,13 @@ estimated betweenness is within an additive error bound with high probability.
 - `delta::Float64`: The confidence parameter. Results are guaranteed with probability `1 - delta`.
 - `start_factor::Int`: Keyword argument to scale the initial burn-in phase duration (default: 100).
 - `endpoints::Bool`: If true, include the endpoints of the sampled shortest paths in the centrality counts (default: false).
-- `normalize::Bool`: If true, normalizes the betweenness values to match Graphs.jl standard (default: true).
+- `normalize::Symbol`: How to normalize the output. `:graphs` matches Graphs.jl, `:kadabra` matches the raw KADABRA paper output, `:none` returns unnormalized counts (default: `:graphs`).
 
 # Returns
 - `Vector{Float64}`: A vector of length `nv(g)` containing the estimated betweenness centrality 
   for each vertex.
 """
-function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100, endpoints::Bool=false, normalize::Bool=true)
+function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100, endpoints::Bool=false, normalize::Symbol=:graphs)
     # --- Input validation ---
     nv(g) >= 2    || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
     err  > 0      || throw(ArgumentError("err must be positive (got $err)"))
@@ -225,14 +225,20 @@ function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float
     res = [global_approx[v] / n_pairs[] for v in 1:n]
     
     scale = 1.0
-    if normalize
+    if normalize == :graphs
         if n > 2
-            scale = (n * (n - 1.0)) / ((n - 1.0) * (n - 2.0))
+            # Graphs.jl normalizes by (N-1)(N-2) for directed, and (N-1)(N-2)/2 for undirected
+            graphs_norm = is_directed(g) ? ((n - 1.0) * (n - 2.0)) : ((n - 1.0) * (n - 2.0)) / 2.0
+            scale = (n * (n - 1.0)) / graphs_norm
         else
             scale = 0.0
         end
-    else
+    elseif normalize == :none
         scale = is_directed(g) ? (n * (n - 1.0)) : (n * (n - 1.0)) / 2.0
+    elseif normalize == :kadabra
+        scale = 1.0 # KADABRA inherently outputs the fraction of pairs, which is already normalized by N(N-1)
+    else
+        throw(ArgumentError("Unknown normalize option: $normalize. Use :graphs, :kadabra, or :none."))
     end
     
     if scale != 1.0
