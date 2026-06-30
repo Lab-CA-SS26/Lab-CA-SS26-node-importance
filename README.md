@@ -31,9 +31,12 @@ This repository contains a high-performance, multi-threaded Julia implementation
 
 The repository is structured as follows:
 
-- **`src/kadabra.jl`**: Core Julia implementation. Fully optimized with zero-allocation path sampling and O(N log K) convergence checking.
+- **`src/kadabra.jl`**: Core Julia implementation of KADABRA. Fully optimized with zero-allocation path sampling and O(N log K) convergence checking.
+- **`src/BRAVAGNN.jl`**: Implementation of the BRAVA-GNN architecture for scalable betweenness centrality estimation using SparseArrays and Flux.jl.
 - **`test/`**: Contains `test_kadabra_graphs_style.jl`, the automated unit test suite verifying correctness, sampling, and convergence against the Graphs.jl ecosystem.
 - **`benchmark/`**: Contains all benchmarking utilities:
+  - `run_benchmarks.jl`: Unified evaluation script comparing Exact Betweenness, Julia KADABRA, C++ KADABRA, and BRAVA-GNN.
+  - `BenchmarkUtils.jl`: Module handling C++ interoperability and parsing.
   - `compare_kadabra.jl`: Julia command-line driver script for loading SNAP datasets.
   - `run_benchmark.sh`: Bash script to compile the C++ binary and run both implementations back-to-back.
   - `experiments.yml`: Simexpal configuration matrix for structured benchmarks.
@@ -105,3 +108,12 @@ simex matrix
 # Execute all experiments
 simex run
 ```
+
+---
+
+## 📝 TODO / Next Steps
+
+- [ ] **Train BRAVA-GNN**: The current `run_benchmarks.jl` pipeline executes a model with random weights. We need to implement a full training script that generates training pairs using `PairwiseDataLoader` and applies the Margin Ranking Loss.
+- [ ] **Scale Benchmarking**: Add a wider array of `Instances/` networks and optionally test memory limitations across scale up to $1M+$ nodes.
+- [ ] **Heuristic Pruning Integration**: Consider integrating heuristic graph pruning to speed up exact Brandes calculation used for ground truth labels.
+- [ ] **Continuous Integration**: Setup GitHub actions to automate tests and benchmarks against C++ reference on pushes.
