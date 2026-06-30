@@ -33,11 +33,13 @@ The repository is structured as follows:
 
 - **`src/kadabra.jl`**: Core Julia implementation of KADABRA. Fully optimized with zero-allocation path sampling and O(N log K) convergence checking.
 - **`src/BRAVAGNN.jl`**: Implementation of the BRAVA-GNN architecture for scalable betweenness centrality estimation using SparseArrays and Flux.jl.
-- **`src/train_bravagnn.jl`**: The training script that applies the Margin Ranking Loss.
-- **`scripts/generate_training_data.py`**: A Python script to generate the synthetic graphs (Directed/Undirected Scale-Free and Hyperbolic Random Graphs) and exact labels.
-- **`test/`**: Contains `test_kadabra_graphs_style.jl`, the automated unit test suite verifying correctness, sampling, and convergence against the Graphs.jl ecosystem.
-- **`benchmark/`**: Contains all benchmarking utilities:
-  - `run_benchmarks.jl`: Unified evaluation script comparing Exact Betweenness, Julia KADABRA, C++ KADABRA, and BRAVA-GNN.
+- **`src/train_bravagnn.jl`**: The full training pipeline loop utilizing Pairwise Margin Ranking loss and offline exact-BC data loading.
+- **`scripts/generate_training_data.py`**: An authentic adaptation of the BRAVA-GNN original generation script. Builds Scale-Free and Hyperbolic topological instances with raw text edge and score exports.
+- **`scripts/download_datasets.py`**: An automated downloader for the 14 real-world test and calibration graphs from the SNAP/ABCDE repositories.
+- **`test/`**: Contains automated unit tests verifying KADABRA correctness against Graphs.jl.
+- **`benchmark/`**: Contains benchmarking suites:
+  - `run_benchmarks.jl`: Base execution script assessing inference time and absolute error across algorithms.
+  - `compare_topk.jl`: Specialized top-$k$ evaluation script calculating Kendall Tau and Set Overlap between KADABRA and BRAVA-GNN.
   - `BenchmarkUtils.jl`: Module handling C++ interoperability and parsing.
 - **`cpp_reference/`**: The original Borassi C++ implementation for baseline comparisons.
 - **`docs/`**: Additional reading materials:
@@ -46,22 +48,43 @@ The repository is structured as follows:
 
 ---
 
-## 🏃‍♂️ How to Run Benchmarks
+## 📦 How to get the Data
 
-The benchmark runner script (`benchmark/run_benchmarks.jl`) compiles the C++ program (if needed), loads the configured test graphs, and runs exact calculation, KADABRA (C++ and Julia), and BRAVA-GNN, and outputs the statistics to a CSV file.
+All benchmark evaluation graphs and synthetic training topologies are completely reproducible. First, ensure your Python virtual environment is activated and `networkit` is installed.
 
-### Usage:
+To fetch the 14 real-world calibration and test graphs natively into `Instances/TestInstances/`:
 ```bash
-cd benchmark
-julia run_benchmarks.jl
+source venv/bin/activate
+python scripts/download_datasets.py --calibration
 ```
-You can easily expand the evaluated datasets by appending them into the `test_files` list array inside the script.
+
+To natively generate the synthetic structural data required to train BRAVA-GNN, exported as text edge-lists to `Instances/Training/`:
+```bash
+python scripts/generate_training_data.py --datasets SF_10_Dir SF_10_Sym HY_10_Dir --num_nodes 100000
+```
 
 ---
 
-## 📝 TODO / Next Steps
+## 🏃‍♂️ Training & Experiments
 
-- [ ] **Train BRAVA-GNN**: The current `run_benchmarks.jl` pipeline executes a model with random weights. We need to implement a full training script that generates training pairs using `PairwiseDataLoader` and applies the Margin Ranking Loss.
+### Training BRAVA-GNN
+Once your training graphs exist in `Instances/Training/`, you can train the PyTorch-equivalent Flux.jl weights. Make sure to launch this on a server utilizing multiple Julia threads.
+```bash
+julia --threads=auto src/train_bravagnn.jl
+```
+This produces a `bravagnn_weights.jld2` artifact inside `benchmark/`.
+
+### Top-k Ranking Evaluation
+To evaluate whether the adaptive probabilistic halting of KADABRA outperforms the fixed inference pass of the trained BRAVA-GNN on the test set, run the top-k comparison. It will measure ranking accuracy natively using **Kendall Tau** and **Set Overlap**:
+```bash
+cd benchmark
+julia --project compare_topk.jl
+```
+
+---
+
+## 📝 Next Steps
+
 - [ ] **Scale Benchmarking**: Add a wider array of `Instances/` networks and optionally test memory limitations across scale up to $1M+$ nodes.
 - [ ] **Heuristic Pruning Integration**: Consider integrating heuristic graph pruning to speed up exact Brandes calculation used for ground truth labels.
 - [ ] **Continuous Integration**: Setup GitHub actions to automate tests and benchmarks against C++ reference on pushes.
