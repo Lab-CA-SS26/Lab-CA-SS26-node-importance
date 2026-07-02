@@ -1,12 +1,13 @@
 using Pkg
 Pkg.activate(mktempdir())
-Pkg.add(["Graphs", "SparseArrays", "DataFrames", "CSV", "Flux", "JLD2", "Random", "Statistics", "Optimisers"])
+Pkg.add(["Graphs", "SparseArrays", "DataFrames", "CSV", "Flux", "JLD2", "Random", "Statistics", "Optimisers", "CUDA"])
 
 using Graphs
 using SparseArrays
 using CSV
 using DataFrames
 using Flux
+using CUDA
 using JLD2
 using Random
 using Statistics
@@ -72,11 +73,21 @@ function train()
         X_out = compute_degree_masses(A, 5)
         X_in = compute_degree_masses(A_t, 5)
         
-        push!(training_data, (A=A, A_t=A_t, X_in=X_in, X_out=X_out, scores=scores))
+        # GPU transfer if available
+        device = CUDA.functional() ? gpu : cpu
+        
+        A_gpu = device(A)
+        A_t_gpu = device(A_t)
+        X_in_gpu = device(X_in)
+        X_out_gpu = device(X_out)
+        
+        push!(training_data, (A=A_gpu, A_t=A_t_gpu, X_in=X_in_gpu, X_out=X_out_gpu, scores=scores))
     end
     
+    device = CUDA.functional() ? gpu : cpu
+    
     # 2. Initialize Model
-    model = BRAVAModel(m_hops=5, hidden_dim=12)
+    model = BRAVAModel(m_hops=5, hidden_dim=12) |> device
     # Extract parameters for Optimisers
     ps = Flux.params(model)
     opt_state = Flux.setup(Flux.Adam(LEARNING_RATE), model)
@@ -109,7 +120,8 @@ function train()
         println("Epoch $epoch / $EPOCHS - Avg Loss: $(round(epoch_loss / max(n_batches, 1), digits=4))")
     end
     
-    # 4. Save Model
+    # 4. Save Model (Move back to CPU before saving)
+    model = model |> cpu
     save_path = joinpath(dirname(@__DIR__), "bravagnn_weights.jld2")
     @save save_path model
     println("Training complete. Model saved to $save_path")
