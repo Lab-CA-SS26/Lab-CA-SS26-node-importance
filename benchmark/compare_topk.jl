@@ -7,6 +7,7 @@ using SparseArrays
 using DataFrames
 using CSV
 using Flux
+using CUDA
 using JLD2
 using StatsBase
 
@@ -84,21 +85,37 @@ function run_topk_comparison()
         println("No trained weights found. Using random initialized BRAVA-GNN weights.")
     end
     
-    println("Running BRAVA-GNN...")
+    device = CUDA.functional() ? gpu : cpu
+    if CUDA.functional()
+        println("Using CUDA GPU for BRAVA-GNN inference...")
+    else
+        println("Using CPU for BRAVA-GNN inference...")
+    end
+    
+    model = model |> device
+
+    println("Running BRAVA-GNN warmup...")
     # Warmup
     A = sparse(g)
     A_t = A'
     X_out = compute_degree_masses(A, 5)
     X_in = compute_degree_masses(A_t, 5)
-    _ = model(A, A_t, X_in, X_out)
     
+    A_gpu = device(A)
+    A_t_gpu = device(A_t)
+    X_in_gpu = device(X_in)
+    X_out_gpu = device(X_out)
+    
+    _ = model(A_gpu, A_t_gpu, X_in_gpu, X_out_gpu)
+    if CUDA.functional() CUDA.synchronize() end
+    
+    println("Running BRAVA-GNN evaluation...")
     brava_time = @elapsed begin
-        A_sp = sparse(g)
-        A_sp_t = A_sp'
-        X_out_sp = compute_degree_masses(A_sp, 5)
-        X_in_sp = compute_degree_masses(A_sp_t, 5)
-        brava_scores = model(A_sp, A_sp_t, X_in_sp, X_out_sp)
+        brava_scores = model(A_gpu, A_t_gpu, X_in_gpu, X_out_gpu)
+        if CUDA.functional() CUDA.synchronize() end
     end
+    
+    brava_scores = brava_scores |> cpu
     println("BRAVA-GNN finished in $(round(brava_time, digits=2)) seconds.")
     
     # 3. KADABRA evaluation
