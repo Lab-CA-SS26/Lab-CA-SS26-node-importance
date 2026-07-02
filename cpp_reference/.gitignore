@@ -1,0 +1,4 @@
+# Ignore build outputs
+/kadabra
+/kadabra.dSYM/
+.DS_Store

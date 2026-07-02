@@ -1,0 +1,13 @@
+Undirected graph
+Number of nodes: 4039
+Number of edges: 176468
+
+Finished after 28974 iterations.
+Edges visited: 180665639
+Average edges visited: 6235
+Total time: 0.0821121
+Time bfs: 0.0715501
+Time critical: 0.00256491
+Time compute finished: 0.000231743
+(Printing thread: 0)
+Maximum confidence interval: 0.0126317
