@@ -88,8 +88,6 @@ function train()
     
     # 2. Initialize Model
     model = BRAVAModel(m_hops=5, hidden_dim=12) |> device
-    # Extract parameters for Optimisers
-    ps = Flux.params(model)
     opt_state = Flux.setup(Flux.Adam(LEARNING_RATE), model)
     
     # 3. Training Loop
