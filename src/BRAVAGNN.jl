@@ -74,7 +74,10 @@ Flux.@layer BRAVALayer
 # (W * X) * A applies the sparse aggregation over neighbors
 # Notice that A here corresponds to outgoing edge propagation.
 function (l::BRAVALayer)(X::AbstractMatrix, A)
-    return norm2_features(relu.(l.W * X * A))
+    Z = l.W * X
+    # Convert Dense * Sparse into (Sparse^T * Dense^T)^T to leverage fast cuSPARSE Sparse * Dense routines
+    out = copy((A' * Z')')
+    return norm2_features(relu.(out))
 end
 
 """
