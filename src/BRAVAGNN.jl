@@ -135,8 +135,8 @@ function (m::BRAVAModel)(A, A_t, X_in::AbstractMatrix, X_out::AbstractMatrix)
         # Incoming stream uses A for aggregation in the paper, which corresponds to A_t in our column-major math
         H_in  = layer(H_in, A_t)
         
-        y_out .+= vec(m.mlp(H_out))
-        y_in  .+= vec(m.mlp(H_in))
+        y_out = y_out .+ vec(m.mlp(H_out))
+        y_in  = y_in .+ vec(m.mlp(H_in))
     end
     
     # Multiplicative Score Fusion
