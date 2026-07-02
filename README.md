@@ -55,12 +55,12 @@ All benchmark evaluation graphs and synthetic training topologies are completely
 To fetch the 14 real-world calibration and test graphs natively into `Instances/TestInstances/`:
 ```bash
 source venv/bin/activate
-python scripts/download_datasets.py --calibration
+python3 scripts/download_datasets.py --calibration
 ```
 
-To natively generate the synthetic structural data required to train BRAVA-GNN, exported as text edge-lists to `Instances/Training/`:
+To natively generate the synthetic structural data required to train BRAVA-GNN, exported as text edge-lists to `Instances/Training/`. We exclude Hyperbolic (`HY`) graphs to match the optimal `-HY` model discussed in the paper:
 ```bash
-python scripts/generate_training_data.py --datasets SF_10_Dir SF_10_Sym HY_10_Dir --num_nodes 100000
+python3 scripts/generate_training_data.py --datasets SF_10_Dir SF_10_Sym --num_nodes 100000
 ```
 
 ---
@@ -68,11 +68,11 @@ python scripts/generate_training_data.py --datasets SF_10_Dir SF_10_Sym HY_10_Di
 ## 🏃‍♂️ Training & Experiments
 
 ### Training BRAVA-GNN
-Once your training graphs exist in `Instances/Training/`, you can train the PyTorch-equivalent Flux.jl weights. Make sure to launch this on a server utilizing multiple Julia threads.
+Once your training graphs exist in `Instances/Training/`, you can train the PyTorch-equivalent Flux.jl weights. The script natively supports **CUDA.jl** and will automatically transfer the model and sparse graph matrices to an NVIDIA GPU if one is detected on your server!
 ```bash
-julia --threads=auto src/train_bravagnn.jl
+julia --project --threads=auto src/train_bravagnn.jl
 ```
-This produces a `bravagnn_weights.jld2` artifact inside `benchmark/`.
+This produces a `bravagnn_weights.jld2` artifact in the root directory.
 
 ### Top-k Ranking Evaluation
 To evaluate whether the adaptive probabilistic halting of KADABRA outperforms the fixed inference pass of the trained BRAVA-GNN on the test set, run the top-k comparison. It will measure ranking accuracy natively using **Kendall Tau** and **Set Overlap**:
