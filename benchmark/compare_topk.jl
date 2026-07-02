@@ -68,11 +68,21 @@ function run_topk_comparison()
     n = nv(g)
     
     # 1. Ground Truth (Exact BC)
-    println("Calculating exact betweenness (this may take a while)...")
-    exact_time = @elapsed begin
-        exact_scores = betweenness_centrality(g, normalize=true)
+    dataset_name = basename(TEST_FILE)
+    cache_file = joinpath(@__DIR__, "$(dataset_name)_exact_bc.jld2")
+    
+    if isfile(cache_file)
+        println("Loading cached exact betweenness centrality from $cache_file...")
+        @load cache_file exact_scores
+        exact_time = 0.0
+    else
+        println("Calculating exact betweenness (this may take a while)...")
+        exact_time = @elapsed begin
+            exact_scores = betweenness_centrality(g, normalize=true)
+        end
+        println("Exact calculation finished in $(round(exact_time, digits=2)) seconds. Saving to cache...")
+        @save cache_file exact_scores
     end
-    println("Exact calculation finished in $(round(exact_time, digits=2)) seconds.")
     
     # 2. BRAVA-GNN setup
     model = BRAVAModel(m_hops=5, hidden_dim=12)
