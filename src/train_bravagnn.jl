@@ -103,6 +103,7 @@ function train()
             loader = PairwiseDataLoader(Float32.(data.scores), BATCH_SIZE, 50)
             
             for batch in loader
+                u, v, y = batch
                 u_gpu = device(u)
                 v_gpu = device(v)
                 y_gpu = device(y)
