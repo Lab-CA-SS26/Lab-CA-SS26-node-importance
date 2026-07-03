@@ -70,7 +70,22 @@ end
 
 Flux.@layer BRAVALayer
 
-using Flux.Zygote: dropgrad
+using ChainRulesCore
+
+# Custom sparse-dense multiplication to explicitly bypass Adjacency matrix gradient computation.
+# This prevents Zygote/ChainRules from allocating a 37GB dense matrix for ΔA = ΔY * B'.
+sparse_dense_mul(A, B) = A * B
+
+function ChainRulesCore.rrule(::typeof(sparse_dense_mul), A, B)
+    Y = A * B
+    function sparse_dense_mul_pullback(ΔY)
+        # Only compute the gradient for the features (B). 
+        # Gradient for the sparse adjacency matrix (A) is completely skipped.
+        ΔB = A' * unthunk(ΔY)
+        return (NoTangent(), NoTangent(), ΔB)
+    end
+    return Y, sparse_dense_mul_pullback
+end
 
 # W * X applies the feature transformation
 # (W * X) * A applies the sparse aggregation over neighbors
@@ -78,8 +93,8 @@ using Flux.Zygote: dropgrad
 function (l::BRAVALayer)(X::AbstractMatrix, A_transposed)
     Z = l.W * X
     # Convert Dense * Sparse into (Sparse^T * Dense^T)^T to leverage fast cuSPARSE Sparse * Dense routines
-    # We drop the gradient of A_transposed to prevent Zygote from allocating 37GB trying to compute its gradient!
-    out = copy((dropgrad(A_transposed) * Z')')
+    # We use our custom sparse_dense_mul to guarantee no gradient is computed for A_transposed.
+    out = copy(sparse_dense_mul(A_transposed, Z')')
     return norm2_features(relu.(out))
 end
 
