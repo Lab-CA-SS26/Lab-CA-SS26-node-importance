@@ -1,6 +1,6 @@
 using Pkg
 Pkg.activate(".")
-Pkg.add(["Graphs", "SparseArrays", "DataFrames", "CSV", "Flux", "JLD2", "Random", "Statistics", "Optimisers", "CUDA"])
+Pkg.add(["Graphs", "SparseArrays", "DataFrames", "CSV", "Flux", "JLD2", "Random", "Statistics", "Optimisers", "CUDA", "cuDNN"])
 
 using Graphs
 using SparseArrays
@@ -8,6 +8,7 @@ using CSV
 using DataFrames
 using Flux
 using CUDA
+using cuDNN
 using JLD2
 using Random
 using Statistics
