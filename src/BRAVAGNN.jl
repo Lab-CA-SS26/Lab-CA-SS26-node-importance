@@ -70,13 +70,16 @@ end
 
 Flux.@layer BRAVALayer
 
+using Zygote: dropgrad
+
 # W * X applies the feature transformation
 # (W * X) * A applies the sparse aggregation over neighbors
 # Notice that A here corresponds to outgoing edge propagation.
 function (l::BRAVALayer)(X::AbstractMatrix, A_transposed)
     Z = l.W * X
     # Convert Dense * Sparse into (Sparse^T * Dense^T)^T to leverage fast cuSPARSE Sparse * Dense routines
-    out = copy((A_transposed * Z')')
+    # We drop the gradient of A_transposed to prevent Zygote from allocating 37GB trying to compute its gradient!
+    out = copy((dropgrad(A_transposed) * Z')')
     return norm2_features(relu.(out))
 end
 
