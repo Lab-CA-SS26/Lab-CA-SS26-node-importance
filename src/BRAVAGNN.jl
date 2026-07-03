@@ -70,7 +70,7 @@ end
 
 Flux.@layer BRAVALayer
 
-using Zygote: dropgrad
+using Flux.Zygote: dropgrad
 
 # W * X applies the feature transformation
 # (W * X) * A applies the sparse aggregation over neighbors
