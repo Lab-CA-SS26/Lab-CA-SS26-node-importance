@@ -104,12 +104,10 @@ function train()
             
             for batch in loader
                 u, v, y = batch
-                u_gpu = device(u)
-                v_gpu = device(v)
-                y_gpu = device(y)
                 loss_val, grads = Flux.withgradient(model) do m
                     preds = m(data.A, data.A_t, data.X_in, data.X_out)
-                    margin_ranking_loss(preds, u_gpu, v_gpu, y_gpu)
+                    preds_cpu = cpu(preds)
+                    margin_ranking_loss(preds_cpu, u, v, y)
                 end
                 
                 Flux.update!(opt_state, model, grads[1])
