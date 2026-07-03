@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(mktempdir())
+Pkg.activate(".")
 Pkg.add(["Graphs", "SparseArrays", "DataFrames", "CSV", "Flux", "JLD2", "Random", "Statistics", "Optimisers", "CUDA"])
 
 using Graphs
