@@ -73,10 +73,10 @@ Flux.@layer BRAVALayer
 # W * X applies the feature transformation
 # (W * X) * A applies the sparse aggregation over neighbors
 # Notice that A here corresponds to outgoing edge propagation.
-function (l::BRAVALayer)(X::AbstractMatrix, A)
+function (l::BRAVALayer)(X::AbstractMatrix, A_transposed)
     Z = l.W * X
     # Convert Dense * Sparse into (Sparse^T * Dense^T)^T to leverage fast cuSPARSE Sparse * Dense routines
-    out = copy((A' * Z')')
+    out = copy((A_transposed * Z')')
     return norm2_features(relu.(out))
 end
 
@@ -133,10 +133,10 @@ function (m::BRAVAModel)(A, A_t, X_in::AbstractMatrix, X_out::AbstractMatrix)
     
     # --- Dual Message Passing ---
     for layer in m.layers
-        # Outgoing stream uses A_t for aggregation in the paper, which corresponds to A in our column-major math
-        H_out = layer(H_out, A)
-        # Incoming stream uses A for aggregation in the paper, which corresponds to A_t in our column-major math
-        H_in  = layer(H_in, A_t)
+        # Outgoing stream uses A, so we pass its transpose A_t
+        H_out = layer(H_out, A_t)
+        # Incoming stream uses A_t, so we pass its transpose A
+        H_in  = layer(H_in, A)
         
         y_out = y_out .+ vec(m.mlp(H_out))
         y_in  = y_in .+ vec(m.mlp(H_in))
