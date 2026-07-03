@@ -68,7 +68,7 @@ function train()
         scores = scores_df.betweenness
         
         # Precompute degree masses
-        A = sparse(g)
+        A = Float32.(sparse(g))
         A_t = A'
         
         X_out = compute_degree_masses(A, 5)
