@@ -70,7 +70,8 @@ end
 
 Flux.@layer BRAVALayer
 
-using Flux.ChainRulesCore: rrule, unthunk, NoTangent
+import Flux.ChainRulesCore: rrule
+using Flux.ChainRulesCore: unthunk, NoTangent
 
 # Custom sparse-dense multiplication to explicitly bypass Adjacency matrix gradient computation.
 # This prevents Zygote/ChainRules from allocating a 37GB dense matrix for ΔA = ΔY * B'.
