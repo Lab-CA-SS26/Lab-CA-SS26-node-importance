@@ -1,0 +1,131 @@
+\chapter{Experimental Setup}
+
+
+\section{Hardware}
+
+The experiments were conducted on a server equipped with an \textbf{AMD EPYC 7402P 24-Core processor}
+clocked at \textbf{2.80 GHz}.
+The processor features \textbf{24 cores}, each with \textbf{2 threads}, and is supported by \textbf{256\,GiB of RAM}.
+Cache specifications include \textbf{768\,KiB L1d}, \textbf{768\,KiB L1i}, \textbf{12\,MiB L2}, and \textbf{128\,MiB L3}.
+The operating system used was \textbf{Ubuntu 22.04.4 LTS}.
+
+The project was implemented in \textbf{C++20} and compiled using \textbf{CMake version 3.25.1} with \textbf{GNU 11.4.0}.
+
+%The experiments were performed on an \textbf{Apple MacBook Pro (14-inch, 2023 model)},
+%powered by an \textbf{Apple M2 Max System-on-a-Chip (SoC)}.
+%The M2 Max features a \textbf{12-core CPU} (comprising 8 performance cores and 4 efficiency cores)
+%and includes a \textbf{38-core GPU}, along with a \textbf{16-core Neural Engine}.
+%The system was configured with \textbf{64\,GiB of unified memory} and a \textbf{1\,TB solid-state drive (SSD)}.
+%The operating system was \textbf{macOS Sequoia 15.5}.
+%The project was implemented in \textbf{C++20} and compiled using \textbf{CMake version 3.26.3} with \textbf{Apple Clang 17.0.0}.
+\textbf{Simexpal 1.1}~\parencite{simexpal2019} was used to conduct the experiments.
+
+
+\section{Implementation}\label{sec:implementation}
+As basis for the implementation serves the framework for parametric maximum flow created by \textcite{beines_simpler_2024} in which we included the implementation of
+pseudoflow and PPF by \textcite{Sauer_PPF_2025}.
+Using these implementation of push relabel, pseudoflow, PBFS and PPF we implemented the Algorithms for DSP as described above.
+For Greedy++ we based it on the implementation by \textcite{boob_flowless_2020}.
+For a fairer comparison we adapted this implementation to use the same C++ datastructures and encapsulate it in a class, as
+we did with the flow based algorithms.
+Since constructing the flow network (Section~\ref{sec:reduction_to_flow}) plays an important role in the runtime for parametric maximum flow,
+we therefore must also include the initiation of the necessary data structures for Greedy++.
+%All algorithms receive the previously read edge list(see \ref{sec:Instances} for details).
+
+
+\section[Instances]{Instances}\label{sec:Instances}
+
+For comparability, we use the same instances as \textcite{boob_flowless_2020}.
+A variety of instances are obtained from the SNAP database~\parencite{leskovec_snap_2014},
+ASU’s Social Computing Data Repository~\parencite{zafarani_social_2009}, and the Koblenz Network Collection
+\parencite{kunegis_konect_2013}.
+Directionality is ignored and duplicate edges are removed.
+All graphs are treated as unweighted.
+\textcite{boob_flowless_2020} also include signed networks but do not explain how they handle these,
+even though the problem is NP-hard on signed graphs.
+Thus, in our experiments we ignore edge signs in signed networks.
+They use one instance from BioGRID~\parencite{stark_biogrid_2006},
+but do not specify which one, so this instance cannot be used.
+
+All unweighted instances used in our experiments are listed in Table~\ref{tab:unweighted_instances}
+\begin{table}[h]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \input{tables/instance_table_unweighted}
+    }
+    \caption{Overview of unweighted instances: $n$ is the number of vertices, $m$ the number of edges, $\lambda^*$ and $|S^*|$ denote the density and size of the densest subgraph, $var(\deg(v)$ the variance of the vertex degree and
+        $u$ is the upper-bound used by {\DSPwithFBA} which is half of the maximum node degree. Optimal values are those from the $IPC_{PR}$ run.
+    Sources: [1] KONECT~\parencite{kunegis_konect_2013}, [2] Zafrani~\parencite{zafarani_social_2009}; unmarked instances are from SNAP~\parencite{leskovec_snap_2014}.    }
+    \label{tab:unweighted_instances}
+\end{table}
+
+The instances \texttt{Ego-twitter} and \texttt{ego-gplus} contain seemingly arbitrary indices that have up to 12 digits.
+Because our algorithms cannot process these large numbers, we first converted the indices
+to a continuous range beginning with zero.
+
+\textcite{boob_flowless_2020} mention using a Twitter graph set~\parencite{sotiropoulos_twittermancer_2019}
+for weighted graphs, and we include these instances while using the frequency of an edge as its weight.
+
+Since these four weighted instances seem to be a litte few, we used all matrices from the Sparse Matrix Collection (SPMC) by \textcite{davis_university_2011} marked as \emph{undirected weighted graph}.
+All these weighted instances used in our experiments are listed in Table~\ref{tab:weighted_instances}
+\begin{table}[h]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \input{tables/instance_table_weighted}
+    }
+    \caption{Overview of weighted instances: $n$ is the number of vertices, $m$ the number of edges, $\lambda^*$ and $|S^*|$ denote the density and size of the densest subgraph, $var(\deg(v)$ the variance of the weighted vertex degree and
+        $u$ is the upper-bound used by {\DSPwithFBA} which is half of the maximum node degree. Optimal values are those from the $IPC_{PR}$ run.
+    Sources: all four twitter instaces from \textcite{sotiropoulos_twittermancer_2019}, all other instances from the SPMC \parencite{davis_university_2011}.    }
+    \label{tab:weighted_instances}
+\end{table}
+
+\newpage
+\section[Algorithm Performance Metrics]{Algorithm Performance Metrics}
+\label{sec:algorithm-performance-metrics}
+%Additionally, for  \emph{IPC} and \emph{DSPwithIntersect} algorithms, we recorded the number of iterations performed,
+We conducted a detailed performance analysis of each exact algorithm on every graph instance.
+For the exact methods, we recorded two primary metrics:
+\begin{enumerate}
+    \item the time required to construct the flow network,
+    \item the runtime of the algorithm.
+\end{enumerate}
+
+For \emph{Greedy++}, we evaluated its performance as an approximation algorithm.
+Given the optimal solution value, we specified target percentages
+$(0.80, 0.90, 0.95, 0.99, 1.00)$ and measured both runtime and number of iterations
+until the algorithm achieved at least each target fraction of the optimum.
+Following \textcite{boob_flowless_2020} and confirmed by our experiments that
+three iterations always reach at least 90\% of the optimum for the unweighted instances,
+we also executed Greedy++ with exactly three iterations and recorded its runtime.
+
+All experiments were repeated on both the original and the \emph{pruned} graphs
+(see Chapter~\ref{ch:pruning}).
+For pruning we tracked the pruning time and the resulting graph size.
+
+Each algorithm–instance pair was run five times with a 30-minute time limit;
+we report the median of these runs.
+For pruning statistics we used the median of all instances and runs.
+
+Throughout this thesis we use the following shorthand:
+\begin{itemize}
+    \item \textbf{PF}: IPC or {\DSPwithR} using pseudoflow, depending on context.
+    \item \textbf{PR}: IPC or {\DSPwithR} using push–relabel, depending on context.
+    \item \textbf{FPPF}: {\DSPwithFBA} using parametric pseudoflow.
+    \item \textbf{FPBFS}: {\DSPwithFBA} using parametric breadth-first search.
+    \item \textbf{G-XX}: Greedy++ run until XX\% of the optimum is reached (e.g., G-90).
+    \item \textbf{G-3}: Greedy++ run for exactly three iterations.
+    \item \textbf{P-X}: Pruning Version.
+\end{itemize}
+
+
+
+
+
+%
+%livehournal groupmemberships timeout bei peeler100 und pbfs->immernoch, aber das einzige
+%orkut-links bei peeler100 -> weiterhin.
+%twitter follows bei fpbfs-> immernoch, aber nur bei nicht reduced.
+%
+%Hab jetzt nur die instanzen aus flowless: also alle entfernt, besonders diese hier, weil funtkionierte nicht:
+%Instanz rausgenommen: US-Airport_2010 bei Peeler 80 weighted
+%US-Airport500 komische density 12184817 bei Peeler 80 weighted

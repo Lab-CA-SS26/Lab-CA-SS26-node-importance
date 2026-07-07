@@ -1,0 +1,65 @@
+\section[Betweenness Ranking Approximation]{Betweenness Ranking Approximation}\label{sec:betweenness-ranking-approximation}
+
+The betweenness centrality of a node measures its importance as a bridge or bottleneck based on the fraction of all shortest paths passing through
+ it~\parencite{freeman1977set,brandes_faster_2001}.
+ Given an unweighted graph $G=(V,E)$, let $\sigma_{s,t}$ denote the total number of shortest paths from node $s$ to node $t$,
+  and let $\sigma_{s,t}(v)$ be the number of those paths that pass through $v \in V$.
+The exact betweenness centrality $C_B(v)$ of a vertex $v$ is formally defined as:
+
+\begin{equation}
+    C_B(v) = \sum_{s \neq v \neq t \in V} \frac{\sigma_{s,t}(v)}{\sigma_{s,t}} \label{eq:betweenness-def}
+\end{equation}
+
+where $\frac{\sigma_{s,t}(v)}{\sigma_{s,t}} = 0$ if $\sigma_{s,t} = 0$~\parencite{brandes2001faster}. In literature and practical network libraries, normalized variants are commonly used to ensure scale-invariance across different graph sizes.
+
+The standard normalization factor depends on whether the source and target node pairs can include $v$ in their normalization pool. For instance, the Julia \texttt{Graphs.jl} library normalizes by dividing by the total number of pairs excluding $v$:
+
+\begin{equation}
+    C_B(v) = \frac{1}{(n-1)(n-2)}\sum_{s \neq v \neq t \in V} \frac{\sigma_{s,t}(v)}{\sigma_{s,t}} \label{eq:betweenness-julia}
+\end{equation}
+
+Alternatively, the adaptive approximation algorithm \textsc{Kadabra} treats betweenness centrality probabilistically~\parencite{borassi_kadabra_2019}.
+It frames the metric as the exact probability that a shortest path $\pi$ between two uniformly selected random nodes $s$ and $t$
+ passes through $v$~\parencite{borassi2019kadabra}.
+Following the convention where the sum includes cases where $\sigma_{s,t}(v)=0$ whenever $s=v$ or $t=v$,
+the normalized centrality is expressed as:
+
+\begin{equation}
+    C_B(v) = \frac{1}{n(n-1)} \sum_{s \neq t \in V} \frac{\sigma_{s,t}(v)}{\sigma_{s,t}} \label{eq:betweenness-kadabra}
+\end{equation}
+
+
+\subsection{Betweenness Ranking Approximation Problem}
+ Given the prohibitive $O(|V||E|)$ exact computation cost of Brandes' algorithm on massive networks,
+ the goal of the \emph{Betweenness Ranking Approximation Problem} is to learn a size-invariant function $f: V \rightarrow \mathbb{R}$
+that maps each node to a real-valued score $f(v)$ such that the induced relative ordering maximizes the ordinal correlation 
+with the true centrality hierarchy:
+
+\begin{equation}
+    \max_{f} \tau \left( \mathcal{R}(f(V)), \mathcal{R}(C_B(V)) \right) \label{eq:ranking-objective}
+\end{equation}
+
+Where $\mathcal{R}(\cdot)$ represents the rank operator, and $\tau$ denotes a ranking index such as the Kendall Tau correlation coefficient.
+
+This formulation allows the estimation to be generalized natively across edge-weighted or directed graph structures.
+ For directed representations, the flow maps independent path dynamics from incoming and outgoing topologies before scoring fusion ($w_{u,v}=1$ for structural baselines).
+
+For later structural representation, we define the $m$-th order multi-hop degree mass of a node vector as:
+\begin{equation}
+    d^{(m)}=\left(\sum_{k=0}^{m}A^{k}\right)d
+\end{equation}
+as the cumulative structural neighborhood volume within $m$ hops, where $A$ represents the graph adjacency matrix and $d$ is the standard degree vector. In strictly local configurations, $m=1$ holds.
+
+The problem is equivalent to preserving topological dominance hierarchies without minimizing absolute regression errors.
+ For high-diameter configurations like spatial road networks, structural regularities produce strict discrete symmetry boundaries,
+  causing standard scale-free embeddings to experience over-smoothing.
+   By shifting the inputs to size-invariant degree masses, long-range structural bottlenecks are captured efficiently
+    within a lightweight parameter footprint.
+
+\begin{align}
+    \mathcal{L}(s_u, s_v, y) & = \max(0, 1 - y \cdot (s_u - s_v))
+\end{align}
+
+Since exact deep architectures for this structural proxy require representative generative training,
+ formulations leverage synthetic hyperplanes such as the hyperbolic random graph model to calibrate power-law
+  degree variations outside standard scale-free assumptions prior to message passing.

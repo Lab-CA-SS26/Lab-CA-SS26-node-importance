@@ -1,0 +1,63 @@
+\chapter[Conclusion]{Conclusion}
+
+This thesis presents a comprehensive empirical evaluation of exact and approximation algorithms for the Densest Subgraph Problem (DSP), challenging the conventional assumption that approximation methods are always preferable for large-scale graphs.
+Through systematic experimentation on 47 real-world graph instances, we demonstrate that modern exact algorithms can compete with and even occasionally outperform, established approximation techniques.
+
+We introduced and evaluated two novel exact algorithms:
+\textbf{DSP-FBA}, which leverages first-breakpoint parametric flow techniques, and \textbf{DSP-Intersect}, which uses an intersection-based approach with restartable maximum flow similar to \textcite{hochbaum_flow_2024} Incremental Parametric Cut procedure (IPC).
+Additionally, we provided the first comprehensive evaluation IPC for the DSP, given that their own empirical study is not publicly available.
+All exact algorithms exploit the properties of monotone parametric minimum cuts to avoid repeated static maximum flow computations, resulting in significant performance improvements over traditional approaches.
+
+Our comparative analysis shows that \textbf{IPC consistently outperforms \DSPwithR} when using identical underlying flow algorithms, primarily due to IPC's more efficient parameter value calculation,
+particularly as the densest subgraph component shrinks.
+
+Among the first breakpoint flow algorithms, \textbf{DSP-FBA using parametric pseudo flow (PPF)} demonstrates superior performance compared to parametric breadth-first search (PBFS), with DSP-FBA using PPF achieving speedups of 1.25 to 5.18 over the PBFS version.
+
+A key finding contradicts prior claims that exact algorithms are magnitudes slower than approximation methods.
+On unweighted graphs, exact algorithms require at most 3.06 the runtime of Greedy++ with three iterations, making them viable when optimal solutions are required.
+This small performance gap is minimal considering the guarantee of optimality offered by exact methods.
+We identified \textbf{degree variance} as the primary factor determining algorithm performance on unweighted graphs.
+This leads to selection guidelines: \textbf{DSP-FBA with FPPF} excels on low-variance graphs ($<1\,250$), \textbf{IPC with Push-Relabel} performs best on high-variance instances ($>30\,000$), and both approaches are comparable on medium-variance graphs.
+For weighted instances, we could not identify a trend when which exact algorithm performs best, but {\DSPwithFBA} with FPPF generally emerges as the fastest algorithm.
+
+
+Our experiments further demonstrate that the effectiveness of graph pruning strongly depends on both the graph structure and edge weight characteristics.
+
+For unweighted graphs with high degree variance, pruning is highly beneficial: removing low-degree nodes can reduce the number of vertices by up to $100\,000\times$ and the number of edges by over $1\,300\times$.
+This substantially simplifies the graph and accelerates exact algorithms.
+Conversely, for low-variance graphs such as the roadNet instances, pruning provides minimal reduction, and the time spent pruning outweighs any computational savings.
+
+When pruning is effective, the variance of the resulting smaller instances changes.
+For these small instances, {\DSPwithFBA} with FPPF again emerges as the best exact algorithm, while IPC performs better on high-variance instances after pruning.
+Even Greedy++ benefits from pruning when running for three iterations, as each iteration profits from the reduced runtime.
+Comparing Greedy++ to the exact algorithm while distinguishing between small and large instances, the maximum remaining speedup is only 1.46,
+with the median being just 4\% faster than IPC$_{PF}$ and 6\% faster than IPC$_{PR}$.
+Compared to the unpruned version of Greedy++, pruned exact algorithms always run faster, in median more than 2 times as fast.
+After pruning the choice between PR and PF shows nearly no significant difference in performance.
+
+For weighted graphs, pruning is generally ineffective.
+The greedy algorithm used for pruning runs more slowly due to the underlying data structures, and the total runtime usually increases when pruning is applied.
+Median speedups drop below 1 when pruning time is included, suggesting that algorithms should typically be applied directly to the original weighted graph.
+Pruning only proved effective on the largest instance, indicating that it is useful for weighted graphs only when they are extremely large.
+
+From these observations, several practical guidelines emerge:
+
+\begin{enumerate}
+    \item
+    Do not apply pruning {on unweighted graphs with very low degree variance}.
+    Instead, use {\DSPwithFBA} with FPPF directly.
+    \item
+    For unweighted graphs, choose {IPC$_{PR}$} when the pruned degree variance is high and {\DSPwithFBA} with FPPF when it is low.    We observed a threshold around $1\,250$.
+
+    \item Pruning on weighted instances appears beneficial only for the largest graphs.
+        Therefore, avoid pruning on most weighted instances unless the graphs are extremely large or your computer cannot handle them.
+        On weighted graphs {\DSPwithFBA} with FPPF was generally the fastest.
+\end{enumerate}
+
+These findings carry broad practical significance.
+Practitioners should not default to approximation methods, instead algorithm choice should reflect graph characteristics and solution requirements.
+When precision is critical, exact algorithms offer a feasible path to optimal solutions within reasonable computational limits.
+The implications extend beyond DSP to other combinatorial optimization problems expressible as parametric flow.
+This work highlights the promise of modern exact algorithms in real-world contexts and provides a framework for evaluating algorithms across both theoretical complexity and empirical performance.
+Future research may extend this analysis to additional graph families, develop adaptive algorithms that switch between exact and approximate methods in real time, and explore hybrid approaches that blend both paradigms.
+It could also investigate whether partial pruning, such as removing only a subset of low-degree nodes, improves runtime or develop efficient techniques for computing stronger initial bounds for exact algorithms.

@@ -1,0 +1,1223 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nyt/global//global/global}
+    \entry{simexpal2019}{article}{}
+      \name{author}{7}{}{%
+        {{hash=4df9ee951f9164550a0978a79d60ccee}{%
+           family={Angriman},
+           familyi={A\bibinitperiod},
+           given={Eugenio},
+           giveni={E\bibinitperiod}}}%
+        {{hash=2eab7df51223aeffead87bdd34b3412f}{%
+           family={Grinten},
+           familyi={G\bibinitperiod},
+           given={Alexander},
+           giveni={A\bibinitperiod},
+           prefix={van\bibnamedelima der},
+           prefixi={v\bibinitperiod\bibinitdelim d\bibinitperiod}}}%
+        {{hash=eaa03daab70da42eb3a2a935560eb23d}{%
+           family={Looz},
+           familyi={L\bibinitperiod},
+           given={Moritz},
+           giveni={M\bibinitperiod},
+           prefix={von},
+           prefixi={v\bibinitperiod}}}%
+        {{hash=4a374125915b3960914c8d26d052ff0b}{%
+           family={Meyerhenke},
+           familyi={M\bibinitperiod},
+           given={Henning},
+           giveni={H\bibinitperiod}}}%
+        {{hash=5b74bae0077b65f428e92cfda7ee88bd}{%
+           family={Nöllenburg},
+           familyi={N\bibinitperiod},
+           given={Martin},
+           giveni={M\bibinitperiod}}}%
+        {{hash=0d19edc7cbc305f8958dcf46f53b7505}{%
+           family={Predari},
+           familyi={P\bibinitperiod},
+           given={Maria},
+           giveni={M\bibinitperiod}}}%
+        {{hash=3ee183aef5d829da4a3b19bee0cdada0}{%
+           family={Tzovas},
+           familyi={T\bibinitperiod},
+           given={Charilaos},
+           giveni={C\bibinitperiod}}}%
+      }
+      \strng{namehash}{5cfd97f031ea2ad3cb4e9cb7a9548e8a}
+      \strng{fullhash}{d7bddbb03f4f2d891a77e6c180ce3911}
+      \strng{bibnamehash}{d7bddbb03f4f2d891a77e6c180ce3911}
+      \strng{authorbibnamehash}{d7bddbb03f4f2d891a77e6c180ce3911}
+      \strng{authornamehash}{5cfd97f031ea2ad3cb4e9cb7a9548e8a}
+      \strng{authorfullhash}{d7bddbb03f4f2d891a77e6c180ce3911}
+      \field{sortinit}{A}
+      \field{sortinithash}{2f401846e2029bad6b3ecc16d50031e2}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1999-4893}
+      \field{journaltitle}{Algorithms}
+      \field{number}{7}
+      \field{title}{Guidelines for Experimental Algorithmics: A Case Study in Network Analysis}
+      \field{volume}{12}
+      \field{year}{2019}
+      \verb{doi}
+      \verb 10.3390/a12070127
+      \endverb
+    \endentry
+    \entry{arora_multiplicative_2012}{article}{}
+      \name{author}{3}{}{%
+        {{hash=8e08b59145b9531815169c7ed0a0b055}{%
+           family={Arora},
+           familyi={A\bibinitperiod},
+           given={Sanjeev},
+           giveni={S\bibinitperiod}}}%
+        {{hash=0b3d32703edd2b7248e8e8f33c5893db}{%
+           family={Hazan},
+           familyi={H\bibinitperiod},
+           given={Elad},
+           giveni={E\bibinitperiod}}}%
+        {{hash=242f1e04780dc61a8b1752c18a41532d}{%
+           family={Kale},
+           familyi={K\bibinitperiod},
+           given={Satyen},
+           giveni={S\bibinitperiod}}}%
+      }
+      \strng{namehash}{ab405688b3c276098991bcafe5da7076}
+      \strng{fullhash}{4517a4c6dd4e6d4dc969408129bdd494}
+      \strng{bibnamehash}{4517a4c6dd4e6d4dc969408129bdd494}
+      \strng{authorbibnamehash}{4517a4c6dd4e6d4dc969408129bdd494}
+      \strng{authornamehash}{ab405688b3c276098991bcafe5da7076}
+      \strng{authorfullhash}{4517a4c6dd4e6d4dc969408129bdd494}
+      \field{sortinit}{A}
+      \field{sortinithash}{2f401846e2029bad6b3ecc16d50031e2}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{day}{1}
+      \field{journaltitle}{Theory of Computing}
+      \field{month}{5}
+      \field{note}{Number: 6 Publisher: Theory of Computing}
+      \field{shorttitle}{The Multiplicative Weights Update Method}
+      \field{title}{The Multiplicative Weights Update Method: a Meta-Algorithm and Applications}
+      \field{volume}{8}
+      \field{year}{2012}
+      \field{dateera}{ce}
+      \field{pages}{121\bibrangedash 164}
+      \range{pages}{44}
+      \verb{doi}
+      \verb 10.4086/toc.2012.v008a006
+      \endverb
+      \verb{file}
+      \verb Theory of computing Full Text PDF:/Users/martinschlaier/Zotero/storage/CPJB8JSH/Arora et al. - 2012 - The Multiplicative Weights Update Method a Meta-Algorithm and Applications.pdf:application/pdf;Theory of Computing Snapshot:/Users/martinschlaier/Zotero/storage/8TTCKMRX/v008a006.html:text/html
+      \endverb
+      \keyw{algorithms,game theory,machine learning}
+    \endentry
+    \entry{beines_simpler_2024}{incollection}{}
+      \name{author}{5}{}{%
+        {{hash=2943f9327b01d93964467b2252b405dc}{%
+           family={Beines},
+           familyi={B\bibinitperiod},
+           given={Arne},
+           giveni={A\bibinitperiod}}}%
+        {{hash=67d2ccb08c8d522ad4bddc300bfea57c}{%
+           family={Kaibel},
+           familyi={K\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+        {{hash=71f8d662b2852f023bdb7b0439272857}{%
+           family={Mayer},
+           familyi={M\bibinitperiod},
+           given={Philip},
+           giveni={P\bibinitperiod}}}%
+        {{hash=a2fd7e6fca32deb028c924ba80cfa4df}{%
+           family={Mutzel},
+           familyi={M\bibinitperiod},
+           given={Petra},
+           giveni={P\bibinitperiod}}}%
+        {{hash=ffcb7cd4c6c3c334654530bd635ddeb2}{%
+           family={Sauer},
+           familyi={S\bibinitperiod},
+           given={Jonas},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{c544724dca3d14d6a5737b2639a7e690}
+      \strng{fullhash}{e6dc8ca41cd2ca608ffb92acd792a569}
+      \strng{bibnamehash}{e6dc8ca41cd2ca608ffb92acd792a569}
+      \strng{authorbibnamehash}{e6dc8ca41cd2ca608ffb92acd792a569}
+      \strng{authornamehash}{c544724dca3d14d6a5737b2639a7e690}
+      \strng{authorfullhash}{e6dc8ca41cd2ca608ffb92acd792a569}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{We present parametric breadth-first search ({PBFS}), a new algorithm for solving the parametric minimum cut problem in a network with source-sink-monotone capacities. The objective is to find the set of breakpoints, i.e., the points at which the minimum cut changes. It is well known that this problem can be solved in the same asymptotic runtime as the static minimum cut problem. However, existing algorithms that achieve this runtime bound involve fairly complicated steps that are inefficient in practice. {PBFS} uses a simpler approach that discovers the breakpoints in ascending order, which allows it to achieve the desired runtime bound while still performing well in practice. We evaluate our algorithm on benchmark instances from polygon aggregation and computer vision. Polygon aggregation was recently proposed as an application for parametric minimum cut, but the monotonicity property has not been exploited fully. {PBFS} outperforms the state of the art on most benchmark instances, usually by a factor of 2–3. It is particularly strong on instances with many breakpoints, which is the case for polygon aggregation. Compared to the existing min-cut-based approach for polygon aggregation, {PBFS} scales much better with the instance size. On large instances with millions of vertices, it is able to compute all breakpoints in a matter of seconds. *This work was partially funded by the Deutsche Forschungsgemeinschaft ({DFG}, German Research Foundation) under grant {FOR}-5361 – 459420781, and by the {BMBF} (Germany) and state of {NRW} as part of the Lamarr-Institute, {LAMARR}22B. This paper has been awarded the “Code and Data Available” and “Results Reproduced” badges as recognition that the author(s) have followed reproducibility principles. Code and data that allow readers to reproduce the results in this paper are available at https://doi.org/10.5281/zenodo.13788773 and https://doi.org/10.5281/zenodo.13642985. Participation in the {ALENEX} artifact evaluation phase was optional and performed at the request of the author(s).}
+      \field{booktitle}{2025 Proceedings of the Symposium on Algorithm Engineering and Experiments ({ALENEX})}
+      \field{note}{\_eprint: https://epubs.siam.org/doi/pdf/10.1137/1.9781611978339.3}
+      \field{title}{A Simpler Approach for Monotone Parametric Minimum Cut: Finding the Breakpoints in Order}
+      \field{year}{2025}
+      \field{dateera}{ce}
+      \field{pages}{29\bibrangedash 41}
+      \range{pages}{13}
+      \verb{doi}
+      \verb 10.1137/1.9781611978339.3
+      \endverb
+      \verb{urlraw}
+      \verb https://epubs.siam.org/doi/abs/10.1137/1.9781611978339.3
+      \endverb
+      \verb{url}
+      \verb https://epubs.siam.org/doi/abs/10.1137/1.9781611978339.3
+      \endverb
+    \endentry
+    \entry{boob_flowless_2020}{inproceedings}{}
+      \name{author}{7}{}{%
+        {{hash=4a8aa8237d138032d1a988938d8a6f24}{%
+           family={Boob},
+           familyi={B\bibinitperiod},
+           given={Digvijay},
+           giveni={D\bibinitperiod}}}%
+        {{hash=2c77663ba135caa9dfff35b526185da9}{%
+           family={Gao},
+           familyi={G\bibinitperiod},
+           given={Yu},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=65d2f58a2df0890a494503815ccad81b}{%
+           family={Peng},
+           familyi={P\bibinitperiod},
+           given={Richard},
+           giveni={R\bibinitperiod}}}%
+        {{hash=044c23b5f53d7242fa072d33f064fb0d}{%
+           family={Sawlani},
+           familyi={S\bibinitperiod},
+           given={Saurabh},
+           giveni={S\bibinitperiod}}}%
+        {{hash=3c8581bc9ea42994894cce357a67fed2}{%
+           family={Tsourakakis},
+           familyi={T\bibinitperiod},
+           given={Charalampos},
+           giveni={C\bibinitperiod}}}%
+        {{hash=ae66067c3dea21e00e9c5b777faa1a4e}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Di},
+           giveni={D\bibinitperiod}}}%
+        {{hash=a23052d54dccc7544b599bacbb8aa1bb}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Junxing},
+           giveni={J\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Taipei Taiwan}%
+      }
+      \list{publisher}{1}{%
+        {ACM}%
+      }
+      \strng{namehash}{31c49d65d48529d81268058d8f79716a}
+      \strng{fullhash}{22f8902c9409b0977b5143708e892d56}
+      \strng{bibnamehash}{22f8902c9409b0977b5143708e892d56}
+      \strng{authorbibnamehash}{22f8902c9409b0977b5143708e892d56}
+      \strng{authornamehash}{31c49d65d48529d81268058d8f79716a}
+      \strng{authorfullhash}{22f8902c9409b0977b5143708e892d56}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{The problem of finding dense components of a graph is a major primitive in graph mining and data analysis. The densest subgraph problem ({DSP}) that asks to find a subgraph with maximum average degree forms a basic primitive in dense subgraph discovery with applications ranging from community detection to unsupervised discovery of biological network modules [16]. The {DSP} is exactly solvable in polynomial time using maximum flows [14, 17, 22]. Due to the high computational cost of maximum flows, Charikar’s greedy approximation algorithm is usually preferred in practice due to its linear time and linear space complexity [3, 8]. It constitutes a key algorithmic idea in scalable solutions for large-scale dynamic graphs [5, 7]. However, its output density can be a factor 2 off the optimal solution.}
+      \field{booktitle}{Proceedings of The Web Conference 2020}
+      \field{day}{20}
+      \field{eventtitle}{{WWW} '20: The Web Conference 2020}
+      \field{isbn}{978-1-4503-7023-3}
+      \field{langid}{english}
+      \field{month}{4}
+      \field{shorttitle}{Flowless}
+      \field{title}{Flowless: Extracting Densest Subgraphs Without Flow Computations}
+      \field{year}{2020}
+      \field{dateera}{ce}
+      \field{pages}{573\bibrangedash 583}
+      \range{pages}{11}
+      \verb{doi}
+      \verb 10.1145/3366423.3380140
+      \endverb
+      \verb{file}
+      \verb PDF:/Users/martinschlaier/Zotero/storage/TX8BFP5I/Boob et al. - 2020 - Flowless Extracting Densest Subgraphs Without Flow Computations.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{charikar_greedy_2000}{inproceedings}{}
+      \name{author}{1}{}{%
+        {{hash=e1b3700a6d5248ffa34baab20bc00fa5}{%
+           family={Charikar},
+           familyi={C\bibinitperiod},
+           given={Moses},
+           giveni={M\bibinitperiod}}}%
+      }
+      \name{editor}{2}{}{%
+        {{hash=b1f3ccb7c28e47308a3a22420635dc84}{%
+           family={Jansen},
+           familyi={J\bibinitperiod},
+           given={Klaus},
+           giveni={K\bibinitperiod}}}%
+        {{hash=7efac60c3432923d4d1f099fa42575eb}{%
+           family={Khuller},
+           familyi={K\bibinitperiod},
+           given={Samir},
+           giveni={S\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Berlin, Heidelberg}%
+      }
+      \list{publisher}{1}{%
+        {Springer}%
+      }
+      \strng{namehash}{e1b3700a6d5248ffa34baab20bc00fa5}
+      \strng{fullhash}{e1b3700a6d5248ffa34baab20bc00fa5}
+      \strng{bibnamehash}{e1b3700a6d5248ffa34baab20bc00fa5}
+      \strng{authorbibnamehash}{e1b3700a6d5248ffa34baab20bc00fa5}
+      \strng{authornamehash}{e1b3700a6d5248ffa34baab20bc00fa5}
+      \strng{authorfullhash}{e1b3700a6d5248ffa34baab20bc00fa5}
+      \strng{editorbibnamehash}{69bea789a68de0e5aae76aa54cb2d9db}
+      \strng{editornamehash}{d7b4fab15673e5627112db803fce61b9}
+      \strng{editorfullhash}{69bea789a68de0e5aae76aa54cb2d9db}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{We study the problem of finding highly connected subgraphs of undirected and directed graphs. For undirected graphs, the notion of density of a subgraph we use is the average degree of the subgraph. For directed graphs, a corresponding notion of density was introduced recently by Kannan and Vinay. This is designed to quantify highly connectedness of substructures in a sparse directed graph such as the web graph. We study the optimization problems of finding subgraphs maximizing these notions of density for undirected and directed graphs. This paper gives simple greedy approximation algorithms for these optimization problems. We also answer an open question about the complexity of the optimization problem for directed graphs.}
+      \field{booktitle}{Approximation Algorithms for Combinatorial Optimization}
+      \field{isbn}{978-3-540-44436-7}
+      \field{langid}{english}
+      \field{title}{Greedy Approximation Algorithms for Finding Dense Components in a Graph}
+      \field{year}{2000}
+      \field{dateera}{ce}
+      \field{pages}{84\bibrangedash 95}
+      \range{pages}{12}
+      \verb{doi}
+      \verb 10.1007/3-540-44436-X_10
+      \endverb
+      \verb{file}
+      \verb greedy-dense.pdf:/Users/martinschlaier/Zotero/storage/BZCQB4GA/greedy-dense.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{chekuri_densest_2022}{incollection}{}
+      \name{author}{3}{}{%
+        {{hash=e64e05b60e285d389253f4c0e695df74}{%
+           family={Chekuri},
+           familyi={C\bibinitperiod},
+           given={Chandra},
+           giveni={C\bibinitperiod}}}%
+        {{hash=d150fb76cf61b2f312154ccd1ec44cdf}{%
+           family={Quanrud},
+           familyi={Q\bibinitperiod},
+           given={Kent},
+           giveni={K\bibinitperiod}}}%
+        {{hash=4555da0f75174caea67a2dbc8b7906e0}{%
+           family={Torres},
+           familyi={T\bibinitperiod},
+           given={Manuel\bibnamedelima R.},
+           giveni={M\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+      }
+      \list{publisher}{2}{%
+        {Society for Industrial}%
+        {Applied Mathematics}%
+      }
+      \strng{namehash}{8103e35c5b2a3206d589b4abf18714d9}
+      \strng{fullhash}{17e7b5aebd96d69ca1e1fa57af9ec930}
+      \strng{bibnamehash}{17e7b5aebd96d69ca1e1fa57af9ec930}
+      \strng{authorbibnamehash}{17e7b5aebd96d69ca1e1fa57af9ec930}
+      \strng{authornamehash}{8103e35c5b2a3206d589b4abf18714d9}
+      \strng{authorfullhash}{17e7b5aebd96d69ca1e1fa57af9ec930}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{The densest subgraph problem in a graph ({DSG}), in the simplest form, is the following. Given an undirected graph G = (V, E) find a subset S ⊆ V of vertices that maximizes the ratio {|}E(S){|}/{|}S{|} where E(S) is the set of edges with both endpoints in S. {DSG} and several of its variants are well-studied in theory and practice and have many applications in data mining and network analysis. In this paper we study fast algorithms and structural aspects of {DSG} via the lens of supermodularity. For this we consider the densest supermodular subset problem ({DSS}): given a non-negative supermodular function f : 2V → ℝ+, maximize f(S)/{|}S{|}. For {DSG} we describe a simple flow-based algorithm that outputs a (1–∊)-approximation in deterministic Õ(m/∊) time where m is the number of edges. Our algorithm is the first to have a near-linear dependence on m and 1/∊ and improves previous methods based on an {LP} relaxation. It generalizes to hypergraphs, and also yields a faster algorithm for directed {DSG}. Greedy peeling algorithms have been very popular for {DSG} and several variants due to their efficiency, empirical performance, and worst-case approximation guarantees. We describe a simple peeling algorithm for {DSS} and analyze its approximation guarantee in a fashion that unifies several existing results. Boob et al. [12] developed an iterative peeling algorithm for {DSG} which appears to work very well in practice, and made a conjecture about its convergence to optimality. We affirmatively answer their conjecture, and in fact prove that a natural generalization of their algorithm converges to a (1–∊)-approximation for any supermodular function f; the key to our proof is to consider an {LP} formulation that is derived via the Lovász extension of a supermodular function. For {DSG} the bound on the number of iterations we prove is where Δ is the maximum degree and λ∗ is the optimum value. Our work suggests that iterative peeling can be an effective heuristic for several objectives considered in the literature. Finally, we show that the 2-approximation for densest-at-least-k subgraph [37] extends to the supermodular setting. We also give a unified analysis of the peeling algorithm for this problem, and via this analysis derive an approximation guarantee for a generalization of {DSS} to maximize f(S)/g({|}S{|}) for a concave function g.}
+      \field{booktitle}{Proceedings of the 2022 Annual {ACM}-{SIAM} Symposium on Discrete Algorithms ({SODA})}
+      \field{month}{1}
+      \field{series}{Proceedings}
+      \field{shorttitle}{Densest Subgraph}
+      \field{title}{Densest Subgraph: Supermodularity, Iterative Peeling, and Flow}
+      \field{year}{2022}
+      \field{dateera}{ce}
+      \field{pages}{1531\bibrangedash 1555}
+      \range{pages}{25}
+      \verb{doi}
+      \verb 10.1137/1.9781611977073.64
+      \endverb
+      \verb{file}
+      \verb Full Text PDF:/Users/martinschlaier/Zotero/storage/3WR3NQN6/Chekuri et al. - 2022 - Densest Subgraph Supermodularity, Iterative Peeling, and Flow.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{davis_university_2011}{article}{}
+      \name{author}{2}{}{%
+        {{hash=65d91744b06296f07cba0205480151ba}{%
+           family={Davis},
+           familyi={D\bibinitperiod},
+           given={Timothy\bibnamedelima A.},
+           giveni={T\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=855f3b81b4485b5f0dcd527f5803bb66}{%
+           family={Hu},
+           familyi={H\bibinitperiod},
+           given={Yifan},
+           giveni={Y\bibinitperiod}}}%
+      }
+      \strng{namehash}{e7b997607ec74b64230172f3e3156858}
+      \strng{fullhash}{7bc47d8c25cee5d3937590eb9894f295}
+      \strng{bibnamehash}{7bc47d8c25cee5d3937590eb9894f295}
+      \strng{authorbibnamehash}{7bc47d8c25cee5d3937590eb9894f295}
+      \strng{authornamehash}{e7b997607ec74b64230172f3e3156858}
+      \strng{authorfullhash}{7bc47d8c25cee5d3937590eb9894f295}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{{ACM} Transactions on Mathematical Software}
+      \field{month}{12}
+      \field{number}{1}
+      \field{title}{The University of Florida Sparse Matrix Collection}
+      \field{volume}{38}
+      \field{year}{2011}
+      \field{dateera}{ce}
+      \field{pages}{1\bibrangedash 25}
+      \range{pages}{25}
+      \verb{doi}
+      \verb 10.1145/2049662.2049663
+      \endverb
+    \endentry
+    \entry{eisner_mathematical_1976}{article}{}
+      \name{author}{2}{}{%
+        {{hash=c75a9268121baf49e5b8b8dc36588fb4}{%
+           family={Eisner},
+           familyi={E\bibinitperiod},
+           given={Mark\bibnamedelima J.},
+           giveni={M\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=736ba8146fc6a05321d99565605cb633}{%
+           family={Severance},
+           familyi={S\bibinitperiod},
+           given={Dennis\bibnamedelima G.},
+           giveni={D\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+      }
+      \strng{namehash}{19717d0fb9bbdda9aa75b3343d9f6737}
+      \strng{fullhash}{0f97f207d3469993ed15a753701c0e18}
+      \strng{bibnamehash}{0f97f207d3469993ed15a753701c0e18}
+      \strng{authorbibnamehash}{0f97f207d3469993ed15a753701c0e18}
+      \strng{authornamehash}{19717d0fb9bbdda9aa75b3343d9f6737}
+      \strng{authorfullhash}{0f97f207d3469993ed15a753701c0e18}
+      \field{sortinit}{E}
+      \field{sortinithash}{8da8a182d344d5b9047633dfc0cc9131}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{It is possible to significantly reduce the average cost of information retrieval from a large shared database by partitioning data items stored within each record into a primary and a secondary record segment. An analytic model, based upon knowledge of data item lengths, transportation costs, and retrieval patterns, is developed to assist an analyst with this assignment problem. The model is generally applicable to environments in which a database resides in secondary storage, and is useful for both uniprogramming and multiprogramming systems. A computationally tractable record design algorithm has been implemented as a Fortran program and applied to numerous problems. Realistic examples are presented which demonstrate a potential for reducing total system cost by more than 65 percent.}
+      \field{day}{1}
+      \field{issn}{0004-5411}
+      \field{journaltitle}{J. {ACM}}
+      \field{month}{10}
+      \field{number}{4}
+      \field{title}{Mathematical Techniques for Efficient Record Segmentation in Large Shared Databases}
+      \field{volume}{23}
+      \field{year}{1976}
+      \field{dateera}{ce}
+      \field{pages}{619\bibrangedash 635}
+      \range{pages}{17}
+      \verb{doi}
+      \verb 10.1145/321978.321982
+      \endverb
+      \verb{file}
+      \verb Full Text PDF:/Users/martinschlaier/Zotero/storage/68KJVFQM/Eisner and Severance - 1976 - Mathematical Techniques for Efficient Record Segmentation in Large Shared Databases.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{ford_jr_maximal_1956}{article}{}
+      \name{author}{2}{}{%
+        {{hash=2c4dccd8059faa5614986f7e0b606baf}{%
+           family={Ford\bibnamedelima Jr},
+           familyi={F\bibinitperiod\bibinitdelim J\bibinitperiod},
+           given={L.\bibnamedelimi R.},
+           giveni={L\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=3e344e6adb502649042816704bfa34fa}{%
+           family={Fulkerson},
+           familyi={F\bibinitperiod},
+           given={D.\bibnamedelimi R.},
+           giveni={D\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+      }
+      \strng{namehash}{aafe7a533a3573d1232dc643449f0a23}
+      \strng{fullhash}{b8bf3e109a5caf5b9b07cd843643b945}
+      \strng{bibnamehash}{b8bf3e109a5caf5b9b07cd843643b945}
+      \strng{authorbibnamehash}{b8bf3e109a5caf5b9b07cd843643b945}
+      \strng{authornamehash}{aafe7a533a3573d1232dc643449f0a23}
+      \strng{authorfullhash}{b8bf3e109a5caf5b9b07cd843643b945}
+      \field{sortinit}{F}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Introduction. The problem discussed in this paper was formulated by T. Harris as follows:“Consider a rail network connecting two cities by way of a number of intermediate cities, where each link of the network has a number assigned to it representing its capacity. Assuming a steady state condition, find a maximal flow from one given city to the other.”}
+      \field{issn}{0008-414X, 1496-4279}
+      \field{journaltitle}{Canadian Journal of Mathematics}
+      \field{langid}{english}
+      \field{month}{1}
+      \field{title}{Maximal Flow Through a Network}
+      \field{volume}{8}
+      \field{year}{1956}
+      \field{dateera}{ce}
+      \field{pages}{399\bibrangedash 404}
+      \range{pages}{6}
+      \verb{doi}
+      \verb 10.4153/CJM-1956-045-5
+      \endverb
+      \verb{file}
+      \verb Full Text PDF:/Users/martinschlaier/Zotero/storage/E4VZS89B/Jr and Fulkerson - 1956 - Maximal Flow Through a Network.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{gallo_fast_1989}{article}{}
+      \name{author}{3}{}{%
+        {{hash=5f77512de4d3eeef7996f641b69c8c19}{%
+           family={Gallo},
+           familyi={G\bibinitperiod},
+           given={Giorgio},
+           giveni={G\bibinitperiod}}}%
+        {{hash=7d20d97f2260dd7517c70e68d81e7426}{%
+           family={Grigoriadis},
+           familyi={G\bibinitperiod},
+           given={Michael\bibnamedelima D.},
+           giveni={M\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=5db7b92ac36b92505a52cbe66bcce4d6}{%
+           family={Tarjan},
+           familyi={T\bibinitperiod},
+           given={Robert\bibnamedelima E.},
+           giveni={R\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+      }
+      \strng{namehash}{3ead82250e2e286f85e4cdcdc1df278f}
+      \strng{fullhash}{b00c30797907018f694cf3ed9af356e9}
+      \strng{bibnamehash}{b00c30797907018f694cf3ed9af356e9}
+      \strng{authorbibnamehash}{b00c30797907018f694cf3ed9af356e9}
+      \strng{authornamehash}{3ead82250e2e286f85e4cdcdc1df278f}
+      \strng{authorfullhash}{b00c30797907018f694cf3ed9af356e9}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0097-5397, 1095-7111}
+      \field{journaltitle}{{SIAM} Journal on Computing}
+      \field{langid}{english}
+      \field{month}{2}
+      \field{number}{1}
+      \field{shortjournal}{{SIAM} J. Comput.}
+      \field{title}{A Fast Parametric Maximum Flow Algorithm and Applications}
+      \field{volume}{18}
+      \field{year}{1989}
+      \field{dateera}{ce}
+      \field{pages}{30\bibrangedash 55}
+      \range{pages}{26}
+      \verb{doi}
+      \verb 10.1137/0218003
+      \endverb
+      \verb{file}
+      \verb A_Fast_Parametric_Maximum_Flow_Algorithm_and_Appli:/Users/martinschlaier/Zotero/storage/32UYL6ZM/A_Fast_Parametric_Maximum_Flow_Algorithm_and_Appli.pdf:application/pdf;Präsentation:/Users/martinschlaier/Zotero/storage/CM75YFPE/Gallo et al. - 1989 - A Fast Parametric Maximum Flow Algorithm and Applications.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{goldberg_finding_1984}{report}{}
+      \name{author}{1}{}{%
+        {{hash=b1bf114c2ff3ceccfeeff0b2c606178c}{%
+           family={Goldberg},
+           familyi={G\bibinitperiod},
+           given={A.\bibnamedelimi V.},
+           giveni={A\bibinitperiod\bibinitdelim V\bibinitperiod}}}%
+      }
+      \strng{namehash}{b1bf114c2ff3ceccfeeff0b2c606178c}
+      \strng{fullhash}{b1bf114c2ff3ceccfeeff0b2c606178c}
+      \strng{bibnamehash}{b1bf114c2ff3ceccfeeff0b2c606178c}
+      \strng{authorbibnamehash}{b1bf114c2ff3ceccfeeff0b2c606178c}
+      \strng{authornamehash}{b1bf114c2ff3ceccfeeff0b2c606178c}
+      \strng{authorfullhash}{b1bf114c2ff3ceccfeeff0b2c606178c}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{(none)}
+      \field{number}{{UCB}/{CSD}-84-171}
+      \field{title}{Finding a Maximum Density Subgraph}
+      \field{year}{1984}
+      \field{dateera}{ce}
+      \verb{file}
+      \verb CSD-84-171.pdf:/Users/martinschlaier/Zotero/storage/FZ27J6N3/CSD-84-171.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{demetrescu_maximum_2011}{incollection}{}
+      \name{author}{5}{}{%
+        {{hash=575546439bd6e9b2cbc49d9c92ced13f}{%
+           family={Goldberg},
+           familyi={G\bibinitperiod},
+           given={Andrew\bibnamedelima V.},
+           giveni={A\bibinitperiod\bibinitdelim V\bibinitperiod}}}%
+        {{hash=b023201a97b1a44b4b28c5dfeaf57e42}{%
+           family={Hed},
+           familyi={H\bibinitperiod},
+           given={Sagi},
+           giveni={S\bibinitperiod}}}%
+        {{hash=74fc28f5c63cf11e0fa303a99e5e55a5}{%
+           family={Kaplan},
+           familyi={K\bibinitperiod},
+           given={Haim},
+           giveni={H\bibinitperiod}}}%
+        {{hash=5db7b92ac36b92505a52cbe66bcce4d6}{%
+           family={Tarjan},
+           familyi={T\bibinitperiod},
+           given={Robert\bibnamedelima E.},
+           giveni={R\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+        {{hash=8839683a16ad350312493c2e29f35b86}{%
+           family={Werneck},
+           familyi={W\bibinitperiod},
+           given={Renato\bibnamedelima F.},
+           giveni={R\bibinitperiod\bibinitdelim F\bibinitperiod}}}%
+      }
+      \name{editor}{2}{}{%
+        {{hash=0d818aa3e968cd8759e8d31211dc6382}{%
+           family={Demetrescu},
+           familyi={D\bibinitperiod},
+           given={Camil},
+           giveni={C\bibinitperiod}}}%
+        {{hash=0896bbcf86e170f605eddc3194d487aa}{%
+           family={Halldórsson},
+           familyi={H\bibinitperiod},
+           given={Magnús\bibnamedelima M.},
+           giveni={M\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Berlin, Heidelberg}%
+      }
+      \list{publisher}{1}{%
+        {Springer Berlin Heidelberg}%
+      }
+      \strng{namehash}{4263fac8a3217cdcaefce6f56f674152}
+      \strng{fullhash}{99573b86935f695a1bd0de8ed925cf47}
+      \strng{bibnamehash}{99573b86935f695a1bd0de8ed925cf47}
+      \strng{authorbibnamehash}{99573b86935f695a1bd0de8ed925cf47}
+      \strng{authornamehash}{4263fac8a3217cdcaefce6f56f674152}
+      \strng{authorfullhash}{99573b86935f695a1bd0de8ed925cf47}
+      \strng{editorbibnamehash}{b786ef094f259a8bee4be8ece5545134}
+      \strng{editornamehash}{a42353e5c30b995ba78331555771713c}
+      \strng{editorfullhash}{b786ef094f259a8bee4be8ece5545134}
+      \field{extraname}{1}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Algorithms – {ESA} 2011}
+      \field{isbn}{978-3-642-23718-8 978-3-642-23719-5}
+      \field{langid}{english}
+      \field{note}{Series Title: Lecture Notes in Computer Science}
+      \field{title}{Maximum Flows by Incremental Breadth-First Search}
+      \field{volume}{6942}
+      \field{year}{2011}
+      \field{dateera}{ce}
+      \field{pages}{457\bibrangedash 468}
+      \range{pages}{12}
+      \verb{doi}
+      \verb 10.1007/978-3-642-23719-5_39
+      \endverb
+      \verb{file}
+      \verb PDF:/Users/martinschlaier/Zotero/storage/L38IQ6AC/Goldberg et al. - 2011 - Maximum Flows by Incremental Breadth-First Search.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{goldberg_new_1988}{article}{}
+      \name{author}{2}{}{%
+        {{hash=575546439bd6e9b2cbc49d9c92ced13f}{%
+           family={Goldberg},
+           familyi={G\bibinitperiod},
+           given={Andrew\bibnamedelima V.},
+           giveni={A\bibinitperiod\bibinitdelim V\bibinitperiod}}}%
+        {{hash=5db7b92ac36b92505a52cbe66bcce4d6}{%
+           family={Tarjan},
+           familyi={T\bibinitperiod},
+           given={Robert\bibnamedelima E.},
+           giveni={R\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+      }
+      \strng{namehash}{4263fac8a3217cdcaefce6f56f674152}
+      \strng{fullhash}{0c5f1d0c7d47338a0051a6ca3a2dfb2e}
+      \strng{bibnamehash}{0c5f1d0c7d47338a0051a6ca3a2dfb2e}
+      \strng{authorbibnamehash}{0c5f1d0c7d47338a0051a6ca3a2dfb2e}
+      \strng{authornamehash}{4263fac8a3217cdcaefce6f56f674152}
+      \strng{authorfullhash}{0c5f1d0c7d47338a0051a6ca3a2dfb2e}
+      \field{extraname}{2}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{All previously known efficient maximum-flow algorithms work by finding augmenting paths, either one path at a time (as in the original Ford and Fulkerson algorithm) or all shortest-length augmenting paths at once (using the layered network approach of Dinic). An alternative method based on the preflow concept of Karzanov is introduced. A preflow is like a flow, except that the total amount flowing into a vertex is allowed to exceed the total amount flowing out. The method maintains a preflow in the original network and pushes local flow excess toward the sink along what are estimated to be shortest paths. The algorithm and its analysis are simple and intuitive, yet the algorithm runs as fast as any other known method on dense graphs, achieving an O(n3) time bound on an n-vertex graph. By incorporating the dynamic tree data structure of Sleator and Tarjan, we obtain a version of the algorithm running in O(nm log(n2/m)) time on an n-vertex, m-edge graph. This is as fast as any known method for any graph density and faster on graphs of moderate density. The algorithm also admits efficient distributed and parallel implementations. A parallel implementation running in O(n2log n) time using n processors and O(m) space is obtained. This time bound matches that of the Shiloach-Vishkin algorithm, which also uses n processors but requires O(n2) space.}
+      \field{day}{1}
+      \field{issn}{0004-5411}
+      \field{journaltitle}{J. {ACM}}
+      \field{month}{10}
+      \field{number}{4}
+      \field{title}{A new approach to the maximum-flow problem}
+      \field{volume}{35}
+      \field{year}{1988}
+      \field{dateera}{ce}
+      \field{pages}{921\bibrangedash 940}
+      \range{pages}{20}
+      \verb{doi}
+      \verb 10.1145/48014.61051
+      \endverb
+      \verb{file}
+      \verb Full Text PDF:/Users/martinschlaier/Zotero/storage/6WXPBIPQ/Goldberg and Tarjan - 1988 - A new approach to the maximum-flow problem.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{hochbaum_flow_2024}{inproceedings}{}
+      \name{author}{1}{}{%
+        {{hash=ae59bc6ce23675ac55049c8c6421cf9e}{%
+           family={Hochbaum},
+           familyi={H\bibinitperiod},
+           given={Dorit},
+           giveni={D\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Porto, Portugal}%
+      }
+      \list{publisher}{2}{%
+        {{SCITEPRESS} - Science}%
+        {Technology Publications}%
+      }
+      \strng{namehash}{ae59bc6ce23675ac55049c8c6421cf9e}
+      \strng{fullhash}{ae59bc6ce23675ac55049c8c6421cf9e}
+      \strng{bibnamehash}{ae59bc6ce23675ac55049c8c6421cf9e}
+      \strng{authorbibnamehash}{ae59bc6ce23675ac55049c8c6421cf9e}
+      \strng{authornamehash}{ae59bc6ce23675ac55049c8c6421cf9e}
+      \strng{authorfullhash}{ae59bc6ce23675ac55049c8c6421cf9e}
+      \field{extraname}{1}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{The maximum density subgraph, or densest subgraph, problem has numerous applications in analyzing graph and community structures in social networks, {DNA} networks and financial networks. The densest subgraph problem has been the subject of study since the early 80s and polynomial time flow-based algorithms are known, yet research in the last couple of decades has been focused on developing heuristic methods for solving the problem claiming that flow computations are computationally prohibitive. We introduce here a new polynomial time algorithm, the incremental parametric cut algorithm ({IPC}) that solves the maximum density subgraph problem and many other max or min ratio problems in the complexity of a single minimum-cut. A characterization of all these efficiently solvable ratio problems is given here as problems with monotone integer programming formulations. {IPC} is much more efficient than the parametric cut algorithm since instead of generating all breakpoints it explores only a tiny fraction of those breakpoints. Compared to the heuristic methods, {IPC} not only guarantees optimality, but also runs orders of magnitude faster than the heuristic methods, as shown in an accompanying experimental study.}
+      \field{booktitle}{Proceedings of the 16th International Joint Conference on Knowledge Discovery, Knowledge Engineering and Knowledge Management}
+      \field{eventtitle}{16th International Conference on Knowledge Discovery and Information Retrieval}
+      \field{isbn}{978-989-758-716-0}
+      \field{langid}{english}
+      \field{shorttitle}{Flow Is Best, Fast and Scalable}
+      \field{title}{Flow Is Best, Fast and Scalable: The Incremental Parametric Cut for Maximum Density and Other Ratio Subgraph Problems:}
+      \field{year}{2024}
+      \field{dateera}{ce}
+      \field{pages}{275\bibrangedash 282}
+      \range{pages}{8}
+      \verb{doi}
+      \verb 10.5220/0012917300003838
+      \endverb
+      \verb{file}
+      \verb PDF:/Users/martinschlaier/Zotero/storage/Y7ILLYKD/Hochbaum - 2024 - Flow Is Best, Fast and Scalable The Incremental Parametric Cut for Maximum Density and Other Ratio.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{hochbaum_pseudoflow_2008}{article}{}
+      \name{author}{1}{}{%
+        {{hash=f0b50663fb3eb0dc58cffb69a26c5593}{%
+           family={Hochbaum},
+           familyi={H\bibinitperiod},
+           given={Dorit\bibnamedelima S.},
+           giveni={D\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+      }
+      \strng{namehash}{f0b50663fb3eb0dc58cffb69a26c5593}
+      \strng{fullhash}{f0b50663fb3eb0dc58cffb69a26c5593}
+      \strng{bibnamehash}{f0b50663fb3eb0dc58cffb69a26c5593}
+      \strng{authorbibnamehash}{f0b50663fb3eb0dc58cffb69a26c5593}
+      \strng{authornamehash}{f0b50663fb3eb0dc58cffb69a26c5593}
+      \strng{authorfullhash}{f0b50663fb3eb0dc58cffb69a26c5593}
+      \field{extraname}{2}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{We introduce the pseudoflow algorithm for the maximum-flow problem that employs only pseudoflows and does not generate flows explicitly. The algorithm solves directly a problem equivalent to the minimum-cut problem—the maximum blocking-cut problem. Once the maximum blocking-cut solution is available, the additional complexity required to find the respective maximum-flow is O(m log n). A variant of the algorithm is a new parametric maximum-flow algorithm generating all breakpoints in the same complexity required to solve the constant capacities maximum-flow problem. The pseudoflow algorithm has also a simplex variant, pseudoflow-simplex, that can be implemented to solve the maximum-flow problem. One feature of the pseudoflow algorithm is that it can initialize with any pseudoflow. This feature allows it to reach an optimal solution quickly when the initial pseudoflow is “close” to an optimal solution. The complexities of the pseudoflow algorithm, the pseudoflow-simplex, and the parametric variants of pseudoflow and pseudoflow-simplex algorithms are all O(mn log n) on a graph with n nodes and m arcs. Therefore, the pseudoflow-simplex algorithm is the fastest simplex algorithm known for the parametric maximum-flow problem. The pseudoflow algorithm is also shown to solve the maximum-flow problem on s, t-tree networks in linear time, where s, t-tree networks are formed by joining a forest of capacitated arcs, with nodes s and t adjacent to any subset of the nodes.}
+      \field{issn}{0030-364X, 1526-5463}
+      \field{journaltitle}{Operations Research}
+      \field{langid}{english}
+      \field{month}{8}
+      \field{number}{4}
+      \field{shortjournal}{Operations Research}
+      \field{shorttitle}{The Pseudoflow Algorithm}
+      \field{title}{The Pseudoflow Algorithm: A New Algorithm for the Maximum-Flow Problem}
+      \field{volume}{56}
+      \field{year}{2008}
+      \field{dateera}{ce}
+      \field{pages}{992\bibrangedash 1009}
+      \range{pages}{18}
+      \verb{doi}
+      \verb 10.1287/opre.1080.0524
+      \endverb
+      \verb{file}
+      \verb PDF:/Users/martinschlaier/Zotero/storage/NNS4UV9C/Hochbaum - 2008 - The Pseudoflow Algorithm A New Algorithm for the Maximum-Flow Problem.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{kunegis_konect_2013}{inproceedings}{}
+      \name{author}{1}{}{%
+        {{hash=783acda4813bfe14364427f83804ce7a}{%
+           family={Kunegis},
+           familyi={K\bibinitperiod},
+           given={Jérôme},
+           giveni={J\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York, {NY}, {USA}}%
+      }
+      \list{publisher}{1}{%
+        {Association for Computing Machinery}%
+      }
+      \strng{namehash}{783acda4813bfe14364427f83804ce7a}
+      \strng{fullhash}{783acda4813bfe14364427f83804ce7a}
+      \strng{bibnamehash}{783acda4813bfe14364427f83804ce7a}
+      \strng{authorbibnamehash}{783acda4813bfe14364427f83804ce7a}
+      \strng{authornamehash}{783acda4813bfe14364427f83804ce7a}
+      \strng{authorfullhash}{783acda4813bfe14364427f83804ce7a}
+      \field{sortinit}{K}
+      \field{sortinithash}{c02bf6bff1c488450c352b40f5d853ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{We present the Koblenz Network Collection ({KONECT}), a project to collect network datasets in the areas of web science, network science and related areas, as well as provide tools for their analysis. In the cited areas, a surprisingly large number of very heterogeneous data can be modeled as networks and consequently, a unified representation of networks can be used to gain insight into many kinds of problems. Due to the emergence of the World Wide Web in the last decades many such datasets are now openly available. The {KONECT} project thus has the goal of collecting many diverse network datasets from the Web, and providing a way for their systematic study. The main parts of {KONECT} are (1) a collection of over 160 network datasets, consisting of directed, undirected, unipartite, bipartite, weighted, unweighted, signed and temporal networks collected from the Web, (2) a Matlab toolbox for network analysis and (3) a website giving a compact overview the various computed statistics and plots. In this paper, we describe {KONECT}'s taxonomy of networks datasets, give an overview of the datasets included, review the supported statistics and plots, and briefly discuss {KONECT}'s role in the area of web science and network science.}
+      \field{booktitle}{Proceedings of the 22nd International Conference on World Wide Web}
+      \field{day}{13}
+      \field{isbn}{978-1-4503-2038-2}
+      \field{month}{5}
+      \field{series}{{WWW} '13 Companion}
+      \field{shorttitle}{{KONECT}}
+      \field{title}{{KONECT}: the Koblenz network collection}
+      \field{year}{2013}
+      \field{dateera}{ce}
+      \field{pages}{1343\bibrangedash 1350}
+      \range{pages}{8}
+      \verb{doi}
+      \verb 10.1145/2487788.2488173
+      \endverb
+      \verb{file}
+      \verb konect-handbook.pdf:/Users/martinschlaier/Zotero/storage/XMMK473W/konect-handbook.pdf:application/octet-stream
+      \endverb
+    \endentry
+    \entry{lanciano_survey_2024}{article}{}
+      \name{author}{4}{}{%
+        {{hash=4fdc1a366f80770e83b1dcb96ee96031}{%
+           family={Lanciano},
+           familyi={L\bibinitperiod},
+           given={Tommaso},
+           giveni={T\bibinitperiod}}}%
+        {{hash=adc586c517705d1819a7251d92e18ee0}{%
+           family={Miyauchi},
+           familyi={M\bibinitperiod},
+           given={Atsushi},
+           giveni={A\bibinitperiod}}}%
+        {{hash=d9b5426c85f548a1f6175a8e11c47d26}{%
+           family={Fazzone},
+           familyi={F\bibinitperiod},
+           given={Adriano},
+           giveni={A\bibinitperiod}}}%
+        {{hash=e5f96000b50965c4c5a75005644d7e29}{%
+           family={Bonchi},
+           familyi={B\bibinitperiod},
+           given={Francesco},
+           giveni={F\bibinitperiod}}}%
+      }
+      \strng{namehash}{370fba4718ba497cedd97311b9d61eaa}
+      \strng{fullhash}{0909ea955e84881ed24a0d45e77ad12d}
+      \strng{bibnamehash}{0909ea955e84881ed24a0d45e77ad12d}
+      \strng{authorbibnamehash}{0909ea955e84881ed24a0d45e77ad12d}
+      \strng{authornamehash}{370fba4718ba497cedd97311b9d61eaa}
+      \strng{authorfullhash}{0909ea955e84881ed24a0d45e77ad12d}
+      \field{sortinit}{L}
+      \field{sortinithash}{7c47d417cecb1f4bd38d1825c427a61a}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{The Densest Subgraph Problem requires to find, in a given graph, a subset of vertices whose induced subgraph maximizes a measure of density. The problem has received a great deal of attention in the algorithmic literature since the early 1970s, with many variants proposed and many applications built on top of this basic definition. Recent years have witnessed a revival of research interest in this problem with several important contributions, including some groundbreaking results, published in 2022 and 2023. This survey provides a deep overview of the fundamental results and an exhaustive coverage of the many variants proposed in the literature, with a special attention to the most recent results. The survey also presents a comprehensive overview of applications and discusses some interesting open problems for this evergreen research topic.}
+      \field{day}{31}
+      \field{eprinttype}{arxiv}
+      \field{issn}{0360-0300, 1557-7341}
+      \field{journaltitle}{{ACM} Computing Surveys}
+      \field{langid}{english}
+      \field{month}{8}
+      \field{number}{8}
+      \field{shortjournal}{{ACM} Comput. Surv.}
+      \field{title}{A Survey on the Densest Subgraph Problem and Its Variants}
+      \field{volume}{56}
+      \field{year}{2024}
+      \field{dateera}{ce}
+      \field{pages}{1\bibrangedash 40}
+      \range{pages}{40}
+      \verb{doi}
+      \verb 10.1145/3653298
+      \endverb
+      \verb{eprint}
+      \verb 2303.14467 [cs]
+      \endverb
+      \verb{file}
+      \verb PDF:/Users/martinschlaier/Zotero/storage/B9W6NE7Y/Lanciano et al. - 2024 - A Survey on the Densest Subgraph Problem and Its Variants.pdf:application/pdf
+      \endverb
+      \keyw{Computer Science - Data Structures and Algorithms,Computer Science - Artificial Intelligence}
+    \endentry
+    \entry{leskovec_snap_2014}{misc}{}
+      \name{author}{2}{}{%
+        {{hash=900d107125ff0ca84698cb909e4f6c51}{%
+           family={Leskovec},
+           familyi={L\bibinitperiod},
+           given={Jure},
+           giveni={J\bibinitperiod}}}%
+        {{hash=767ff42ec330eeedea785558d350f6fa}{%
+           family={Krevl},
+           familyi={K\bibinitperiod},
+           given={Andrej},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{59a3e4bbf278a9983985f1d6be6a3e41}
+      \strng{fullhash}{8b6c59a3c7880c51055cf3864633578b}
+      \strng{bibnamehash}{8b6c59a3c7880c51055cf3864633578b}
+      \strng{authorbibnamehash}{8b6c59a3c7880c51055cf3864633578b}
+      \strng{authornamehash}{59a3e4bbf278a9983985f1d6be6a3e41}
+      \strng{authorfullhash}{8b6c59a3c7880c51055cf3864633578b}
+      \field{sortinit}{L}
+      \field{sortinithash}{7c47d417cecb1f4bd38d1825c427a61a}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{6}
+      \field{title}{{SNAP} Datasets: Stanford Large Network Dataset Collection}
+      \field{year}{2014}
+      \field{dateera}{ce}
+      \verb{file}
+      \verb SNAP\: Stanford Network Analysis Project:/Users/martinschlaier/Zotero/storage/GDEPVYRE/index.html:text/html
+      \endverb
+      \verb{urlraw}
+      \verb http://snap.stanford.edu/data
+      \endverb
+      \verb{url}
+      \verb http://snap.stanford.edu/data
+      \endverb
+    \endentry
+    \entry{picard_network_1982}{article}{}
+      \name{author}{2}{}{%
+        {{hash=aa55dd9a784608569a903dd93e1239af}{%
+           family={Picard},
+           familyi={P\bibinitperiod},
+           given={Jean-Claude},
+           giveni={J\bibinithyphendelim C\bibinitperiod}}}%
+        {{hash=760304f86b4bdbd2352d1fab66e9fcd5}{%
+           family={Queyranne},
+           familyi={Q\bibinitperiod},
+           given={Maurice},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{8214a2937288ef448f30925b63a4b3c0}
+      \strng{fullhash}{c59b76aee2d845dc8fa6f2284b4ac877}
+      \strng{bibnamehash}{c59b76aee2d845dc8fa6f2284b4ac877}
+      \strng{authorbibnamehash}{c59b76aee2d845dc8fa6f2284b4ac877}
+      \strng{authornamehash}{8214a2937288ef448f30925b63a4b3c0}
+      \strng{authorfullhash}{c59b76aee2d845dc8fa6f2284b4ac877}
+      \field{sortinit}{P}
+      \field{sortinithash}{ff3bcf24f47321b42cb156c2cc8a8422}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{A network flow technique is used to solve the unconstrained nonlinear 0-1 programming problem, which is maximizing the ratio of two polynomials, assuming that all the nonlinear coefficients in the numerator are non-negative and all the nonlinear coefficients in the denominator are nonpositive. Two examples are an investment selection problem to maximize the rate of return, and a decomposition approach to a scheduling problem studied by Sidney and Lawler. The proposed algorithm requires the solution of a sequence of minimum-cut problems in a related network, and can be extended to some more general problems of the same type. This approach is also applied to find the density of a graph (the maximum ratio, among its subgraphs, of the number of edges to the number of nodes) and its arboricity, for which polynomial algorithms are described. It is also useful in providing a bounding scheme for the maximum-clique and vertex packing problems.}
+      \field{issn}{1097-0037}
+      \field{journaltitle}{Networks}
+      \field{langid}{english}
+      \field{note}{\_eprint: https://onlinelibrary.wiley.com/doi/pdf/10.1002/net.3230120206}
+      \field{number}{2}
+      \field{title}{A network flow solution to some nonlinear 0-1 programming problems, with applications to graph theory}
+      \field{volume}{12}
+      \field{year}{1982}
+      \field{dateera}{ce}
+      \field{pages}{141\bibrangedash 159}
+      \range{pages}{19}
+      \verb{doi}
+      \verb 10.1002/net.3230120206
+      \endverb
+      \verb{file}
+      \verb Full Text PDF:/Users/martinschlaier/Zotero/storage/DN8AR7Q7/Picard and Queyranne - 1982 - A network flow solution to some nonlinear 0-1 programming problems, with applications to graph theor.pdf:application/pdf;Snapshot:/Users/martinschlaier/Zotero/storage/244XHVRX/net.html:text/html
+      \endverb
+    \endentry
+    \entry{Sauer_PPF_2025}{unpublished}{}
+      \name{author}{1}{}{%
+        {{hash=ffcb7cd4c6c3c334654530bd635ddeb2}{%
+           family={Sauer},
+           familyi={S\bibinitperiod},
+           given={Jonas},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{ffcb7cd4c6c3c334654530bd635ddeb2}
+      \strng{fullhash}{ffcb7cd4c6c3c334654530bd635ddeb2}
+      \strng{bibnamehash}{ffcb7cd4c6c3c334654530bd635ddeb2}
+      \strng{authorbibnamehash}{ffcb7cd4c6c3c334654530bd635ddeb2}
+      \strng{authornamehash}{ffcb7cd4c6c3c334654530bd635ddeb2}
+      \strng{authorfullhash}{ffcb7cd4c6c3c334654530bd635ddeb2}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Unpublished manuscript}
+      \field{title}{A Faster Pseudoflow-Based Algorithm for Monotone Parametric Minimum Cut}
+      \field{year}{2025}
+    \endentry
+    \entry{sotiropoulos_twittermancer_2019}{inproceedings}{}
+      \name{author}{4}{}{%
+        {{hash=239dff481b37fc8d531e84bf2216be68}{%
+           family={Sotiropoulos},
+           familyi={S\bibinitperiod},
+           given={Konstantinos},
+           giveni={K\bibinitperiod}}}%
+        {{hash=77ef2969a938bc08511f185063ab60f0}{%
+           family={Byers},
+           familyi={B\bibinitperiod},
+           given={John\bibnamedelima W.},
+           giveni={J\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
+        {{hash=795815715bd3379045c18ea1051d5fa8}{%
+           family={Pratikakis},
+           familyi={P\bibinitperiod},
+           given={Polyvios},
+           giveni={P\bibinitperiod}}}%
+        {{hash=ad596aaa3fe4ccdb67388ccb833a8666}{%
+           family={Tsourakakis},
+           familyi={T\bibinitperiod},
+           given={Charalampos\bibnamedelima E.},
+           giveni={C\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Monticello, {IL}, {USA}}%
+      }
+      \list{publisher}{1}{%
+        {IEEE}%
+      }
+      \strng{namehash}{56545ecd1342305c7d8b047d43380d8a}
+      \strng{fullhash}{3d487bba4c4a282a90b481bc04df76ef}
+      \strng{bibnamehash}{3d487bba4c4a282a90b481bc04df76ef}
+      \strng{authorbibnamehash}{3d487bba4c4a282a90b481bc04df76ef}
+      \strng{authornamehash}{56545ecd1342305c7d8b047d43380d8a}
+      \strng{authorfullhash}{3d487bba4c4a282a90b481bc04df76ef}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{This work investigates the interplay between different types of user interactions on Twitter, with respect to predicting missing or unseen interactions. For example, given a set of retweet interactions between Twitter users, how accurately can we predict reply interactions? Is it more difﬁcult to predict retweet or quote interactions between a pair of accounts? Also, which features of interaction patterns are most important to enable accurate prediction of speciﬁc Twitter interactions? Our empirical study of Twitter interactions contributes initial answers to these questions. We have crawled an extensive dataset of Twitter accounts and their follow, quote, retweet, reply interactions over a period of a month. Using a machine learning framework, we ﬁnd we can accurately predict many interactions of Twitter users. Interestingly, the most predictive features vary with the user proﬁles, and are not the same across all users. For example, for a pair of users that interact with a large number of other Twitter users, we ﬁnd that certain “higher-dimensional” triads, i.e., triads that involve multiple types of interactions, are very informative, whereas for less active Twitter users, certain in-degrees and out-degrees play a major role. Finally, we provide various other insights on Twitter user behavior.}
+      \field{booktitle}{2019 57th Annual Allerton Conference on Communication, Control, and Computing (Allerton)}
+      \field{eventtitle}{2019 57th Annual Allerton Conference on Communication, Control, and Computing (Allerton)}
+      \field{isbn}{978-1-7281-3151-1}
+      \field{langid}{english}
+      \field{month}{9}
+      \field{shorttitle}{{TwitterMancer}}
+      \field{title}{{TwitterMancer}: Predicting User Interactions on Twitter}
+      \field{year}{2019}
+      \field{dateera}{ce}
+      \field{pages}{973\bibrangedash 980}
+      \range{pages}{8}
+      \verb{doi}
+      \verb 10.1109/ALLERTON.2019.8919702
+      \endverb
+      \verb{file}
+      \verb PDF:/Users/martinschlaier/Zotero/storage/V7TYZQHX/Sotiropoulos et al. - 2019 - TwitterMancer Predicting User Interactions on Twitter.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{stark_biogrid_2006}{article}{}
+      \name{author}{6}{}{%
+        {{hash=7d3920dbd440b426070baa7180d87849}{%
+           family={Stark},
+           familyi={S\bibinitperiod},
+           given={Chris},
+           giveni={C\bibinitperiod}}}%
+        {{hash=845c8ae9b82c732af626fe79e35d855e}{%
+           family={Breitkreutz},
+           familyi={B\bibinitperiod},
+           given={Bobby-Joe},
+           giveni={B\bibinithyphendelim J\bibinitperiod}}}%
+        {{hash=3a415be2116d81e83d0fe98238531309}{%
+           family={Reguly},
+           familyi={R\bibinitperiod},
+           given={Teresa},
+           giveni={T\bibinitperiod}}}%
+        {{hash=74cd482e8c5d0195ad29f6e185081d0c}{%
+           family={Boucher},
+           familyi={B\bibinitperiod},
+           given={Lorrie},
+           giveni={L\bibinitperiod}}}%
+        {{hash=8692774cf44dfca7883149f817fd6672}{%
+           family={Breitkreutz},
+           familyi={B\bibinitperiod},
+           given={Ashton},
+           giveni={A\bibinitperiod}}}%
+        {{hash=f236468f2a5c8132d4000d107c0eccc0}{%
+           family={Tyers},
+           familyi={T\bibinitperiod},
+           given={Mike},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{9a4c133b73d7a4b177ca96799f51e387}
+      \strng{fullhash}{c5088c7b0b20ea5859525ce300c70439}
+      \strng{bibnamehash}{c5088c7b0b20ea5859525ce300c70439}
+      \strng{authorbibnamehash}{c5088c7b0b20ea5859525ce300c70439}
+      \strng{authornamehash}{9a4c133b73d7a4b177ca96799f51e387}
+      \strng{authorfullhash}{c5088c7b0b20ea5859525ce300c70439}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{Access to unified datasets of protein and genetic interactions is critical for interrogation of gene/protein function and analysis of global network properties. {BioGRID} is a freely accessible database of physical and genetic interactions available at http://www.thebiogrid.org. {BioGRID} release version 2.0 includes \&gt;116 000 interactions from Saccharomyces cerevisiae, Caenorhabditis elegans, Drosophila melanogaster and Homo sapiens. Over 30 000 interactions have recently been added from 5778 sources through exhaustive curation of the Saccharomyces cerevisiae primary literature. An internally hyper-linked web interface allows for rapid search and retrieval of interaction data. Full or user-defined datasets are freely downloadable as tab-delimited text files and {PSI}-{MI} {XML}. Pre-computed graphical layouts of interactions are available in a variety of file formats. User-customized graphs with embedded protein, gene and interaction attributes can be constructed with a visualization system called Osprey that is dynamically linked to the {BioGRID}.}
+      \field{day}{1}
+      \field{issn}{0305-1048}
+      \field{issue}{suppl\_1}
+      \field{journaltitle}{Nucleic Acids Research}
+      \field{month}{1}
+      \field{shortjournal}{Nucleic Acids Research}
+      \field{shorttitle}{{BioGRID}}
+      \field{title}{{BioGRID}: a general repository for interaction datasets}
+      \field{volume}{34}
+      \field{year}{2006}
+      \field{dateera}{ce}
+      \field{pages}{D535\bibrangedash D539}
+      \range{pages}{-1}
+      \verb{doi}
+      \verb 10.1093/nar/gkj109
+      \endverb
+      \verb{file}
+      \verb Full Text PDF:/Users/martinschlaier/Zotero/storage/KILRLVWF/Stark et al. - 2006 - BioGRID a general repository for interaction datasets.pdf:application/pdf;Snapshot:/Users/martinschlaier/Zotero/storage/I8XH4XZ8/gkj109.html:text/html
+      \endverb
+    \endentry
+    \entry{wu_exploiting_2017}{article}{}
+      \name{author}{2}{}{%
+        {{hash=a3467545efc97f24be8a5d66e4c70ab4}{%
+           family={Wu},
+           familyi={W\bibinitperiod},
+           given={Bo},
+           giveni={B\bibinitperiod}}}%
+        {{hash=48831df31a47b878552b9867bbfe6028}{%
+           family={Shen},
+           familyi={S\bibinitperiod},
+           given={Haiying},
+           giveni={H\bibinitperiod}}}%
+      }
+      \strng{namehash}{ab9f39ce3d6233c1fec4d595a0d38300}
+      \strng{fullhash}{e484ca41ea576e339dde47cbc3f44d72}
+      \strng{bibnamehash}{e484ca41ea576e339dde47cbc3f44d72}
+      \strng{authorbibnamehash}{e484ca41ea576e339dde47cbc3f44d72}
+      \strng{authornamehash}{ab9f39ce3d6233c1fec4d595a0d38300}
+      \strng{authorfullhash}{e484ca41ea576e339dde47cbc3f44d72}
+      \field{sortinit}{W}
+      \field{sortinithash}{4315d78024d0cea9b57a0c6f0e35ed0d}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Discovering the densest subgraph is important in graph analysis, which has wide-ranging applications from social network community mining to the discovery of biological network modules. However, the previous algorithms neglect the connectivity of the dense subgraph since it is a challenge to give consideration to both subgraph structure and time efﬁciency. As a result, it may lead to isolated subgraphs in the output though they aim to ﬁnd one connected dense subgraph. Also, there are lack of efﬁcient algorithms for big natural graphs, especially considering datasets become increasingly larger in this era of Big Data. Furthermore, previous algorithms fail to take advantage of various features of natural graphs (e.g., power-law degree distribution, homophyly of vertices, and power-law community size) which can be applied to improve the efﬁciency and precision of the densest subgraph discovery. To handle these problems, in this paper, we study the densest subgraph problem by designing two different algorithms based on different features that natural graphs have. First, by analyzing the features of natural graphs, we design a heuristic algorithm for discovering the connected densest subgraph for massive undirected graphs in a {MapReduce} framework by taking advantage of the features of natural graphs. Second, we propose an exact algorithm for big data for the problem of discovering the densest subgraph. Experimental results show that our algorithms are more time-efﬁcient and precise than other algorithms.}
+      \field{day}{1}
+      \field{issn}{2332-7790}
+      \field{journaltitle}{{IEEE} Transactions on Big Data}
+      \field{langid}{english}
+      \field{month}{9}
+      \field{number}{3}
+      \field{shortjournal}{{IEEE} Trans. Big Data}
+      \field{title}{Exploiting Efficient Densest Subgraph Discovering Methods for Big Data}
+      \field{volume}{3}
+      \field{year}{2017}
+      \field{dateera}{ce}
+      \field{pages}{334\bibrangedash 348}
+      \range{pages}{15}
+      \verb{doi}
+      \verb 10.1109/TBDATA.2016.2625307
+      \endverb
+      \verb{file}
+      \verb PDF:/Users/martinschlaier/Zotero/storage/JAH2H3SN/Wu and Shen - 2017 - Exploiting Efficient Densest Subgraph Discovering Methods for Big Data.pdf:application/pdf
+      \endverb
+    \endentry
+    \entry{zafarani_social_2009}{misc}{}
+      \name{author}{2}{}{%
+        {{hash=d306937230eb130921ea8108e0c69b4c}{%
+           family={Zafarani},
+           familyi={Z\bibinitperiod},
+           given={R.},
+           giveni={R\bibinitperiod}}}%
+        {{hash=240f15f7d0b589c89d5552453f46785d}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={H.},
+           giveni={H\bibinitperiod}}}%
+      }
+      \list{publisher}{2}{%
+        {Arizona State University, School of Computing, Informatics}%
+        {Decision Systems Engineering}%
+      }
+      \strng{namehash}{89837924b47b6ff4df43d8da725a7e52}
+      \strng{fullhash}{c7825cee27c595b7d04a9c6957774c4b}
+      \strng{bibnamehash}{c7825cee27c595b7d04a9c6957774c4b}
+      \strng{authorbibnamehash}{c7825cee27c595b7d04a9c6957774c4b}
+      \strng{authornamehash}{89837924b47b6ff4df43d8da725a7e52}
+      \strng{authorfullhash}{c7825cee27c595b7d04a9c6957774c4b}
+      \field{sortinit}{Z}
+      \field{sortinithash}{96892c0b0a36bb8557c40c49813d48b3}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Social Computing Data Repository at {ASU}}
+      \field{urlday}{30}
+      \field{urlmonth}{8}
+      \field{urlyear}{2025}
+      \field{year}{2009}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://datasets.syr.edu/
+      \endverb
+      \verb{url}
+      \verb https://datasets.syr.edu/
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

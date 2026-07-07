@@ -1,0 +1,96 @@
+%------------------------------------------------
+% Latex-Grundgerüst für Abschlussarbeiten
+%
+% zu Erzeugen mit
+%   pdflatex ausarbeitung.tex
+%
+% von Carsten Gutwenger, Nils Kriege, Denis Kurz,
+%     Till Schäfer, Lutz Oettershagen, Jonas Charfreitag
+%
+%------------------------------------------------
+
+\documentclass[a4paper,11pt,twoside,headsepline,openany]{scrbook}
+
+\input{header}
+
+\addbibresource[location=local, datatype=bibtex]{literature.bib}
+
+
+    % Header und Footer
+    \pagestyle{scrheadings}
+    \ofoot{}\cfoot{}\ifoot{}
+    \lehead{\pagemark}
+    \rehead{\slshape\leftmark}
+    \lohead{\slshape\leftmark}
+    \rohead{\pagemark}
+%
+    \newtheorem{definition}{Definition}
+    \newtheorem{theorem}{Theorem}
+    \newtheorem{lemma}{Lemma}
+    \newtheorem{observation}{Observation}
+
+    \usepackage{blindtext}
+
+    \usepackage[british]{babel}
+
+    \usetikzlibrary{arrows.meta, positioning}
+
+    \newcommand{\DSPwithFBA}{DSP-FBA}
+    \newcommand{\DSPwithR}{DSP-Intersect}
+
+
+\begin{document}
+    \frontmatter
+    \input{sections/titel}
+    \cleardoublepage
+    % \input{sections/acknowledgements}
+    \input{sections/AI}
+    % \cleardoublepage
+    % \input{sections/abstract}
+    % \cleardoublepage
+    \tableofcontents
+%    \pagenumbering{gobble}
+%    \clearpage
+%    \input{sections/erklaerung}
+%    \listoffigures   % Automatically generates list of figures
+%    \listoftables
+
+    \mainmatter
+    \input{sections/introduction}
+    \cleardoublepage
+    \input{sections/preliminaries}
+    \cleardoublepage
+    \input{sections/kadabra}
+    \cleardoublepage
+    \input{sections/brava}
+    \cleardoublepage
+%    \input{sections/implementation}
+    \input{sections/setup}
+    \cleardoublepage
+    \input{sections/results}
+    \cleardoublepage
+    \input{sections/result_pruning}
+    \cleardoublepage
+%    \input{sections/Observations}
+
+
+    \input{sections/conclusion}
+    \cleardoublepage
+    \appendix
+        \input{sections/appendix}
+    \cleardoublepage
+
+    \backmatter
+    \printbibliography[
+        heading=bibintoc,
+        title={Bibliography}
+    ]
+
+
+% Abbildungsverzeichnis (optional)
+% Algorithmenverzeichnis (optional)
+% Symbolverzeichnis (optional)
+
+
+% Anhang (optional)
+\end{document}
