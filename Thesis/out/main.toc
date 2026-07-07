@@ -3,59 +3,27 @@
 \contentsline {section}{\numberline {1.1}Motivation}{1}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Related Work}{1}{section.1.2}%
 \contentsline {section}{\numberline {1.3}Our Contribution}{2}{section.1.3}%
-\contentsline {chapter}{\numberline {2}Preliminaries}{5}{chapter.2}%
-\contentsline {section}{\numberline {2.1}Densest Subgraph Problem}{5}{section.2.1}%
-\contentsline {section}{\numberline {2.2}Maximum Flow and Minimum Cut}{5}{section.2.2}%
-\contentsline {section}{\numberline {2.3}Parametric Flow}{7}{section.2.3}%
-\contentsline {section}{\numberline {2.4}Solving DSP with Reduction to Parametric Flow}{9}{section.2.4}%
-\contentsline {chapter}{\numberline {3}Exact Algorithms}{13}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Goldberg's Maximum-Flow-Based Algorithm}{13}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Parametric Max-Flow for DSP}{13}{section.3.2}%
-\contentsline {subsection}{\numberline {3.2.1}Solving the DSP by finding the first breakpoint}{14}{subsection.3.2.1}%
-\contentsline {subsection}{\numberline {3.2.2}DSP with an Intersection~Scheme}{15}{subsection.3.2.2}%
-\contentsline {subsection}{\numberline {3.2.3}Incremental Parametric Cut (IPC)}{17}{subsection.3.2.3}%
-\contentsline {subsection}{\numberline {3.2.4}Difference IPC vs {DSP-Intersect} and Runtimes}{18}{subsection.3.2.4}%
-\contentsline {chapter}{\numberline {4}Approximation Algorithms}{19}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Charikar Greedy-Algorithm}{19}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Iterative Peeling Algorithm Greedy++}{20}{section.4.2}%
-\contentsline {chapter}{\numberline {5}Graph Pruning}{23}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Pruning Mechanisms: Leveraging Graph Structure}{23}{section.5.1}%
-\contentsline {subsection}{\numberline {5.1.1}Structural Pruning via Graph Partitioning}{23}{subsection.5.1.1}%
-\contentsline {subsection}{\numberline {5.1.2}Algorithmic Pruning via Degree Peeling}{23}{subsection.5.1.2}%
-\contentsline {section}{\numberline {5.2}A Pruning-Accelerated Framework for DSP}{24}{section.5.2}%
-\contentsline {paragraph}{\nonumberline Stage 1: Fast Pruning and Bounding}{24}{paragraph*.10}%
-\contentsline {paragraph}{\nonumberline Stage 2: Exact Computation on the Pruned Graph}{24}{paragraph*.12}%
-\contentsline {chapter}{\numberline {6}Experimental Setup}{25}{chapter.6}%
-\contentsline {section}{\numberline {6.1}Hardware}{25}{section.6.1}%
-\contentsline {section}{\numberline {6.2}Implementation}{25}{section.6.2}%
-\contentsline {section}{\numberline {6.3}Instances}{25}{section.6.3}%
-\contentsline {section}{\numberline {6.4}Algorithm Performance Metrics}{27}{section.6.4}%
-\contentsline {chapter}{\numberline {7}Results}{29}{chapter.7}%
-\contentsline {section}{\numberline {7.1}Comparing First Breakpoint Algorithms}{29}{section.7.1}%
-\contentsline {section}{\numberline {7.2}Comparing IPC and {DSP-Intersect} with PF and PR}{30}{section.7.2}%
-\contentsline {section}{\numberline {7.3}Comparing IPC in its Versions}{30}{section.7.3}%
-\contentsline {section}{\numberline {7.4}Comparing {DSP-FBA} FPPF and IPC}{32}{section.7.4}%
-\contentsline {subsection}{\numberline {7.4.1}Unweighted Instances}{32}{subsection.7.4.1}%
-\contentsline {paragraph}{\nonumberline The Creation of the Flow Network}{35}{paragraph*.23}%
-\contentsline {subsection}{\numberline {7.4.2}Weighted Instances}{35}{subsection.7.4.2}%
-\contentsline {section}{\numberline {7.5}Iterations performed by Greedy++}{36}{section.7.5}%
-\contentsline {section}{\numberline {7.6}Comparing Greedy++ to the Exact Algorithms}{36}{section.7.6}%
-\contentsline {subsection}{\numberline {7.6.1}Unweighted Instances}{37}{subsection.7.6.1}%
-\contentsline {subsection}{\numberline {7.6.2}Weighted Instances}{38}{subsection.7.6.2}%
-\contentsline {paragraph}{\nonumberline Conclusion}{39}{paragraph*.30}%
-\contentsline {chapter}{\numberline {8}Graph Pruning}{41}{chapter.8}%
-\contentsline {section}{\numberline {8.1}Size Reduction}{41}{section.8.1}%
-\contentsline {section}{\numberline {8.2}Pruning Unweighted Instances}{42}{section.8.2}%
-\contentsline {subsection}{\numberline {8.2.1}Comparing the Speedup of Each Algorithm in Comparison to Unpruned Runtime}{42}{subsection.8.2.1}%
-\contentsline {subsection}{\numberline {8.2.2}Ratio of Pruning Time vs Algorithm Time}{43}{subsection.8.2.2}%
-\contentsline {subsection}{\numberline {8.2.3}Comparing the exact Algorithms on Pruned Unweighted Instances}{44}{subsection.8.2.3}%
-\contentsline {subsection}{\numberline {8.2.4}Variant 2 of Pruning Unweighted Instances}{45}{subsection.8.2.4}%
-\contentsline {subsection}{\numberline {8.2.5}Final Comparison on Unweighted Instances: Greedy++ vs Exact Algorithms}{47}{subsection.8.2.5}%
-\contentsline {paragraph}{\nonumberline Instances where pruning provides no advantage}{47}{paragraph*.39}%
-\contentsline {paragraph}{\nonumberline Instances where pruning helps and the variance is small}{47}{paragraph*.41}%
-\contentsline {paragraph}{\nonumberline Instances where pruning helps and the variance is large}{47}{paragraph*.43}%
-\contentsline {section}{\numberline {8.3}Pruning on Weighted Instances}{48}{section.8.3}%
-\contentsline {chapter}{\numberline {9}Conclusion}{51}{chapter.9}%
-\contentsline {chapter}{\numberline {A}Absolute Runtimes}{53}{appendix.A}%
-\contentsline {chapter}{\nonumberline Bibliography}{55}{chapter*.50}%
+\contentsline {section}{\numberline {1.4}Betweenness Ranking Approximation}{3}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}Betweenness Ranking Approximation Problem}{4}{subsection.1.4.1}%
+\contentsline {chapter}{\numberline {2}KADABRA}{6}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Overview and Problem Formalization}{6}{section.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}The Stochastic Paradigm}{6}{subsection.2.1.1}%
+\contentsline {subsection}{\numberline {2.1.2}Objective and Error Formalization}{6}{subsection.2.1.2}%
+\contentsline {subsection}{\numberline {2.1.3}The Adaptive Sampling Challenge}{7}{subsection.2.1.3}%
+\contentsline {section}{\numberline {2.2}Algorithmic Innovations in KADABRA}{7}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Balanced Bidirectional BFS (bb-BFS)}{7}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Rigorous Adaptive Stopping Condition}{8}{subsection.2.2.2}%
+\contentsline {section}{\numberline {2.3}Theoretical Guarantees: The Contrast with GNNs}{8}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}Rigorous Martingale-Based Correctness}{8}{subsection.2.3.1}%
+\contentsline {subsection}{\numberline {2.3.2}Adaptive Top-$k$ Centrality Selection}{9}{subsection.2.3.2}%
+\contentsline {chapter}{\numberline {3}brava}{11}{chapter.3}%
+\contentsline {chapter}{\numberline {4}Experimental Setup}{12}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Hardware}{12}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Implementation}{12}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Instances}{12}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Algorithm Performance Metrics}{13}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Results}{13}{section.4.5}%
+\contentsline {chapter}{\numberline {5}Conclusion}{15}{chapter.5}%
+\contentsline {chapter}{\numberline {A}Absolute Runtimes}{16}{appendix.A}%
+\contentsline {chapter}{\nonumberline Bibliography}{17}{chapter*.4}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

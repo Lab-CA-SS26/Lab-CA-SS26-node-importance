@@ -1,7 +1,7 @@
 INFO:  latexindent.pl version 4.0.2, 2026-06-06, a script to indent .tex files
        latexindent.pl lives here: /opt/homebrew/Cellar/latexindent/4.0.2/libexec/bin/
-       Tue Jul  7 12:57:57 2026
-       Filename: /Users/martinschlaier/Documents/10_Universitaet/Master/Lab-CA/Lab-CA-SS26-node-importance/Thesis/sections/__latexindent_temp_preliminaries.tex
+       Tue Jul  7 14:26:15 2026
+       Filename: /Users/martinschlaier/Documents/10_Universitaet/Master/Lab-CA/Lab-CA-SS26-node-importance/Thesis/sections/__latexindent_temp_kadabra.tex
 INFO:  Processing switches:
        -y|--yaml: YAML settings specified via command line
        -c|--cruft: cruft directory

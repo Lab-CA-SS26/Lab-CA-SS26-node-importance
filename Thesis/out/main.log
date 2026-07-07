@@ -1,7 +1,6 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.5.8)  30 SEP 2025 13:03
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.5.8)  7 JUL 2026 14:57
 entering extended mode
  restricted \write18 enabled.
- file:line:error style messages enabled.
  %&-line parsing enabled.
 **main.tex
 (./main.tex
@@ -1478,7 +1477,120 @@ Package biblatex Info: Automatic encoding selection.
 Package biblatex Info: Trying to load bibliographic data...
 Package biblatex Info: ... file 'main.bbl' found.
 
-(out/main.bbl)
+(out/main.bbl
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                Sauer_PPF_2025
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                beines_simpler_2024
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                boob_flowless_2020
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                borassi2019kadabra
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                brandes2001faster
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                charikar_greedy_2000
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                chekuri_densest_2022
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                freeman1977set
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                goldberg_finding_1984
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                hochbaum_flow_2024
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                hochbaum_pseudoflow_2008
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                kunegis_konect_2013
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                leskovec_snap_2014
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                picard_network_1982
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                simexpal2019
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+
+Package biblatex Warning: The following entry could not be found
+(biblatex)                in the database:
+(biblatex)                zafarani_social_2009
+(biblatex)                Please verify the spelling and rerun
+(biblatex)                LaTeX afterwards.
+
+)
 Package biblatex Info: Reference section=0 on input line 42.
 Package biblatex Info: Reference segment=0 on input line 42.
 
@@ -1499,7 +1611,19 @@ File: ub_logo.png Graphic file (type png)
 Package pdftex.def Info: ub_logo.png  used on input line 5.
 (pdftex.def)             Requested size: 170.71652pt x 65.88551pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 21--26
+! Missing } inserted.
+<inserted text> 
+                }
+l.16 	\end{center}
+                  
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 19--24
 
  []
 
@@ -1511,418 +1635,322 @@ Underfull \hbox (badness 10000) in paragraph at lines 21--26
 
 {/usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/loc
 al/texlive/2023/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc} <./ub_logo
-.png>]) [2
+.png>]
+LaTeX Font Info:    Trying to load font information for U+msa on input line 31.
 
-
-] (./sections/acknowledgements.tex) (./sections/AI.tex
-LaTeX Font Info:    Trying to load font information for U+msa on input line 1.
-
-(/usr/local/texlive/2023/texmf-dist/tex/latex/amsfonts/umsa.fd
+ (/usr/local/texlive/2023/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 1.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 31.
+
 
 (/usr/local/texlive/2023/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Trying to load font information for U+stmry on input line 1
-.
+LaTeX Font Info:    Trying to load font information for U+stmry on input line 3
+1.
 
-(/usr/local/texlive/2023/texmf-dist/tex/latex/stmaryrd/Ustmry.fd) [3
-
-]
+(/usr/local/texlive/2023/texmf-dist/tex/latex/stmaryrd/Ustmry.fd) [2])
+(./sections/AI.tex
 LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 5
 .
-
-(/usr/local/texlive/2023/texmf-dist/tex/latex/base/t1cmtt.fd
+ (/usr/local/texlive/2023/texmf-dist/tex/latex/base/t1cmtt.fd
 File: t1cmtt.fd 2022/07/10 v2.5l Standard LaTeX font definitions
-)) [4
+))
+Overfull \hbox (14.70383pt too wide) in paragraph at lines 5--51
+\T1/cmr/m/n/10.95 I hereby de-clare that gen-er-at-ive ar-ti-fi-cial in-tel-li-
+gence tools in the form of, \T1/cmtt/m/n/10.95 Gemini 3.5 Flash\T1/cmr/m/n/10.9
+5 ,
+ []
 
-]
-(./sections/abstract.tex) [5
+[3
 
-
-
-] [6
-
-
-] (out/main.toc [7
-
-])
+] (out/main.toc)
 \tf@toc=\write6
 \openout6 = `main.toc'.
 
- [8]
-(./sections/introduction.tex
+ [4
+
+] (./sections/introduction.tex
 chapter 1.
+
+LaTeX Warning: Citation 'picard_network_1982' on page 1 undefined on input line
+ 30.
+
+
+LaTeX Warning: Citation 'goldberg_finding_1984' on page 1 undefined on input li
+ne 31.
+
+
+LaTeX Warning: Citation 'charikar_greedy_2000' on page 1 undefined on input lin
+e 32.
+
 [1
 
 
 
-] [2]) [3] [4
+]
+
+LaTeX Warning: Citation 'boob_flowless_2020' on page 2 undefined on input line 
+40.
 
 
-] (./sections/preliminaries.tex
+LaTeX Warning: Citation 'chekuri_densest_2022' on page 2 undefined on input lin
+e 42.
+
+
+Overfull \hbox (1.32404pt too wide) in paragraph at lines 37--44
+\T1/cmr/m/n/10.95 of mag-nitude faster than Gold-berg's max-imum flow al-gorith
+m. []
+ []
+
+
+LaTeX Warning: Citation 'hochbaum_flow_2024' on page 2 undefined on input line 
+45.
+
+
+LaTeX Warning: Citation 'hochbaum_pseudoflow_2008' on page 2 undefined on input
+ line 45.
+
+
+LaTeX Warning: Citation 'hochbaum_flow_2024' on page 2 undefined on input line 
+48.
+
+
+Overfull \hbox (3.34503pt too wide) in paragraph at lines 45--50
+[][] \T1/cmr/m/n/10.95 in-tro-duced the \T1/cmr/m/it/10.95 In-cre-mental Para-m
+et-ric Cut \T1/cmr/m/n/10.95 pro-ced-ure (IPC),
+ []
+
+
+LaTeX Warning: Citation 'beines_simpler_2024' on page 2 undefined on input line
+ 52.
+
+
+LaTeX Warning: Citation 'Sauer_PPF_2025' on page 2 undefined on input line 52.
+
+
+LaTeX Warning: Citation 'hochbaum_flow_2024' on page 2 undefined on input line 
+65.
+
+[2]
+
+LaTeX Warning: Citation 'beines_simpler_2024' on page 3 undefined on input line
+ 89.
+
+
+Overfull \hbox (56.16824pt too wide) in paragraph at lines 89--91
+[]\T1/cmr/m/n/10.95 Our im-ple-ment-a-tion ex-tends the para-met-ric max-imum f
+low frame-work by []
+ []
+
+) (./sections/preliminaries.tex
+
+LaTeX Warning: Citation 'freeman1977set' on page 3 undefined on input line 4.
+
+
+LaTeX Warning: Citation 'brandes2001faster' on page 3 undefined on input line 1
+3.
+
+[3]
+
+LaTeX Warning: Citation 'borassi2019kadabra' on page 4 undefined on input line 
+23.
+
+[4]) (./sections/kadabra.tex [5]
 chapter 2.
-[5
 
-] [6] [7{/usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t
-s1.enc}]
-Overfull \hbox (3.27301pt too wide) detected at line 187
-[] [] \OT1/cmr/m/n/10.95 = [] []
+Overfull \hbox (0.7687pt too wide) in paragraph at lines 15--17
+[]\T1/cmr/m/n/10.95 KADABRA lever-ages this by sampling a se-quence of $\OML/cm
+m/m/it/10.95 ^^\$ \T1/cmr/m/n/10.95 ran-dom shortest paths $\OML/cmm/m/it/10.95
+ ^^Y[]; [] ; ^^Y[]$
  []
 
-[8] (./figures/constructed_graph.tex)
-Underfull \vbox (badness 5302) has occurred while \output is active []
+[6
 
- [9]
-[10]
-pdfTeX warning (ext4): destination with the same identifier (name{equation.2.4.
-1}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.325         \end{align}
-                         
-pdfTeX warning (ext4): destination with the same identifier (name{equation.2.4.
-2}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.325         \end{align}
-                         
-pdfTeX warning (ext4): destination with the same identifier (name{equation.2.4.
-3}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.325         \end{align}
-                         
-pdfTeX warning (ext4): destination with the same identifier (name{equation.2.4.
-4}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.325         \end{align}
-                         
-pdfTeX warning (ext4): destination with the same identifier (name{equation.2.4.
-1}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.333         \end{align}
-                         
-pdfTeX warning (ext4): destination with the same identifier (name{equation.2.4.
-2}) has been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.333         \end{align}
-                         ) [11] [12
+{/usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}]
+ [7] [8]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 119.
 
 
-] (./sections/exact_algorithms.tex
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 119.
+
+[9]) (./sections/brava.tex [10]
 chapter 3.
-[13
+) (./sections/setup.tex [11
 
 ]
-Overfull \hbox (9.4094pt too wide) in paragraph at lines 83--88
-\T1/cmr/m/it/10.95 PPF \T1/cmr/m/n/10.95 (FPPF) and bundle all al-gorithms whic
-h finds the first break-point as \T1/cmr/bx/it/10.95 first-breakpoint
- []
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[14] (./figures/intersectionscheme.tex) [15] [16]
-
-./sections/exact_algorithms.tex:230: Package amsmath Error: Erroneous nesting o
-f equation structures;
-(amsmath)                trying to recover with `aligned'.
-
-See the amsmath package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.230         \end{align}
-                         
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
-
-./sections/exact_algorithms.tex:230: Package amsmath Error: Multiple \label's: 
-label '{eq:alg_equality1}' will be lost.
-
-See the amsmath package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.230         \end{align}
-                         
-Your command was ignored.
-Type  I <command> <return>  to replace it with another command,
-or  <return>  to continue without it.
-
-[17]) [18] (./sections/approx_algorithms.tex
 chapter 4.
-./sections/approx_algorithms.tex:27: Missing $ inserted.
-<inserted text> 
-                $
-l.27     $\rho^*$ \gets
-                        $\rho(S_{\max})$\;
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
 
-./sections/approx_algorithms.tex:27: Missing $ inserted.
-<inserted text> 
-                $
-l.27     $\rho^*$ \gets $\rho
-                             (S_{\max})$\;
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-[19
+LaTeX Warning: Citation 'simexpal2019' on page 12 undefined on input line 21.
 
 
+Overfull \hbox (36.32004pt too wide) in paragraph at lines 12--22
+\T1/cmr/m/n/10.95 and BRAVA-GNN was im-ple-men-ted and run with \T1/cmr/bx/n/10
+.95 Ju-lia 1.12.5\T1/cmr/m/n/10.95 . \T1/cmr/bx/n/10.95 Simex-pal 1.1 \T1/cmr/m
+/n/10.95 ([])
+ []
 
-] [20]
-./sections/approx_algorithms.tex:141: Missing $ inserted.
-<inserted text> 
-                $
-l.141     \Return
-                  $G_{\text{densest}}$, $\rho^*$\;
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
 
-./sections/approx_algorithms.tex:141: Missing $ inserted.
-<inserted text> 
-                $
-l.141     \Return
-                  $G_{\text{densest}}$, $\rho^*$\;
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
+LaTeX Warning: Citation 'beines_simpler_2024' on page 12 undefined on input lin
+e 25.
 
-[21]) [22] (./sections/graph_reduction.tex
-chapter 5.
-[23
+
+LaTeX Warning: Citation 'Sauer_PPF_2025' on page 12 undefined on input line 26.
 
 
 
-]) [24] (./sections/setup.tex
-chapter 6.
-(./tables/instance_table_unweighted.tex)
+LaTeX Warning: Citation 'boob_flowless_2020' on page 12 undefined on input line
+ 28.
+
+
+LaTeX Warning: Reference `sec:reduction_to_flow' on page 12 undefined on input 
+line 31.
+
+
+LaTeX Warning: Citation 'leskovec_snap_2014' on page 12 undefined on input line
+ 39.
+
+
+LaTeX Warning: Citation 'zafarani_social_2009' on page 12 undefined on input li
+ne 40.
+
+
+LaTeX Warning: Citation 'kunegis_konect_2013' on page 12 undefined on input lin
+e 41.
+
+
+LaTeX Warning: Reference `tab:wei' on page 12 undefined on input line 43.
+
+(./tables/instance_table_new.tex)
+
+LaTeX Warning: Citation 'kunegis_konect_2013' on page 12 undefined on input lin
+e 50.
+
+
+LaTeX Warning: Citation 'zafarani_social_2009' on page 12 undefined on input li
+ne 50.
+
+
+LaTeX Warning: Citation 'leskovec_snap_2014' on page 12 undefined on input line
+ 50.
+
+
+LaTeX Warning: Citation 'kunegis_konect_2013' on page 12 undefined on input lin
+e 50.
+
+
+LaTeX Warning: Citation 'zafarani_social_2009' on page 12 undefined on input li
+ne 50.
+
+
+LaTeX Warning: Citation 'leskovec_snap_2014' on page 12 undefined on input line
+ 50.
+
+
+Underfull \hbox (badness 2213) in paragraph at lines 50--50
+[][][]|\T1/cmr/m/n/10.95 Over-view of in-stances: $\OML/cmm/m/it/10.95 n$ \T1/c
+mr/m/n/10.95 is the num-ber of ver-tices, $\OML/cmm/m/it/10.95 m$ \T1/cmr/m/n/1
+0.95 the num-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 50--50
+\T1/cmr/m/n/10.95 ber of edges, Sources: [1] KONECT ([]),
+ []
+
+
+Underfull \hbox (badness 4242) in paragraph at lines 50--50
+\T1/cmr/m/n/10.95 [2] Za-frani ([]); un-marked in-stances are from
+ []
+
+
+LaTeX Warning: Float too large for page by 40.30052pt on input line 52.
+
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[25
+[12
+
+]
+
+LaTeX Warning: Citation 'boob_flowless_2020' on page 13 undefined on input line
+ 68.
 
 
+LaTeX Warning: Reference `ch:pruning' on page 13 undefined on input line 73.
 
-] (./tables/instance_table_weighted.tex)
 
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[26]
-Overfull \hbox (11.67143pt too wide) in paragraph at lines 101--104
+Overfull \hbox (18.04243pt too wide) in paragraph at lines 72--75
 []\T1/cmr/m/n/10.95 All ex-per-i-ments were re-peated on both the ori-ginal and
- the \T1/cmr/m/it/10.95 pruned \T1/cmr/m/n/10.95 graphs (see Chapter []5[]).
+ the \T1/cmr/m/it/10.95 pruned \T1/cmr/m/n/10.95 graphs (see Chapter []).
  []
 
-[27]) [28] (./sections/results.tex
-chapter 7.
-(./tables/FDA_speedup.tex) [29
-
-
+) (./sections/results.tex) (./sections/conclusion.tex [13] [14]
+chapter 5.
+) (./sections/appendix.tex [15
 
 ]
-Overfull \hbox (2.41344pt too wide) in paragraph at lines 62--75
- [][] 
- []
-
-<figures/plotted_speedup_R_IPC_vs_N_d_S.pdf, id=583, 715.47299pt x 445.90588pt>
-
-File: figures/plotted_speedup_R_IPC_vs_N_d_S.pdf Graphic file (type pdf)
-<use figures/plotted_speedup_R_IPC_vs_N_d_S.pdf>
-Package pdftex.def Info: figures/plotted_speedup_R_IPC_vs_N_d_S.pdf  used on in
-put line 81.
-(pdftex.def)             Requested size: 418.25368pt x 260.66678pt.
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-[30] [31 <./figures/plotted_speedup_R_IPC_vs_N_d_S.pdf>]
-<figures/comp_Pf_PR.pdf, id=631, 870.27141pt x 1228.56746pt>
-File: figures/comp_Pf_PR.pdf Graphic file (type pdf)
-<use figures/comp_Pf_PR.pdf>
-Package pdftex.def Info: figures/comp_Pf_PR.pdf  used on input line 138.
-(pdftex.def)             Requested size: 418.25368pt x 590.45554pt.
-
-
-LaTeX Warning: Float too large for page by 49.72534pt on input line 143.
-
-<figures/comp_FPPF_IPC_unweighted.pdf, id=633, 853.50871pt x 519.62129pt>
-File: figures/comp_FPPF_IPC_unweighted.pdf Graphic file (type pdf)
-<use figures/comp_FPPF_IPC_unweighted.pdf>
-Package pdftex.def Info: figures/comp_FPPF_IPC_unweighted.pdf  used on input li
-ne 189.
-(pdftex.def)             Requested size: 334.60422pt x 203.70601pt.
-[32] [33 <./figures/comp_Pf_PR.pdf>] [34 <./figures/comp_FPPF_IPC_unweighted.pd
-f>] [35] (./tables/iterations_greedy_unweighted.tex)
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[36] [37] (./tables/Exact_vs_G-3_unweighted.tex) [38] [39]) [40]
-(./sections/result_pruning.tex
-chapter 8.
-(./tables/Size_reduction_by_pruning.tex) [41
-
-
-
-] [42]
-(./tables/ratio_pruning_runtime_unweighted.tex) [43]
-
-./sections/result_pruning.tex:138: Package caption Error: \caption outside floa
-t.
-
-See the caption package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.138 ...tal runtime and therefore reduces\caption
-                                                  {Descriptive statistics of...
-
-If you do not understand this error, please take a closer look
-at the documentation of the `caption' package, especially the
-section about errors.
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
-<figures/comp_FPPF_IPC_pruned_unweighted.pdf, id=795, 570.93298pt x 445.90588pt
->
-File: figures/comp_FPPF_IPC_pruned_unweighted.pdf Graphic file (type pdf)
-<use figures/comp_FPPF_IPC_pruned_unweighted.pdf>
-Package pdftex.def Info: figures/comp_FPPF_IPC_pruned_unweighted.pdf  used on i
-nput line 148.
-(pdftex.def)             Requested size: 334.60422pt x 261.34038pt.
-[44 <./figures/comp_FPPF_IPC_pruned_unweighted.pdf>] [45]
-<figures/pruning2-1.pdf, id=824, 722.7pt x 361.35pt>
-File: figures/pruning2-1.pdf Graphic file (type pdf)
-<use figures/pruning2-1.pdf>
-Package pdftex.def Info: figures/pruning2-1.pdf  used on input line 216.
-(pdftex.def)             Requested size: 418.25368pt x 209.1255pt.
- [46 <./figures/pruning2-1.pdf>]
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[47]
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[48]) [49] [50
-
-
-] (./sections/conclusion.tex
-chapter 9.
-
-Overfull \hbox (5.40324pt too wide) in paragraph at lines 11--13
-[]\T1/cmr/m/n/10.95 Our com-par-at-ive ana-lysis shows that \T1/cmr/bx/n/10.95 
-IPC con-sist-ently out-per-forms DSP-Intersect
- []
-
-[51
-
-]) [52] (./sections/appendix.tex
 chapter A.
-(./tables/abosolute_runtime_weighted.tex)
-(./tables/abosolute_runtime_weighted_pruned.tex)
-(./tables/abosolute_runtime_unweighted.tex)
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-(./tables/abosolute_runtime_unweighted_pruned.tex)
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-) [53
-
-
-
-] [54]
-chapter without number
-
-Overfull \hbox (12.81757pt too wide) in paragraph at lines 90--90
-\T1/cmr/m/it/10.95 ments (ALE-NEX)\T1/cmr/m/n/10.95 . _eprint: ht-tps://epubs.s
-iam.org/doi/pdf/10.1137/1.9781611978339.3,
- []
-
-[55
-
-
-
+) [16
 
 ]
-Overfull \hbox (1.85521pt too wide) in paragraph at lines 90--90
-[][]\T1/cmr/m/n/10.95 Lanciano, Tom-maso, At-sushi Miyau-chi, Ad-ri-ano Fazzone
- and Francesco Bon-chi (31st Aug.
- []
+chapter without number
+[17
 
-[56] [57] (out/main.aux)
 
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+
+] (out/main.aux)
+
+LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
-
-Package biblatex Warning: Please rerun LaTeX.
-(biblatex)                Page breaks have changed.
-
 Package logreq Info: Writing requests to 'main.run.xml'.
 \openout1 = `main.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 46054 strings out of 476025
- 967343 string characters out of 5790018
- 1931388 words of memory out of 5000000
- 65484 multiletter control sequences out of 15000+600000
- 534612 words of font info for 77 fonts, out of 8000000 for 9000
+ 45032 strings out of 476025
+ 943239 string characters out of 5790018
+ 1870388 words of memory out of 5000000
+ 64755 multiletter control sequences out of 15000+600000
+ 532160 words of font info for 78 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 108i,20n,106p,10599b,2701s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 108i,20n,106p,10599b,2451s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb
 ></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb>
 </usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb><
 /usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></u
 sr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr
 /local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/l
-ocal/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/loc
-al/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local
-/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/te
-xlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texli
-ve/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/
-2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2
-023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/202
-3/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2023/
-texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2023/te
-xmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb></usr/local/texlive/2023/texm
-f-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2023/
-texmf-dist/fonts/type1/public/cm-super/sfbi1095.pfb></usr/local/texlive/2023/te
-xmf-dist/fonts/type1/public/cm-super/sfbx0800.pfb></usr/local/texlive/2023/texm
-f-dist/fonts/type1/public/cm-super/sfbx1095.pfb></usr/local/texlive/2023/texmf-
-dist/fonts/type1/public/cm-super/sfcc1095.pfb></usr/local/texlive/2023/texmf-di
-st/fonts/type1/public/cm-super/sfrm0800.pfb></usr/local/texlive/2023/texmf-dist
-/fonts/type1/public/cm-super/sfrm1095.pfb></usr/local/texlive/2023/texmf-dist/f
-onts/type1/public/cm-super/sfsl1095.pfb></usr/local/texlive/2023/texmf-dist/fon
-ts/type1/public/cm-super/sfss1095.pfb></usr/local/texlive/2023/texmf-dist/fonts
-/type1/public/cm-super/sfss1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/t
-ype1/public/cm-super/sfss1440.pfb></usr/local/texlive/2023/texmf-dist/fonts/typ
-e1/public/cm-super/sfsx1095.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1
-/public/cm-super/sfsx1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/p
-ublic/cm-super/sfsx1440.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/pub
-lic/cm-super/sfsx1728.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/publi
-c/cm-super/sfsx2074.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/
-cm-super/sfti0800.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm
--super/sfti1095.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-s
-uper/sftt1095.pfb>
-Output written on out/main.pdf (65 pages, 1136163 bytes).
+ocal/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/loca
+l/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/t
+exlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/te
+xlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texl
+ive/2023/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/
+texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfbx1095.pfb></usr/local/te
+xlive/2023/texmf-dist/fonts/type1/public/cm-super/sfcc1095.pfb></usr/local/texl
+ive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></usr/local/texliv
+e/2023/texmf-dist/fonts/type1/public/cm-super/sfsl1095.pfb></usr/local/texlive/
+2023/texmf-dist/fonts/type1/public/cm-super/sfss1095.pfb></usr/local/texlive/20
+23/texmf-dist/fonts/type1/public/cm-super/sfss1440.pfb></usr/local/texlive/2023
+/texmf-dist/fonts/type1/public/cm-super/sfss1728.pfb></usr/local/texlive/2023/t
+exmf-dist/fonts/type1/public/cm-super/sfsx1095.pfb></usr/local/texlive/2023/tex
+mf-dist/fonts/type1/public/cm-super/sfsx1200.pfb></usr/local/texlive/2023/texmf
+-dist/fonts/type1/public/cm-super/sfsx1440.pfb></usr/local/texlive/2023/texmf-d
+ist/fonts/type1/public/cm-super/sfsx1728.pfb></usr/local/texlive/2023/texmf-dis
+t/fonts/type1/public/cm-super/sfsx2074.pfb></usr/local/texlive/2023/texmf-dist/
+fonts/type1/public/cm-super/sfti1095.pfb></usr/local/texlive/2023/texmf-dist/fo
+nts/type1/public/cm-super/sftt1095.pfb>
+Output written on out/main.pdf (21 pages, 506775 bytes).
 PDF statistics:
- 1304 PDF objects out of 1440 (max. 8388607)
- 1136 compressed objects within 12 object streams
- 311 named destinations out of 1000 (max. 500000)
- 459 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 432 PDF objects out of 1000 (max. 8388607)
+ 352 compressed objects within 4 object streams
+ 76 named destinations out of 1000 (max. 500000)
+ 234 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -8,8 +8,13 @@ LATEXMK = latexmk
 .PHONY: all
 all: $(OUTDIR)/$(MAIN).pdf
 
+# Generate the instance table if it doesn't exist
+tables/instance_table_new.tex:
+	@echo "Generating instance table..."
+	cd .. && ./venv/bin/python scripts/generate_instance_table.py
+
 # Rule to compile the main document
-$(OUTDIR)/$(MAIN).pdf: $(MAIN).tex
+$(OUTDIR)/$(MAIN).pdf: $(MAIN).tex tables/instance_table_new.tex
 	@mkdir -p $(OUTDIR)
 	$(LATEXMK) -pdf -outdir=$(OUTDIR) -interaction=nonstopmode $(MAIN).tex
 
