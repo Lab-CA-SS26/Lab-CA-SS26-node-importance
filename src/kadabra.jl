@@ -166,17 +166,19 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     # ---------------------------------------------------------
     phase1_claimed = Threads.Atomic{Int}(0)
     Threads.@threads for tid in 1:nthreads
-        ws = workspaces[tid]
-        counts = approx_local[tid]
-        while true
-            prev = Threads.atomic_add!(phase1_claimed, 1)
-            prev >= tau && break                            
-            s, t = rand(1:n), rand(1:n)
-            while s == t; t = rand(1:n); end
-            
-            # Zero-allocation increment
-            sample_shortest_path!(counts, ws, g, s, t; endpoints=endpoints)
-            Threads.atomic_add!(n_pairs, 1)
+        let g=g, n=n, tau=tau, endpoints=endpoints, phase1_claimed=phase1_claimed, n_pairs=n_pairs
+            ws = workspaces[tid]
+            counts = approx_local[tid]
+            while true
+                prev = Threads.atomic_add!(phase1_claimed, 1)
+                prev >= tau && break                            
+                s, t = rand(1:n), rand(1:n)
+                while s == t; t = rand(1:n); end
+                
+                # Zero-allocation increment
+                sample_shortest_path!(counts, ws, g, s, t; endpoints=endpoints)
+                Threads.atomic_add!(n_pairs, 1)
+            end
         end
     end
     
@@ -186,31 +188,33 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     stop_flag = Threads.Atomic{Bool}(false)
     
     Threads.@threads for tid in 1:nthreads
-        ws = workspaces[tid]
-        counts = approx_local[tid]
-        
-        while !stop_flag[] && n_pairs[] < omega
-            # Small batch before status check
-            for _ in 1:check_interval
-                s, t = rand(1:n), rand(1:n)
-                while s == t; t = rand(1:n); end
-                
-                sample_shortest_path!(counts, ws, g, s, t; endpoints=endpoints)
-                Threads.atomic_add!(n_pairs, 1)
-            end
+        let g=g, n=n, endpoints=endpoints, check_interval=check_interval, n_pairs=n_pairs, stop_flag=stop_flag, global_approx=global_approx, approx_local=approx_local, k=k, err=err, delta_l_guess=delta_l_guess, delta_u_guess=delta_u_guess, omega=omega, absolute=absolute, union_sample=union_sample
+            ws = workspaces[tid]
+            counts = approx_local[tid]
             
-            # Only thread 1 handles the heavy stopping calculation
-            if tid == 1
-                fill!(global_approx, 0)
-                for t_approx in approx_local
-                    global_approx .+= t_approx
+            while !stop_flag[] && n_pairs[] < omega
+                # Small batch before status check
+                for _ in 1:check_interval
+                    s, t = rand(1:n), rand(1:n)
+                    while s == t; t = rand(1:n); end
+                    
+                    sample_shortest_path!(counts, ws, g, s, t; endpoints=endpoints)
+                    Threads.atomic_add!(n_pairs, 1)
                 end
                 
-                # O(N log K) partial sort instead of O(N log N) full sort
-                top_k_nodes = partialsortperm(global_approx, 1:union_sample, rev=true)
-                
-                if check_finished(global_approx, top_k_nodes, n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute)
-                    Threads.atomic_xchg!(stop_flag, true)
+                # Only thread 1 handles the heavy stopping calculation
+                if tid == 1
+                    fill!(global_approx, 0)
+                    for t_approx in approx_local
+                        global_approx .+= t_approx
+                    end
+                    
+                    # O(N log K) partial sort instead of O(N log N) full sort
+                    top_k_nodes = partialsortperm(global_approx, 1:union_sample, rev=true)
+                    
+                    if check_finished(global_approx, top_k_nodes, n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute)
+                        Threads.atomic_xchg!(stop_flag, true)
+                    end
                 end
             end
         end
