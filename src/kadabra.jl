@@ -107,6 +107,37 @@ function estimate_diameter(g::AbstractGraph)
     return max(diam, 1.0)
 end
 
+function zero_alloc_top_k!(top_k_nodes::AbstractVector{Int}, values::AbstractVector{Int}, k::Int)
+    n = length(values)
+    for i in 1:k
+        top_k_nodes[i] = i
+    end
+    for i in 2:k
+        curr = top_k_nodes[i]
+        val = values[curr]
+        j = i - 1
+        while j > 0 && values[top_k_nodes[j]] < val
+            top_k_nodes[j+1] = top_k_nodes[j]
+            j -= 1
+        end
+        top_k_nodes[j+1] = curr
+    end
+    
+    min_val = values[top_k_nodes[k]]
+    for i in k+1:n
+        val = values[i]
+        if val > min_val
+            j = k - 1
+            while j > 0 && values[top_k_nodes[j]] < val
+                top_k_nodes[j+1] = top_k_nodes[j]
+                j -= 1
+            end
+            top_k_nodes[j+1] = i
+            min_val = values[top_k_nodes[k]]
+        end
+    end
+end
+
 """
     kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100)
 
@@ -214,11 +245,15 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
                         global_approx .+= t_approx
                     end
                     
-                    # O(N log K) partial sort instead of O(N log N) full sort
-                    for i in 1:n
-                        top_k_nodes[i] = i
+                    if absolute
+                        # Order doesn't matter for absolute mode since we check all elements
+                        for i in 1:union_sample
+                            top_k_nodes[i] = i
+                        end
+                    else
+                        # Zero-allocation top-K selection for relative ranking mode
+                        zero_alloc_top_k!(top_k_nodes, global_approx, union_sample)
                     end
-                    partialsortperm!(top_k_nodes, global_approx, 1:union_sample, rev=true)
                     
                     if check_finished(global_approx, view(top_k_nodes, 1:union_sample), n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute, bet_buf, err_l_buf, err_u_buf)
                         Threads.atomic_xchg!(stop_flag, true)
@@ -446,9 +481,9 @@ and directly increment `counts` for every vertex on the path. No heap allocation
 function sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g::AbstractGraph{T}, s::Integer, t::Integer; dir=:out, endpoints::Bool=false) where T
     s == t && return
     if (dir == :out)
-        _bb_bfs_sample!(counts, ws, g, s, t, outneighbors, inneighbors, endpoints)
+        _sample_shortest_path!(g, T(s), T(t), counts, ws, outneighbors, inneighbors, endpoints)
     else
-        _bb_bfs_sample!(counts, ws, g, s, t, inneighbors, outneighbors, endpoints)
+        _sample_shortest_path!(g, T(s), T(t), counts, ws, inneighbors, outneighbors, endpoints)
     end
 end
 
@@ -461,19 +496,7 @@ When the frontiers intersect, it selects a single bridge edge uniformly at rando
 the number of shortest paths crossing it) and backtracks to construct the sampled path.
 The nodes on the resulting path are incremented directly in the `counts` array without allocating memory.
 """
-function _bb_bfs_sample!(
-    counts::Vector{Int},
-    ws::KadabraWorkspace{T}, 
-    g::AbstractGraph{T}, 
-    s::Integer, 
-    t::Integer, 
-    neighborfn_s::F1,
-    neighborfn_t::F2,
-    endpoints::Bool
-) where {T, F1, F2}
-    s = T(s)
-    t = T(t)
-    
+function _sample_shortest_path!(g::AbstractGraph{T}, s::T, t::T, counts::Vector{Int}, ws::KadabraWorkspace{T}, neighborfn_s::F1, neighborfn_t::F2, endpoints::Bool) where {T<:Integer, F1, F2}
     ball_indicator = ws.ball_indicator
     n_paths = ws.n_paths
     dist = ws.dist
