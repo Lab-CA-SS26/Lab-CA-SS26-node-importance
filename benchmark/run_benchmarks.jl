@@ -77,12 +77,12 @@ function run_benchmarks()
     end
     
     # 2. Synthetic Graphs for Scalability Testing
-    println("\nGenerating synthetic graphs for scalability...")
-    for n in [1000, 5000, 10000]
-        println("Generating Barabási–Albert graph N=$n...")
-        g_syn = barabasi_albert(n, 10)
-        push!(datasets, ("BA_$(n)_10", false, g_syn))
-    end
+    # println("\nGenerating synthetic graphs for scalability...")
+    # for n in [1000, 5000, 10000]
+    #     println("Generating Barabási–Albert graph N=$n...")
+    #     g_syn = barabasi_albert(n, 10)
+    #     push!(datasets, ("BA_$(n)_10", false, g_syn))
+    # end
     
     # Initialize and load trained BRAVA model
     model = BRAVAModel(m_hops=5, hidden_dim=12)
