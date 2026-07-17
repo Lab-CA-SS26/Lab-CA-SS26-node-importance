@@ -148,6 +148,9 @@ function run_benchmarks()
         A = sparse(g)
         A_t = A'
         
+        # Set to test mode to disable Dropout during inference!
+        Flux.testmode!(model)
+        
         # Warmup
         _X_out = compute_degree_masses(A, 5)
         _X_in = compute_degree_masses(A_t, 5)

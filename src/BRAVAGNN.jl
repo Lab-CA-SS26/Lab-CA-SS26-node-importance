@@ -15,30 +15,23 @@ export compute_degree_masses, BRAVALayer, BRAVAModel, PairwiseDataLoader, margin
     compute_degree_masses(A, m::Int=5)
 
 Computes the degree mass features up to order `m` for a sparse adjacency matrix `A`.
-For an outgoing stream over A (which captures destinations reachable from sources), 
-this computes out-degrees. For an incoming stream over A^T, pass `A'` to compute in-degrees.
-
-Returns a dense `Float32` matrix of size `(m+1) × N`, where N is the number of nodes.
-This layout is perfectly optimal for Flux.jl (Feature × Batch).
+Applies log1p to perfectly match the PyTorch reference implementation.
 """
 function compute_degree_masses(A, m::Int=5)
     N = size(A, 1)
-    # Pre-allocate output feature matrix F of size (m+1) x N in column-major
     F = zeros(Float32, m + 1, N)
     
-    # d^(0) = row-degree vector (using Float32 for NN compatibility)
-    # Since A corresponds to destinations, row sum is the out-degree.
-    # Note: A * ones(N) computes the row sum.
     v = A * ones(Float32, N)
     F[1, :] .= v
     
-    # Iteratively compute A^k * d
     curr_mass = copy(v)
     for k in 1:m
         v = A * v
         curr_mass .= curr_mass .+ v
         F[k+1, :] .= curr_mass
     end
+    # Apply log1p exactly like PyTorch
+    F .= log1p.(F)
     return F
 end
 
@@ -48,24 +41,22 @@ end
 
 """
 Row-wise L2 normalization mapped across columns (features).
-Given F x N matrix X, normalizes each node's F-dimensional feature vector.
 """
 function norm2_features(X::AbstractMatrix)
-    # Avoid division by zero
     norms = sqrt.(sum(X.^2, dims=1)) .+ eps(Float32)
     return X ./ norms
 end
 
 """
-    BRAVALayer(W)
+    BRAVALayer(W, b)
 
 A single message-passing layer for BRAVA-GNN.
-Since Flux expects features as columns (F x N), the equation 
-H_out = Norm2(ReLU(A^T H_out W)) translates perfectly to:
-X_out = Norm2(ReLU(W * X_out * A)) in our column-major layout.
+Matches PyTorch's GNN_Layer exactly: Y = A * (X W) + b
+In column-major layout: Y = (A * (W X)^T)^T + b
 """
-struct BRAVALayer{T}
+struct BRAVALayer{T, B}
     W::T
+    b::B
 end
 
 Flux.@layer BRAVALayer
@@ -73,89 +64,86 @@ Flux.@layer BRAVALayer
 import Flux.ChainRulesCore: rrule
 using Flux.ChainRulesCore: unthunk, NoTangent
 
-# Custom sparse-dense multiplication to explicitly bypass Adjacency matrix gradient computation.
-# This prevents Zygote/ChainRules from allocating a 37GB dense matrix for ΔA = ΔY * B'.
 sparse_dense_mul(A, B) = A * B
 
 function rrule(::typeof(sparse_dense_mul), A, B)
     Y = A * B
     function sparse_dense_mul_pullback(ΔY)
-        # Only compute the gradient for the features (B). 
-        # Gradient for the sparse adjacency matrix (A) is completely skipped.
         ΔB = A' * unthunk(ΔY)
         return (NoTangent(), NoTangent(), ΔB)
     end
     return Y, sparse_dense_mul_pullback
 end
 
-# W * X applies the feature transformation
-# (W * X) * A applies the sparse aggregation over neighbors
-# Notice that A here corresponds to outgoing edge propagation.
 function (l::BRAVALayer)(X::AbstractMatrix, A_transposed)
     Z = l.W * X
-    # Convert Dense * Sparse into (Sparse^T * Dense^T)^T to leverage fast cuSPARSE Sparse * Dense routines
-    # We use our custom sparse_dense_mul to guarantee no gradient is computed for A_transposed.
     out = copy(sparse_dense_mul(A_transposed, Z')')
-    return norm2_features(relu.(out))
+    return out .+ l.b
 end
 
 """
-    BRAVAModel(embedding, layers, mlp)
+    BRAVAModel(embedding, layers, dropout, mlp)
 
 The dual-stream BRAVA-GNN model.
 """
-struct BRAVAModel{E, L, M}
+struct BRAVAModel{E, L, D, M}
     embedding::E
     layers::L
+    dropout::D
     mlp::M
 end
 
 Flux.@layer BRAVAModel
 
-function BRAVAModel(; m_hops::Int=5, hidden_dim::Int=12)
+function BRAVAModel(; m_hops::Int=5, hidden_dim::Int=12, num_layers::Int=4, p_drop::Float32=0.3f0)
     # 1. DegreeMassEmbedding
-    embedding = Dense(m_hops + 1 => hidden_dim, relu)
+    embedding = Dense(m_hops + 1 => hidden_dim, bias=true)
     
-    # 2. Two message passing layers with shared weights
-    # We use Dense without bias to represent the W matrix
-    layer1 = BRAVALayer(Dense(hidden_dim => hidden_dim, bias=false).weight)
-    layer2 = BRAVALayer(Dense(hidden_dim => hidden_dim, bias=false).weight)
-    layers = (layer1, layer2)
+    # 2. PyTorch uses independent GNN_Layers (not shared)
+    layers = Tuple([BRAVALayer(Dense(hidden_dim => hidden_dim, bias=true).weight, Dense(hidden_dim => hidden_dim, bias=true).bias) for _ in 1:num_layers])
     
-    # 3. Shared MLP for prediction (dimensions 12 -> 24 -> 24 -> 1)
+    # 3. Dropout
+    dropout = Dropout(p_drop)
+    
+    # 4. MLP for prediction
     mlp = Chain(
         Dense(hidden_dim => 24, relu),
-        Dropout(0.3),
+        Dropout(p_drop),
         Dense(24 => 24, relu),
-        Dropout(0.3),
-        Dense(24 => 1) # Outputs a scalar score
+        Dropout(p_drop),
+        Dense(24 => 1)
     )
     
-    return BRAVAModel(embedding, layers, mlp)
+    return BRAVAModel(embedding, layers, dropout, mlp)
 end
 
-"""
-    (m::BRAVAModel)(A, A_t, X_in::AbstractMatrix, X_out::AbstractMatrix)
-
-Forward pass of the BRAVA model.
-A_t is the transpose of A (for incoming streams).
-X_in and X_out are the degree mass features for incoming and outgoing streams respectively.
-"""
 function (m::BRAVAModel)(A, A_t, X_in::AbstractMatrix, X_out::AbstractMatrix)
     # --- Initial Embeddings ---
-    H_out = norm2_features(m.embedding(X_out))
-    H_in  = norm2_features(m.embedding(X_in))
+    # PyTorch: x = F.normalize(F.relu(self.gc1(adj1)), p=2, dim=1)
+    # In PyTorch, gc1 is GNN_Layer_Init which applies AW + b. But wait!
+    # Our embedding just does W X + b (no adjacency multiplication on the first step for degree_mass).
+    # This matches PyTorch's logic for degree_mix_mass, which skips A*W for the first layer.
+    H_out = norm2_features(relu.(m.embedding(X_out)))
+    H_in  = norm2_features(relu.(m.embedding(X_in)))
     
-    # Accumulated intermediate scores
     y_out = vec(m.mlp(H_out))
     y_in  = vec(m.mlp(H_in))
     
-    # --- Dual Message Passing ---
-    for layer in m.layers
-        # Outgoing stream uses A, so we pass its transpose A_t
-        H_out = layer(H_out, A_t)
-        # Incoming stream uses A_t, so we pass its transpose A
-        H_in  = layer(H_in, A)
+    num_layers = length(m.layers)
+    for (i, layer) in enumerate(m.layers)
+        # Message passing + Bias
+        H_out_new = layer(H_out, A_t)
+        H_in_new  = layer(H_in, A)
+        
+        # ReLU + Dropout
+        H_out = m.dropout(relu.(H_out_new))
+        H_in  = m.dropout(relu.(H_in_new))
+        
+        # Normalize all except last layer
+        if i < num_layers
+            H_out = norm2_features(H_out)
+            H_in  = norm2_features(H_in)
+        end
         
         y_out = y_out .+ vec(m.mlp(H_out))
         y_in  = y_in .+ vec(m.mlp(H_in))
