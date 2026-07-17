@@ -11,8 +11,8 @@ using CUDA
 using JLD2
 using StatsBase
 
-include(joinpath("..", "src", "kadabra.jl"))
-include(joinpath("..", "src", "BRAVAGNN.jl"))
+include(joinpath("..", "..", "src", "kadabra.jl"))
+include(joinpath("..", "..", "src", "BRAVAGNN.jl"))
 include("BenchmarkUtils.jl")
 
 using .BRAVAGNN

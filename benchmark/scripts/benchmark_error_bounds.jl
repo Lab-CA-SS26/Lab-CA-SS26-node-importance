@@ -8,7 +8,7 @@ using CSV
 using JLD2
 using StatsBase
 
-include(joinpath("..", "src", "kadabra.jl"))
+include(joinpath("..", "..", "src", "kadabra.jl"))
 include("BenchmarkUtils.jl")
 using .BenchmarkUtils
 

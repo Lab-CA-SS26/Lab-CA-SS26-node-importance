@@ -11,11 +11,11 @@ using Flux
 using JLD2
 
 # Include the local source modules
-include("../src/BRAVAGNN.jl")
-include("../src/kadabra.jl")
+include("../../src/BRAVAGNN.jl")
+using .BRAVAGNN
+include("../../src/kadabra.jl")
 include("BenchmarkUtils.jl")
 
-using .BRAVAGNN
 using .BenchmarkUtils
 
 # Configuration
