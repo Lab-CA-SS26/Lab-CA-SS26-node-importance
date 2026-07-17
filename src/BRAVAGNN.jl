@@ -5,7 +5,7 @@ using SparseArrays
 using Random
 using Flux
 
-export compute_degree_masses, BRAVALayer, BRAVAModel, PairwiseDataLoader, margin_ranking_loss
+export compute_degree_masses, compute_pagerank_feature, BRAVALayer, BRAVAModel, PairwiseDataLoader, margin_ranking_loss
 
 # ==============================================================================
 # 1. Multi-hop Degree Mass Pipeline
