@@ -8,8 +8,8 @@ include("src/kadabra.jl")
 
 function run_local_test()
     datasets = [
-        ("datasets/p2p-Gnutella31.txt", false),
-        ("datasets/soc-Epinions1.txt", true)
+        ("Instances/TestInstances/p2p-Gnutella31.txt", false),
+        ("Instances/TestInstances/soc-Epinions1.txt", true)
     ]
     
     results = []
