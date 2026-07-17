@@ -161,6 +161,10 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     delta_l_guess = fill(delta / (4 * n), n)
     delta_u_guess = fill(delta / (4 * n), n)
     
+    bet_buf = zeros(Float64, union_sample)
+    err_l_buf = zeros(Float64, union_sample)
+    err_u_buf = zeros(Float64, union_sample)
+    
     # ---------------------------------------------------------
     # PHASE 1: Initial burn-in sampling (exactly tau samples)
     # ---------------------------------------------------------
@@ -188,7 +192,7 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     stop_flag = Threads.Atomic{Bool}(false)
     
     Threads.@threads for tid in 1:nthreads
-        let g=g, n=n, endpoints=endpoints, check_interval=check_interval, n_pairs=n_pairs, stop_flag=stop_flag, global_approx=global_approx, approx_local=approx_local, k=k, err=err, delta_l_guess=delta_l_guess, delta_u_guess=delta_u_guess, omega=omega, absolute=absolute, union_sample=union_sample
+        let g=g, n=n, endpoints=endpoints, check_interval=check_interval, n_pairs=n_pairs, stop_flag=stop_flag, global_approx=global_approx, approx_local=approx_local, k=k, err=err, delta_l_guess=delta_l_guess, delta_u_guess=delta_u_guess, omega=omega, absolute=absolute, union_sample=union_sample, bet_buf=bet_buf, err_l_buf=err_l_buf, err_u_buf=err_u_buf
             ws = workspaces[tid]
             counts = approx_local[tid]
             
@@ -212,7 +216,7 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
                     # O(N log K) partial sort instead of O(N log N) full sort
                     top_k_nodes = partialsortperm(global_approx, 1:union_sample, rev=true)
                     
-                    if check_finished(global_approx, top_k_nodes, n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute)
+                    if check_finished(global_approx, top_k_nodes, n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute, bet_buf, err_l_buf, err_u_buf)
                         Threads.atomic_xchg!(stop_flag, true)
                     end
                 end
@@ -317,13 +321,17 @@ function check_finished(
     delta_l_guess::Vector{Float64}, 
     delta_u_guess::Vector{Float64}, 
     omega::Float64, 
-    absolute::Bool
+    absolute::Bool,
+    bet::Vector{Float64},
+    err_l::Vector{Float64},
+    err_u::Vector{Float64}
 )
-    bet = [approx_counts[v] / n_pairs for v in top_k_nodes]
-    
     n_tracked = length(top_k_nodes)
-    err_l = zeros(Float64, n_tracked)
-    err_u = zeros(Float64, n_tracked)
+    
+    for i in 1:n_tracked
+        v = top_k_nodes[i]
+        bet[i] = approx_counts[v] / n_pairs
+    end
     
     for i in 1:n_tracked
         v = top_k_nodes[i]
