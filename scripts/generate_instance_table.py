@@ -52,7 +52,7 @@ def main():
     tex.append(r"\bottomrule")
     tex.append(r"\end{tabular}")
     
-    output_path = "Thesis/tables/instance_table_new.tex"
+    output_path = "Report/tables/instance_table_new.tex"
     with open(output_path, 'w') as f:
         f.write("\n".join(tex) + "\n")
         

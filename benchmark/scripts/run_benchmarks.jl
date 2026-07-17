@@ -84,8 +84,8 @@ function run_benchmarks()
     # end
     
     # Initialize and load trained BRAVA model
-    model = BRAVAModel(m_hops=5, hidden_dim=12)
-    weight_path = joinpath(dirname(dirname(@__DIR__)), "bravagnn_weights.jld2")
+    model = BRAVAModel(m_hops=5, hidden_dim=12, num_layers=2)
+    weight_path = joinpath(@__DIR__, "..", "cache", "bravagnn_weights.jld2")
     if isfile(weight_path)
         println("Loading trained BRAVA-GNN weights from $weight_path...")
         @load weight_path model

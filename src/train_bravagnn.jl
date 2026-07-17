@@ -58,7 +58,7 @@ function train()
     
     for gf in graph_files
         name = replace(gf, ".txt" => "")
-        is_directed = startswith(name, "BO_") || startswith(name, "UDHY_")
+        is_directed = occursin("Dir", name)
         
         # Load graph
         g = load_training_graph(joinpath(TRAINING_DIR, gf), is_directed)
@@ -90,7 +90,7 @@ function train()
     device = CUDA.functional() ? gpu : cpu
     
     # 2. Initialize Model
-    model = BRAVAModel(m_hops=5, hidden_dim=12) |> device
+    model = BRAVAModel(m_hops=5, hidden_dim=12, num_layers=2) |> device
     opt_state = Flux.setup(Flux.Adam(LEARNING_RATE), model)
     
     # 3. Training Loop
@@ -124,7 +124,7 @@ function train()
     
     # 4. Save Model (Move back to CPU before saving)
     model = model |> cpu
-    save_path = joinpath(dirname(@__DIR__), "bravagnn_weights.jld2")
+    save_path = joinpath(dirname(@__DIR__), "benchmark", "cache", "bravagnn_weights.jld2")
     @save save_path model
     println("Training complete. Model saved to $save_path")
 end
