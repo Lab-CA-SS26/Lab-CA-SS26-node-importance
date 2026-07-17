@@ -1,7 +1,7 @@
 # Worker script for thread scaling
 using Pkg
-Pkg.activate(mktempdir())
-Pkg.add(["Graphs", "CSV", "DataFrames"])
+Pkg.activate(joinpath(@__DIR__, ".."))
+Pkg.instantiate()
 
 using Graphs
 using Printf

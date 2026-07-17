@@ -1,7 +1,6 @@
 using Pkg
-# Use a temporary environment to easily run on a server without manual setup
-Pkg.activate(mktempdir())
-Pkg.add(["Graphs", "DelimitedFiles", "DataFrames", "CSV", "JLD2"])
+Pkg.activate(joinpath(@__DIR__, ".."))
+Pkg.instantiate()
 
 using Graphs
 using DelimitedFiles

@@ -1,7 +1,6 @@
 using Pkg
-# Activate temporary environment for benchmarking dependencies
-Pkg.activate(mktempdir())
-Pkg.add(["Graphs", "SparseArrays", "DataFrames", "CSV", "StatsBase", "Flux", "JLD2"])
+Pkg.activate(joinpath(@__DIR__, ".."))
+Pkg.instantiate()
 
 using Graphs
 using SparseArrays

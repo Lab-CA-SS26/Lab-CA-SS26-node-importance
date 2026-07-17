@@ -1,6 +1,6 @@
 using Pkg
-Pkg.activate(mktempdir())
-Pkg.add(["Graphs", "SparseArrays", "DataFrames", "CSV", "Flux", "JLD2", "StatsBase"])
+Pkg.activate(joinpath(@__DIR__, ".."))
+Pkg.instantiate()
 
 using Graphs
 using SparseArrays

@@ -1,6 +1,6 @@
 using Pkg
-Pkg.activate(mktempdir())
-Pkg.add(["Graphs", "DataFrames", "CSV", "JLD2", "StatsBase"])
+Pkg.activate(joinpath(@__DIR__, ".."))
+Pkg.instantiate()
 
 using Graphs
 using DataFrames
