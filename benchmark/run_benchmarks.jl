@@ -94,6 +94,10 @@ function run_benchmarks()
         println("No trained weights found. Using random initialized BRAVA-GNN weights.")
     end
     
+    # Load exact Brandes timings
+    timing_file = joinpath(@__DIR__, "exact_brandes_timings.csv")
+    timing_df = isfile(timing_file) ? CSV.read(timing_file, DataFrame) : DataFrame()
+    
     for (dataset_name, is_directed, g) in datasets
         println("\n=== Benchmarking Dataset: $dataset_name ===")
         N = nv(g)
@@ -106,7 +110,18 @@ function run_benchmarks()
         
         # 2. Ground Truth (with Caching)
         cache_file = joinpath(@__DIR__, "$(dataset_name)_exact_bc.jld2")
-        t_exact = @elapsed exact_bc = get_exact_betweenness(g, cache_file)
+        exact_bc = get_exact_betweenness(g, cache_file)
+        
+        t_exact = 0.0
+        if !isempty(timing_df)
+            t_row = filter(row -> row.Dataset == dataset_name, timing_df)
+            if !isempty(t_row)
+                t_exact = t_row.Runtime_s[1]
+            end
+        end
+        if t_exact == 0.0
+            println("Warning: Exact Brandes timing not found in CSV. Defaulting to 0.0s")
+        end
         
         push!(results, (dataset_name, is_directed, N, M, "Exact (Brandes)", t_exact, 0.0, 1.0, 100.0))
         
