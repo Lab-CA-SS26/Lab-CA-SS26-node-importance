@@ -73,7 +73,7 @@ function get_exact_betweenness(g::AbstractGraph, cache_file::String)
         return exact_bc
     else
         println("Computing exact betweenness centrality (This may take a while)...")
-        t_exact = @elapsed exact_bc = betweenness_centrality(g)
+        t_exact = @elapsed exact_bc = betweenness_centrality(g, normalize=true)
         println("Exact BC computed in $(round(t_exact, digits=2))s. Saving to cache.")
         @save cache_file exact_bc
         return exact_bc
@@ -89,29 +89,39 @@ function run_benchmarks()
         Edges = Int[],
         Method = String[],
         WallClock_s = Float64[],
+        Memory_MB = Float64[],
         Speedup = Float64[],
         Kendall_Tau = Float64[]
     )
     
     # We will test on the facebook_combined graph inside cpp_reference/example_input as a sanity check
-    # In a real run, this would loop over INSTANCES_DIR
     test_files = [joinpath(dirname(@__DIR__), "cpp_reference", "example_input", "facebook_combined.txt")]
+    
+    datasets = []
+    
+    # 1. Real graphs
+    for filepath in test_files
+        if isfile(filepath)
+            g = load_graph_from_edgelist(filepath, false)
+            push!(datasets, (basename(filepath), false, g))
+        else
+            @warn "File not found: $filepath. Skipping."
+        end
+    end
+    
+    # 2. Synthetic Graphs for Scalability Testing
+    println("\nGenerating synthetic graphs for scalability...")
+    for n in [1000, 5000, 10000]
+        println("Generating Barabási–Albert graph N=$n...")
+        g_syn = barabasi_albert(n, 10)
+        push!(datasets, ("BA_$(n)_10", false, g_syn))
+    end
     
     # Initialize a dummy trained BRAVA model
     model = BRAVAModel(m_hops=5, hidden_dim=12)
     
-    for filepath in test_files
-        if !isfile(filepath)
-            @warn "File not found: $filepath. Skipping."
-            continue
-        end
-        
-        dataset_name = basename(filepath)
-        is_directed = false # Infer or configure based on dataset
+    for (dataset_name, is_directed, g) in datasets
         println("\n=== Benchmarking Dataset: $dataset_name ===")
-        
-        # 1. Load Graph
-        g = load_graph_from_edgelist(filepath, is_directed)
         N = nv(g)
         M = ne(g)
         println("Loaded graph: $N nodes, $M edges.")
@@ -124,37 +134,60 @@ function run_benchmarks()
         cache_file = joinpath(@__DIR__, "$(dataset_name)_exact_bc.jld2")
         t_exact = @elapsed exact_bc = get_exact_betweenness(g, cache_file)
         
-        push!(results, (dataset_name, is_directed, N, M, "Exact (Brandes)", t_exact, 1.0, 100.0))
+        push!(results, (dataset_name, is_directed, N, M, "Exact (Brandes)", t_exact, 0.0, 1.0, 100.0))
         
         # 3. Evaluate Julia KADABRA
         println("Running Julia KADABRA...")
         # Warmup
         _ = kadabra_centrality(g, 0, KADABRA_EPSILON, KADABRA_DELTA)
-        t_jl = @elapsed scores_jl = kadabra_centrality(g, 0, KADABRA_EPSILON, KADABRA_DELTA)
+        
+        # We manually use @allocated to track memory
+        mem_jl_bytes = @allocated begin
+            t_jl = @elapsed scores_jl = kadabra_centrality(g, 0, KADABRA_EPSILON, KADABRA_DELTA)
+        end
         tau_jl = corkendall(scores_jl, exact_bc) * 100
-        push!(results, (dataset_name, is_directed, N, M, "KADABRA (Julia)", t_jl, t_exact / t_jl, tau_jl))
+        push!(results, (dataset_name, is_directed, N, M, "KADABRA (Julia)", t_jl, mem_jl_bytes / 1024^2, t_exact / t_jl, tau_jl))
         
         # 4. Evaluate C++ KADABRA
         println("Running C++ KADABRA...")
         t_cpp, scores_cpp = run_cpp_kadabra(cpp_input_file, is_directed, KADABRA_EPSILON, KADABRA_DELTA, N)
         tau_cpp = corkendall(scores_cpp, exact_bc) * 100
-        push!(results, (dataset_name, is_directed, N, M, "KADABRA (C++)", t_cpp, t_exact / max(t_cpp, 1e-6), tau_cpp))
+        # C++ memory tracking from Julia is tricky, defaulting to 0 for now
+        push!(results, (dataset_name, is_directed, N, M, "KADABRA (C++)", t_cpp, 0.0, t_exact / max(t_cpp, 1e-6), tau_cpp))
         
         # 5. Evaluate BRAVA-GNN
         println("Running BRAVA-GNN...")
-        # Compile sparse adjacency
         A = sparse(g)
         A_t = A'
         
-        # Strict timing encompasses feature preprocessing + inference
-        t_gnn = @elapsed begin
-            X_out = compute_degree_masses(A, 5)
-            X_in = compute_degree_masses(A_t, 5)
-            scores_gnn = model(A, A_t, X_in, X_out)
+        # Warmup
+        _X_out = compute_degree_masses(A, 5)
+        _X_in = compute_degree_masses(A_t, 5)
+        _ = model(A, A_t, _X_in, _X_out)
+        
+        mem_gnn_bytes = @allocated begin
+            t_gnn = @elapsed begin
+                X_out = compute_degree_masses(A, 5)
+                X_in = compute_degree_masses(A_t, 5)
+                scores_gnn = model(A, A_t, X_in, X_out)
+            end
         end
         
-        tau_gnn = corkendall(scores_gnn, exact_bc) * 100
-        push!(results, (dataset_name, is_directed, N, M, "BRAVA-GNN", t_gnn, t_exact / t_gnn, tau_gnn))
+        tau_gnn = corkendall(vec(scores_gnn), exact_bc) * 100
+        push!(results, (dataset_name, is_directed, N, M, "BRAVA-GNN", t_gnn, mem_gnn_bytes / 1024^2, t_exact / t_gnn, tau_gnn))
+        
+        # 6. Evaluate Heuristic Baselines
+        println("Running Heuristics...")
+        
+        # Degree
+        mem_deg = @allocated t_deg = @elapsed scores_deg = degree(g)
+        tau_deg = corkendall(scores_deg, exact_bc) * 100
+        push!(results, (dataset_name, is_directed, N, M, "Degree Centrality", t_deg, mem_deg / 1024^2, t_exact / max(t_deg, 1e-6), tau_deg))
+        
+        # PageRank
+        mem_pr = @allocated t_pr = @elapsed scores_pr = pagerank(g)
+        tau_pr = corkendall(scores_pr, exact_bc) * 100
+        push!(results, (dataset_name, is_directed, N, M, "PageRank", t_pr, mem_pr / 1024^2, t_exact / max(t_pr, 1e-6), tau_pr))
         
         println("Done with $dataset_name.\n")
     end
@@ -162,7 +195,7 @@ function run_benchmarks()
     # Save and Print Results
     CSV.write(OUTPUT_FILE, results)
     println("=== Final Benchmark Results ===")
-    println(results)
+    display(results)
     println("Results saved to: $OUTPUT_FILE")
 end
 

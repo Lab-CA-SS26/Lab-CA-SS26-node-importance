@@ -47,7 +47,7 @@ function load_graph(filepath::String, directed::Bool)
     return g
 end
 
-# Calculate the intersection fraction of the top-k items
+# Calculate the intersection fraction of the top-k items (Precision at K)
 function top_k_overlap(true_scores, pred_scores, k::Int)
     true_topk = Set(sortperm(true_scores, rev=true)[1:k])
     pred_topk = Set(sortperm(pred_scores, rev=true)[1:k])
@@ -59,6 +59,26 @@ end
 function top_k_kendall_tau(true_scores, pred_scores, k::Int)
     true_topk_idx = sortperm(true_scores, rev=true)[1:k]
     return corkendall(true_scores[true_topk_idx], pred_scores[true_topk_idx])
+end
+
+# NDCG at K
+function ndcg_at_k(true_scores, pred_scores, k::Int)
+    pred_topk_idx = sortperm(pred_scores, rev=true)[1:k]
+    true_topk_idx = sortperm(true_scores, rev=true)[1:k]
+    
+    function dcg(scores, idxs)
+        val = 0.0
+        for i in 1:k
+            rel = scores[idxs[i]]
+            val += rel / log2(i + 1)
+        end
+        return val
+    end
+    
+    actual_dcg = dcg(true_scores, pred_topk_idx)
+    ideal_dcg = dcg(true_scores, true_topk_idx)
+    
+    return ideal_dcg > 0 ? actual_dcg / ideal_dcg : 0.0
 end
 
 function run_topk_comparison()
@@ -128,16 +148,29 @@ function run_topk_comparison()
     brava_scores = brava_scores |> cpu
     println("BRAVA-GNN finished in $(round(brava_time, digits=2)) seconds.")
     
-    # 3. KADABRA evaluation
+    # 3. KADABRA and Baselines evaluation
     results = DataFrame(
         k = Int[],
         Kadabra_Time_s = Float64[],
         Kadabra_Overlap = Float64[],
         Kadabra_Tau = Float64[],
+        Kadabra_NDCG = Float64[],
         BRAVA_Time_s = Float64[],
         BRAVA_Overlap = Float64[],
-        BRAVA_Tau = Float64[]
+        BRAVA_Tau = Float64[],
+        BRAVA_NDCG = Float64[],
+        Degree_Overlap = Float64[],
+        Degree_Tau = Float64[],
+        Degree_NDCG = Float64[],
+        PageRank_Overlap = Float64[],
+        PageRank_Tau = Float64[],
+        PageRank_NDCG = Float64[]
     )
+    
+    # Compute fast baselines
+    println("Computing Heuristic Baselines...")
+    degree_scores = degree(g)
+    pagerank_scores = pagerank(g)
     
     # Warmup KADABRA
     _ = kadabra_centrality(g, 10, KADABRA_EPSILON, KADABRA_DELTA)
@@ -151,14 +184,30 @@ function run_topk_comparison()
         
         overlap_kad = top_k_overlap(exact_scores, kadabra_scores, k)
         overlap_brava = top_k_overlap(exact_scores, vec(brava_scores), k)
+        overlap_deg = top_k_overlap(exact_scores, degree_scores, k)
+        overlap_pr = top_k_overlap(exact_scores, pagerank_scores, k)
         
         tau_kad = top_k_kendall_tau(exact_scores, kadabra_scores, k)
         tau_brava = top_k_kendall_tau(exact_scores, vec(brava_scores), k)
+        tau_deg = top_k_kendall_tau(exact_scores, degree_scores, k)
+        tau_pr = top_k_kendall_tau(exact_scores, pagerank_scores, k)
+
+        ndcg_kad = ndcg_at_k(exact_scores, kadabra_scores, k)
+        ndcg_brava = ndcg_at_k(exact_scores, vec(brava_scores), k)
+        ndcg_deg = ndcg_at_k(exact_scores, degree_scores, k)
+        ndcg_pr = ndcg_at_k(exact_scores, pagerank_scores, k)
         
-        println("  KADABRA -> Time: $(round(kadabra_time, digits=2))s, Overlap: $(round(overlap_kad*100, digits=2))%, Tau: $(round(tau_kad, digits=4))")
-        println("  BRAVA   -> Time: $(round(brava_time, digits=2))s, Overlap: $(round(overlap_brava*100, digits=2))%, Tau: $(round(tau_brava, digits=4))")
+        println("  KADABRA -> Time: $(round(kadabra_time, digits=2))s, Overlap: $(round(overlap_kad*100, digits=2))%, Tau: $(round(tau_kad, digits=4)), NDCG: $(round(ndcg_kad, digits=4))")
+        println("  BRAVA   -> Time: $(round(brava_time, digits=2))s, Overlap: $(round(overlap_brava*100, digits=2))%, Tau: $(round(tau_brava, digits=4)), NDCG: $(round(ndcg_brava, digits=4))")
+        println("  Degree  -> Overlap: $(round(overlap_deg*100, digits=2))%, Tau: $(round(tau_deg, digits=4)), NDCG: $(round(ndcg_deg, digits=4))")
+        println("  PageRank-> Overlap: $(round(overlap_pr*100, digits=2))%, Tau: $(round(tau_pr, digits=4)), NDCG: $(round(ndcg_pr, digits=4))")
         
-        push!(results, (k, kadabra_time, overlap_kad, tau_kad, brava_time, overlap_brava, tau_brava))
+        push!(results, (
+            k, kadabra_time, overlap_kad, tau_kad, ndcg_kad, 
+            brava_time, overlap_brava, tau_brava, ndcg_brava,
+            overlap_deg, tau_deg, ndcg_deg,
+            overlap_pr, tau_pr, ndcg_pr
+        ))
     end
     
     println("\n=== Final Top-k Results ===")
