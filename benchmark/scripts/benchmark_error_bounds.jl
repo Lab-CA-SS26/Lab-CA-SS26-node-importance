@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
+Pkg.activate(joinpath(@__DIR__, "..", ".."))
 Pkg.instantiate()
 
 using Graphs
@@ -18,7 +18,7 @@ const DELTAS = [0.1, 0.05, 0.01]
 function run_error_bounds_benchmark()
     println("--- Kadabra Error Bounds Evaluation ---")
     
-    instances_file = joinpath(dirname(@__DIR__), "Instances", "instances.txt")
+    instances_file = joinpath(dirname(dirname(@__DIR__)), "Instances", "instances.txt")
     instances = BenchmarkUtils.read_instances(instances_file)
     
     results = DataFrame(
@@ -31,7 +31,7 @@ function run_error_bounds_benchmark()
     )
     
     for (rel_path, is_directed) in instances
-        filepath = joinpath(dirname(@__DIR__), "Instances", rel_path)
+        filepath = joinpath(dirname(dirname(@__DIR__)), "Instances", rel_path)
         if !isfile(filepath)
             @warn "File not found: $filepath. Skipping."
             continue
@@ -44,7 +44,7 @@ function run_error_bounds_benchmark()
         n = nv(g)
         
         # 1. Ground Truth (Exact BC)
-        cache_file = joinpath(@__DIR__, "$(dataset_name)_exact_bc.jld2")
+        cache_file = joinpath(@__DIR__, "..", "cache", "$(dataset_name)_exact_bc.jld2")
         
         if isfile(cache_file)
             println("Loading cached exact betweenness centrality from $cache_file...")
@@ -84,7 +84,7 @@ function run_error_bounds_benchmark()
     println("\n=== Final Error Bounds Results ===")
     display(results)
     
-    output_file = joinpath(@__DIR__, "error_bounds_results.csv")
+    output_file = joinpath(@__DIR__, "..", "results", "error_bounds_results.csv")
     CSV.write(output_file, results)
     println("\nResults saved to $output_file")
 end

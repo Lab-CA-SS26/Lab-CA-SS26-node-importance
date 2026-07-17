@@ -81,7 +81,7 @@ Returns `(execution_time_seconds, scores_array)`.
 """
 function run_cpp_kadabra(graph_file::String, is_directed::Bool, epsilon::Float64, delta::Float64, num_nodes::Int)
     # Check if compiled binary exists
-    cpp_dir = joinpath(dirname(@__DIR__), "cpp_reference")
+    cpp_dir = joinpath(dirname(dirname(@__DIR__)), "cpp_reference")
     binary_path = joinpath(cpp_dir, "kadabra")
     
     if !isfile(binary_path)

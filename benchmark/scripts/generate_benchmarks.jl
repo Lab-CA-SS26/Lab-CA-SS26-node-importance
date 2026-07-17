@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
+Pkg.activate(joinpath(@__DIR__, "..", ".."))
 Pkg.instantiate()
 
 using Graphs
@@ -53,11 +53,11 @@ end
 
 function generate_benchmarks()
     # Path to Instances directory relative to this script
-    instances_dir = joinpath(dirname(@__DIR__), "Instances")
+    instances_dir = joinpath(dirname(dirname(@__DIR__)), "Instances")
     instances_file = joinpath(instances_dir, "instances.txt")
     
     # We output timings and JLD2 caches into the benchmark dir itself for easy loading by other scripts
-    benchmark_dir = dirname(@__DIR__) * "/benchmark"
+    benchmark_dir = dirname(dirname(@__DIR__)) * "/benchmark"
     out_csv = joinpath(benchmark_dir, "exact_brandes_timings.csv")
     
     if !isfile(instances_file)

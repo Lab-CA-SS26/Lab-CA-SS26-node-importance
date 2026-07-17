@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
+Pkg.activate(joinpath(@__DIR__, "..", ".."))
 Pkg.instantiate()
 
 using Graphs
@@ -19,8 +19,8 @@ using .BRAVAGNN
 using .BenchmarkUtils
 
 # Configuration
-const INSTANCES_DIR = joinpath(dirname(@__DIR__), "Instances", "example_input") # Example input directory to test
-const OUTPUT_FILE = joinpath(@__DIR__, "benchmark_results.csv")
+const INSTANCES_DIR = joinpath(dirname(dirname(@__DIR__)), "Instances", "example_input") # Example input directory to test
+const OUTPUT_FILE = joinpath(@__DIR__, "..", "results", "benchmark_results.csv")
 const KADABRA_EPSILON = 0.01
 const KADABRA_DELTA = 0.1
 
@@ -59,14 +59,14 @@ function run_benchmarks()
         Kendall_Tau = Float64[]
     )
     
-    instances_file = joinpath(dirname(@__DIR__), "Instances", "instances.txt")
+    instances_file = joinpath(dirname(dirname(@__DIR__)), "Instances", "instances.txt")
     instances = BenchmarkUtils.read_instances(instances_file)
     
     datasets = []
     
     # 1. Real graphs
     for (rel_path, is_directed) in instances
-        filepath = joinpath(dirname(@__DIR__), "Instances", rel_path)
+        filepath = joinpath(dirname(dirname(@__DIR__)), "Instances", rel_path)
         if isfile(filepath)
             g = BenchmarkUtils.load_graph_from_edgelist(filepath, is_directed)
             push!(datasets, (basename(filepath), is_directed, g))
@@ -85,7 +85,7 @@ function run_benchmarks()
     
     # Initialize and load trained BRAVA model
     model = BRAVAModel(m_hops=5, hidden_dim=12)
-    weight_path = joinpath(dirname(@__DIR__), "bravagnn_weights.jld2")
+    weight_path = joinpath(dirname(dirname(@__DIR__)), "bravagnn_weights.jld2")
     if isfile(weight_path)
         println("Loading trained BRAVA-GNN weights from $weight_path...")
         @load weight_path model
@@ -94,7 +94,7 @@ function run_benchmarks()
     end
     
     # Load exact Brandes timings
-    timing_file = joinpath(@__DIR__, "exact_brandes_timings.csv")
+    timing_file = joinpath(@__DIR__, "..", "results", "exact_brandes_timings.csv")
     timing_df = isfile(timing_file) ? CSV.read(timing_file, DataFrame) : DataFrame()
     
     for (dataset_name, is_directed, g) in datasets
@@ -108,7 +108,7 @@ function run_benchmarks()
         export_to_edgelist(g, cpp_input_file)
         
         # 2. Ground Truth (with Caching)
-        cache_file = joinpath(@__DIR__, "$(dataset_name)_exact_bc.jld2")
+        cache_file = joinpath(@__DIR__, "..", "cache", "$(dataset_name)_exact_bc.jld2")
         exact_bc = get_exact_betweenness(g, cache_file)
         
         t_exact = 0.0

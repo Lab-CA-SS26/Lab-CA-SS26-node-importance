@@ -2,13 +2,13 @@
 # Spawns Julia subprocesses with different thread counts.
 
 include("BenchmarkUtils.jl")
-instances_file = joinpath(dirname(@__DIR__), "Instances", "instances.txt")
+instances_file = joinpath(dirname(dirname(@__DIR__)), "Instances", "instances.txt")
 instances = BenchmarkUtils.read_instances(instances_file)
 
 # You can adjust these thread counts depending on your server's hardware (e.g. up to 128)
 thread_counts = [1, 2, 4, 8, 16, 24, 32, 48] 
 
-out_csv = joinpath(@__DIR__, "thread_scaling_results.csv")
+out_csv = joinpath(@__DIR__, "..", "results", "thread_scaling_results.csv")
 
 # Initialize CSV
 open(out_csv, "w") do io

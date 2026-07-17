@@ -40,29 +40,29 @@ Once the training data is generated, you can trigger the Flux.jl training loop. 
 
 To run the training:
 ```bash
-julia src/train_bravagnn.jl
+julia --project=. src/train_bravagnn.jl
 ```
 
 To profile and time the entire execution on a headless server:
 ```bash
-time julia src/train_bravagnn.jl
+time julia --project=. src/train_bravagnn.jl
 ```
 
 The script will run for 10 epochs. It calculates and outputs the loss at the end of each epoch to verify convergence. Once complete, it saves the optimized parameters locally to `bravagnn_weights.jld2`.
 
 ## 4. Benchmarking and Evaluation
 
-We utilize a unified script to evaluate the performance of exact algorithms alongside Julia Kadabra, the original C++ Kadabra baseline, and our trained BRAVA-GNN.
+We utilize a unified suite of scripts to evaluate the performance of exact algorithms alongside Julia Kadabra, the original C++ Kadabra baseline, and our trained BRAVA-GNN.
 
-To run the benchmark script:
+To run the primary benchmark script:
 ```bash
-cd benchmark
-julia run_benchmarks.jl
+julia --project=. benchmark/scripts/run_benchmarks.jl
 ```
 
 ### Configuration and Setup:
-- **Test Files**: To add new graphs to evaluate, edit `benchmark/run_benchmarks.jl` and modify the `test_files` list array with the paths to your test datasets.
-- **Model Load**: The current benchmark initiates a randomly weighted model for evaluation (to test speed). To use your serialized `bravagnn_weights.jld2` from the training phase, you should use `JLD2.@load` inside `run_benchmarks.jl` to override the initialized model before inference.
-- **Ground Truth Caching**: The benchmark automatically caches the exact betweenness results so subsequent evaluation loops skip the expensive $O(|V||E|)$ ground truth calculations. 
+- **Test Files**: To add new graphs to evaluate, edit `Instances/instances.txt` which acts as the global registry for all benchmarking datasets.
+- **Model Load**: The script will automatically search for and load `bravagnn_weights.jld2` from the project root. If not found, it evaluates a randomly initialized model.
+- **Ground Truth Caching**: The benchmark automatically caches exact betweenness results into `benchmark/cache/` so subsequent evaluation loops skip the expensive $O(|V||E|)$ ground truth calculations. 
 
-The evaluation output is printed as a console table and dumped identically to `benchmark/benchmark_results.csv`.
+The evaluation output is printed as a console table and dumped to `benchmark/results/benchmark_results.csv`.
+

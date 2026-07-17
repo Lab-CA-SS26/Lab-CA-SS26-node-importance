@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
+Pkg.activate(joinpath(@__DIR__, "..", ".."))
 Pkg.instantiate()
 
 using Graphs
@@ -59,7 +59,7 @@ end
 function run_topk_comparison()
     println("--- Top-k Evaluation ---")
     
-    instances_file = joinpath(dirname(@__DIR__), "Instances", "instances.txt")
+    instances_file = joinpath(dirname(dirname(@__DIR__)), "Instances", "instances.txt")
     instances = BenchmarkUtils.read_instances(instances_file)
     
     results = DataFrame(
@@ -84,7 +84,7 @@ function run_topk_comparison()
     
     # 2. BRAVA-GNN setup
     model = BRAVAModel(m_hops=5, hidden_dim=12)
-    weight_path = joinpath(dirname(@__DIR__), "bravagnn_weights.jld2")
+    weight_path = joinpath(dirname(dirname(@__DIR__)), "bravagnn_weights.jld2")
     if isfile(weight_path)
         println("Loading trained BRAVA-GNN weights from $weight_path...")
         @load weight_path model
@@ -101,7 +101,7 @@ function run_topk_comparison()
     model = model |> device
     
     for (rel_path, is_directed) in instances
-        filepath = joinpath(dirname(@__DIR__), "Instances", rel_path)
+        filepath = joinpath(dirname(dirname(@__DIR__)), "Instances", rel_path)
         if !isfile(filepath)
             @warn "File not found: $filepath. Skipping."
             continue
@@ -114,7 +114,7 @@ function run_topk_comparison()
         n = nv(g)
         
         # 1. Ground Truth (Exact BC)
-        cache_file = joinpath(@__DIR__, "$(dataset_name)_exact_bc.jld2")
+        cache_file = joinpath(@__DIR__, "..", "cache", "$(dataset_name)_exact_bc.jld2")
         
         if isfile(cache_file)
             println("Loading cached exact betweenness centrality from $cache_file...")
@@ -196,7 +196,7 @@ function run_topk_comparison()
     println("\n=== Final Top-k Results ===")
     display(results)
     
-    out_file = joinpath(@__DIR__, "topk_results.csv")
+    out_file = joinpath(@__DIR__, "..", "results", "topk_results.csv")
     CSV.write(out_file, results)
     println("\nResults saved to $out_file")
 end
