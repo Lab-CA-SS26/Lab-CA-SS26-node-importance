@@ -102,23 +102,35 @@ function train()
             Random.shuffle!(training_data)
             
             for data in training_data
-                # Convert scores to Float32 and define batches_per_epoch (e.g. N * 20 / BATCH_SIZE)
-                batches_per_epoch = max(50, round(Int, length(data.scores) * 20 / BATCH_SIZE))
-                loader = PairwiseDataLoader(Float32.(data.scores), BATCH_SIZE, batches_per_epoch)
+                N = length(data.scores)
+                k = N * 20
                 
-                for batch in loader
-                    u, v, y = batch
-                    loss_val, grads = Flux.withgradient(model) do m
-                        preds = m(data.A, data.A_t, data.X_in, data.X_out)
-                        preds_cpu = cpu(preds)
-                        margin_ranking_loss(preds_cpu, u, v, y)
-                    end
-                    
-                    Flux.update!(opt_state, model, grads[1])
-                    
-                    epoch_loss += loss_val
-                    n_batches += 1
+                U = rand(1:N, k)
+                V = rand(1:N, k)
+                diffs = data.scores[U] .- data.scores[V]
+                Y = sign.(diffs)
+                
+                # To match PyTorch, we can filter out ties if we want, or just let gradient be 0.
+                # PyTorch computes the margin loss directly. Our margin_ranking_loss handles Y=0 natively
+                # by having a gradient of 0, but filtering is slightly faster:
+                valid_idx = findall(x -> x != 0, diffs)
+                U = U[valid_idx]
+                V = V[valid_idx]
+                Y = Y[valid_idx]
+                
+                U_dev = device(U)
+                V_dev = device(V)
+                Y_dev = device(Float32.(Y))
+                
+                loss_val, grads = Flux.withgradient(model) do m
+                    preds = m(data.A, data.A_t, data.X_in, data.X_out)
+                    margin_ranking_loss(preds, U_dev, V_dev, Y_dev)
                 end
+                
+                Flux.update!(opt_state, model, grads[1])
+                
+                epoch_loss += loss_val
+                n_batches += 1
             end
         end
         

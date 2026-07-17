@@ -243,7 +243,7 @@ end
 Computes the pairwise margin ranking loss for the predicted scores `s` over indices `U` and `V` with labels `Y`.
 `Y` is +1 if s_U should be > s_V, and -1 if s_U should be < s_V.
 """
-function margin_ranking_loss(s::AbstractVector, U::AbstractVector{Int}, V::AbstractVector{Int}, Y::AbstractVector{Float32})
+function margin_ranking_loss(s, U, V, Y)
     # L(u, v) = max(0, 1 - Y * (s_u - s_v))
     diffs = s[U] .- s[V]
     margins = 1.0f0 .- Y .* diffs
