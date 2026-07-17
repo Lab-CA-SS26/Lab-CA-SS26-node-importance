@@ -1,4 +1,4 @@
-# Makefile for compiling the thesis report
+# Makefile for compiling the lab report
 
 MAIN = main
 OUTDIR = out

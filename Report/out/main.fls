@@ -1,4 +1,4 @@
-PWD /Users/martinschlaier/Documents/10_Universitaet/Master/Lab-CA/Lab-CA-SS26-node-importance/Thesis
+PWD /Users/martinschlaier/Documents/10_Universitaet/Master/Lab-CA/Lab-CA-SS26-node-importance/Report
 INPUT /usr/local/texlive/2023/texmf.cnf
 INPUT /usr/local/texlive/2023/texmf-dist/web2c/texmf.cnf
 INPUT /usr/local/texlive/2023/texmf-var/web2c/pdftex/pdflatex.fmt
@@ -1404,16 +1404,6 @@ INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
-INPUT out/main.out
-INPUT out/main.out
-INPUT out/main.out
-INPUT out/main.out
-INPUT out/main.out
-INPUT out/main.out
-INPUT out/main.out
-INPUT out/main.out
-INPUT out/main.out
-INPUT out/main.out
 OUTPUT out/main.out
 OUTPUT out/main.pdf
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/bookmark/bookmark.sty
@@ -1439,12 +1429,6 @@ INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/biblatex/lbx/english.lbx
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/biblatex/lbx/english.lbx
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/biblatex/lbx/english.lbx
 OUTPUT out/main.bcf
-INPUT out/main.bbl
-INPUT out/main.bbl
-INPUT out/main.bbl
-INPUT out/main.bbl
-INPUT out/main.bbl
-INPUT out/main.bbl
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/graphics/graphicx.sty
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/graphics/color.sty
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/translations/translations-basic-dictionary-english.trsl
@@ -1520,9 +1504,6 @@ INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/base/t1cmtt.fd
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/base/t1cmtt.fd
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/base/t1cmtt.fd
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ectt1095.tfm
-INPUT out/main.toc
-INPUT out/main.toc
-INPUT out/main.toc
 OUTPUT out/main.toc
 INPUT ./sections/introduction.tex
 INPUT ./sections/introduction.tex
@@ -1549,8 +1530,6 @@ INPUT ./sections/kadabra.tex
 INPUT sections/kadabra.tex
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecrm0800.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecrm0600.tfm
-INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/tcrm1095.tfm
-INPUT /usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/cm/cmr12.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/cm/cmmi12.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/cm/cmsy10.tfm
@@ -1558,6 +1537,7 @@ INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/cm/cmex10.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm10.tfm
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/public/stmaryrd/stmary10.tfm
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/tcrm1095.tfm
 INPUT ./sections/brava.tex
 INPUT ./sections/brava.tex
 INPUT ./sections/brava.tex
@@ -1565,6 +1545,7 @@ INPUT sections/brava.tex
 INPUT ./sections/brava.tex
 INPUT ./sections/brava.tex
 INPUT sections/brava.tex
+INPUT /usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc
 INPUT ./sections/setup.tex
 INPUT ./sections/setup.tex
 INPUT ./sections/setup.tex
@@ -1603,7 +1584,6 @@ INPUT sections/appendix.tex
 INPUT out/main.aux
 INPUT out/main.out
 INPUT out/main.out
-INPUT out/main.run.xml
 OUTPUT out/main.run.xml
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb

@@ -1,0 +1,44 @@
+\chapter{KADABRA}
+\section{Overview and Problem Formalization}
+
+Exact betweenness centrality (BC) computation is $O(mn)$, which is impractical for large networks. KADABRA shifts to a sampling-based approximation. It samples $\tau$ random shortest paths and computes an empirical indicator $X_i(v)$ for each path:
+\begin{equation}
+    X_i(v) = \begin{cases} 1 & \text{if } v \in \pi_i \text{ and } v \neq s, t \\ 0 & \text{otherwise} \end{cases}
+\end{equation}
+The empirical estimate $\tilde{b}(v)$ is the sample mean of these indicators, providing an unbiased estimator for $bc(v)$.
+
+KADABRA minimizes the sample size $\tau$ while ensuring that the estimates for all nodes fall within an absolute error bound $\lambda$ with a confidence $1-\delta$:
+\begin{equation}
+    \Pr(\forall v \in V, |\tilde{b}(v) - bc(v)| \le \lambda) \ge 1 - \delta
+\end{equation}
+
+Instead of a static sample size, KADABRA uses \textbf{adaptive sampling}, treating $\tau$ as a stopping time determined on the fly. 
+
+\section{Algorithmic Innovations}
+
+KADABRA optimizes both the time per sample and the total number of samples required.
+
+\subsection{Balanced Bidirectional BFS (bb-BFS)}
+To accelerate shortest path sampling, KADABRA uses a balanced bidirectional BFS. It simultaneously grows a forward tree from the source $s$ and a backward tree from the target $t$, always expanding from the tree with the smaller boundary volume:
+\begin{equation}
+\text{Expand from } s \iff \sum_{v \in \Gamma^{l_s}(s)} \text{deg}(v) \le \sum_{u \in \Gamma^{l_t}(t)} \text{deg}(u)
+\end{equation}
+This cuts path generation time from $\Theta(|E|)$ to $|E|^{\frac{1}{2}+o(1)}$ on realistic random networks.
+
+\subsection{Rigorous Adaptive Stopping Condition}
+KADABRA dynamically evaluates lower and upper error bounds ($f$ and $g$) on the fly using deterministic target confidences. The algorithm terminates as soon as $f \le \lambda$ and $g \le \lambda$ for all relevant vertices.
+
+\section{Theoretical Guarantees}
+
+\subsection{Rigorous Martingale-Based Correctness}
+Evaluating a stopping condition based on observed data introduces stochastic dependence. KADABRA resolves this by modeling the sequence of path indicators as a martingale. Applying McDiarmid's concentration inequality, it proves that the dynamic stopping condition safely maintains the absolute $(\lambda, \delta)$-approximation guarantee upon termination.
+
+\subsection{Adaptive Top-$k$ Centrality Selection}
+Computing a uniform $\lambda$-approximation for all nodes is computationally wasteful. KADABRA instead uses an adaptive relaxation for Top-$k$ ranking. Given a threshold $k$, KADABRA guarantees that every vertex either has its exact rank established, is formally excluded from the Top-$k$, or its estimate is within $\lambda$ error. 
+
+It implements this by sorting nodes by empirical centrality and safely terminating only if bounding intervals do not overlap:
+\begin{itemize}
+    \item \textbf{Internal Separation ($i \le k$):} Ensures adjacent rank bounds do not overlap.
+    \item \textbf{External Exclusion ($i > k$):} Ensures $\tilde{b}(v_k) - f(v_k) \ge \tilde{b}(v_i) + g(v_i)$.
+\end{itemize}
+This dynamic boundary validation allows KADABRA to skip unnecessary sampling for low-centrality nodes, enabling fast approximation on massive networks.

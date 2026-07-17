@@ -98,24 +98,27 @@ function train()
         epoch_loss = 0.0
         n_batches = 0
         
-        Random.shuffle!(training_data)
-        
-        for data in training_data
-            # Convert scores to Float32 and define batches_per_epoch (e.g., 50)
-            loader = PairwiseDataLoader(Float32.(data.scores), BATCH_SIZE, 50)
+        for virtual_copy in 1:50
+            Random.shuffle!(training_data)
             
-            for batch in loader
-                u, v, y = batch
-                loss_val, grads = Flux.withgradient(model) do m
-                    preds = m(data.A, data.A_t, data.X_in, data.X_out)
-                    preds_cpu = cpu(preds)
-                    margin_ranking_loss(preds_cpu, u, v, y)
+            for data in training_data
+                # Convert scores to Float32 and define batches_per_epoch (e.g. N * 20 / BATCH_SIZE)
+                batches_per_epoch = max(50, round(Int, length(data.scores) * 20 / BATCH_SIZE))
+                loader = PairwiseDataLoader(Float32.(data.scores), BATCH_SIZE, batches_per_epoch)
+                
+                for batch in loader
+                    u, v, y = batch
+                    loss_val, grads = Flux.withgradient(model) do m
+                        preds = m(data.A, data.A_t, data.X_in, data.X_out)
+                        preds_cpu = cpu(preds)
+                        margin_ranking_loss(preds_cpu, u, v, y)
+                    end
+                    
+                    Flux.update!(opt_state, model, grads[1])
+                    
+                    epoch_loss += loss_val
+                    n_batches += 1
                 end
-                
-                Flux.update!(opt_state, model, grads[1])
-                
-                epoch_loss += loss_val
-                n_batches += 1
             end
         end
         
