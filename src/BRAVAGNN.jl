@@ -49,22 +49,21 @@ applies log1p, and appends the precomputed PageRank feature to perfectly match `
 """
 function compute_degree_masses(A, pr_feat::AbstractVector{Float32}, m::Int=5)
     N = size(A, 1)
-    F = zeros(Float32, m + 2, N)
+    F = zeros(Float32, m + 1, N)
     
     v = A * ones(Float32, N)
     F[1, :] .= v
     
-    curr_mass = copy(v)
-    for k in 1:m
+    for k in 2:m
         v = A * v
-        curr_mass .= curr_mass .+ v
-        F[k+1, :] .= curr_mass
+        F[k, :] .= v
     end
     
     # Apply log1p exactly like PyTorch
-    F[1:m+1, :] .= log1p.(F[1:m+1, :])
+    F[1:m, :] .= log1p.(F[1:m, :])
+    
     # Append PageRank as the final feature
-    F[m+2, :] .= pr_feat
+    F[m+1, :] .= pr_feat
     return F
 end
 
@@ -130,7 +129,7 @@ Flux.@layer BRAVAModel
 
 function BRAVAModel(; m_hops::Int=5, hidden_dim::Int=12, num_layers::Int=4, p_drop::Float32=0.3f0)
     # 1. DegreeMassEmbedding + PageRank
-    embedding = Dense(m_hops + 2 => hidden_dim, bias=true)
+    embedding = Dense(m_hops + 1 => hidden_dim, bias=true)
     
     # 2. PyTorch uses independent GNN_Layers (not shared)
     layers = Tuple([BRAVALayer(Dense(hidden_dim => hidden_dim, bias=true).weight, Dense(hidden_dim => hidden_dim, bias=true).bias) for _ in 1:num_layers])
@@ -165,10 +164,12 @@ function (m::BRAVAModel)(A, A_t, X_in::AbstractMatrix, X_out::AbstractMatrix)
     num_layers = length(m.layers)
     for (i, layer) in enumerate(m.layers)
         # Message passing + Bias
-        H_out_new = layer(H_out, A_t)
-        H_in_new  = layer(H_in, A)
+        # Python implementation uses regular adj (A) for H_out (forward stream)
+        # and adj_t (A_t) for H_in (backward stream)
+        H_out_new = layer(H_out, A)
+        H_in_new  = layer(H_in, A_t)
         
-        # ReLU + Dropout
+        # Non-linearity
         H_out = m.dropout(relu.(H_out_new))
         H_in  = m.dropout(relu.(H_in_new))
         
