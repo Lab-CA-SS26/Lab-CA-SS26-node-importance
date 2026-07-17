@@ -9,40 +9,7 @@ using DataFrames
 using CSV
 using JLD2
 
-"""
-    load_graph_from_edgelist(filepath::String, is_directed::Bool)
-
-A robust loader for space-separated edge lists. Handles 0-indexed and 1-indexed.
-"""
-function load_graph_from_edgelist(filepath::String, is_directed::Bool)
-    edges_list = Tuple{Int, Int}[]
-    max_node = 0
-    
-    for line in eachline(filepath)
-        line = strip(line)
-        if isempty(line) || startswith(line, "#") || startswith(line, "%")
-            continue
-        end
-        parts = split(line)
-        if length(parts) >= 2
-            u = parse(Int, parts[1])
-            v = parse(Int, parts[2])
-            push!(edges_list, (u, v))
-            max_node = max(max_node, u, v)
-        end
-    end
-    
-    # Check if 0-indexed
-    min_node = isempty(edges_list) ? 0 : minimum(min(u, v) for (u, v) in edges_list)
-    shift = min_node == 0 ? 1 : 0
-    
-    g = is_directed ? SimpleDiGraph(max_node + shift) : SimpleGraph(max_node + shift)
-    for (u, v) in edges_list
-        add_edge!(g, u + shift, v + shift)
-    end
-    
-    return g
-end
+include("BenchmarkUtils.jl")
 
 """
     with_timeout(f, timeout_sec)
@@ -110,24 +77,20 @@ function generate_benchmarks()
         Status = String[]
     )
     
-    for line in eachline(instances_file)
-        rel_path = strip(line)
-        if isempty(rel_path) || startswith(rel_path, "#")
-            continue
-        end
-        
+    instances = BenchmarkUtils.read_instances(instances_file)
+    
+    for (rel_path, is_directed) in instances
         full_path = joinpath(instances_dir, rel_path)
         if !isfile(full_path)
             println("Graph file not found: $full_path. Skipping.")
             continue
         end
         
-        println("\nProcessing: $rel_path")
+        println("\nProcessing: $rel_path (Directed: $is_directed)")
         dataset_name = basename(full_path)
         
         # 1. Load graph
-        is_directed = false 
-        g = load_graph_from_edgelist(full_path, is_directed)
+        g = BenchmarkUtils.load_graph_from_edgelist(full_path, is_directed)
         N = nv(g)
         M = ne(g)
         println("  Nodes: $N, Edges: $M")

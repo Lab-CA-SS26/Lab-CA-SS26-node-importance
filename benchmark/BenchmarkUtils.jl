@@ -3,8 +3,57 @@ module BenchmarkUtils
 using Graphs
 using SparseArrays
 
-export run_cpp_kadabra, export_to_edgelist
+export run_cpp_kadabra, export_to_edgelist, read_instances, load_graph_from_edgelist
 
+"""
+    read_instances(filepath::String)
+
+Reads a text file containing dataset paths and directed flags.
+Returns an array of `(relative_path::String, is_directed::Bool)` tuples.
+"""
+function read_instances(filepath::String)
+    instances = Tuple{String, Bool}[]
+    for line in eachline(filepath)
+        line = strip(line)
+        if isempty(line) || startswith(line, "#")
+            continue
+        end
+        parts = split(line)
+        path = parts[1]
+        is_directed = length(parts) > 1 && parts[2] == "D"
+        push!(instances, (path, is_directed))
+    end
+    return instances
+end
+
+"""
+    load_graph_from_edgelist(filepath::String, is_directed::Bool)
+
+Loads a graph from a space-separated edgelist. Autodetects 0-indexing vs 1-indexing.
+"""
+function load_graph_from_edgelist(filepath::String, is_directed::Bool)
+    edges_list = Tuple{Int, Int}[]
+    max_node = 0
+    for line in eachline(filepath)
+        parts = split(strip(line))
+        if length(parts) >= 2
+            u = parse(Int, parts[1])
+            v = parse(Int, parts[2])
+            push!(edges_list, (u, v))
+            max_node = max(max_node, u, v)
+        end
+    end
+    
+    # Graphs.jl expects 1-indexed nodes. Sometimes edges are 0-indexed.
+    min_node = isempty(edges_list) ? 0 : minimum(min(u, v) for (u, v) in edges_list)
+    shift = min_node == 0 ? 1 : 0
+    
+    g = is_directed ? SimpleDiGraph(max_node + shift) : SimpleGraph(max_node + shift)
+    for (u, v) in edges_list
+        add_edge!(g, u + shift, v + shift)
+    end
+    return g
+end
 """
     export_to_edgelist(g::AbstractGraph, filepath::String)
 

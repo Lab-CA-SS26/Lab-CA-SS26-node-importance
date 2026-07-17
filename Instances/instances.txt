@@ -1,24 +1,17 @@
-ABCDE/amazon.txt
-ABCDE/cit-Patents.txt
-ABCDE/com-lj.txt
-ABCDE/com-youtube.txt
-ABCDE/dblp.txt
-TestInstances/com-DBLP.txt
-TestInstances/com-Orkut.txt
-TestInstances/email-Enron.txt
-TestInstances/email-EuAll.txt
-TestInstances/gemsec-Facebook.txt
-TestInstances/musae-github.txt
-TestInstances/p2p-Gnutella30.txt
-TestInstances/p2p-Gnutella31.txt
-TestInstances/soc-Epinions1.txt
-TestInstances/soc-LiveJournal1.txt
-TestInstances/soc-Pokec.txt
-TestInstances/soc-Slashdot0811.txt
-TestInstances/soc-Slashdot0902.txt
-TestInstances/twitch-gamers.txt
-TestInstances/web-BerkStan.txt
-TestInstances/web-Google.txt
-TestInstances/web-NotreDame.txt
-TestInstances/wiki-Talk.txt
-TestInstances/wiki-topcats.txt
+# Undirected
+TestInstances/p2p-Gnutella31.txt U
+ABCDE/com-youtube.txt U
+ABCDE/amazon.txt U
+ABCDE/cit-Patents.txt U
+ABCDE/com-lj.txt U
+ABCDE/dblp.txt U
+
+# Directed
+TestInstances/soc-Epinions1.txt D
+TestInstances/soc-Slashdot0902.txt D
+TestInstances/email-EuAll.txt D
+TestInstances/web-Google.txt D
+TestInstances/soc-Pokec.txt D
+TestInstances/wiki-topcats.txt D
+TestInstances/wiki-Talk.txt D
+TestInstances/soc-LiveJournal1.txt D

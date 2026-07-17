@@ -25,41 +25,7 @@ const OUTPUT_FILE = joinpath(@__DIR__, "benchmark_results.csv")
 const KADABRA_EPSILON = 0.01
 const KADABRA_DELTA = 0.1
 
-"""
-    load_graph_from_edgelist(filepath::String, is_directed::Bool)
 
-A robust loader for space-separated edge lists.
-"""
-function load_graph_from_edgelist(filepath::String, is_directed::Bool)
-    edges_list = Tuple{Int, Int}[]
-    max_node = 0
-    
-    for line in eachline(filepath)
-        line = strip(line)
-        if isempty(line) || startswith(line, "#") || startswith(line, "%")
-            continue
-        end
-        parts = split(line)
-        if length(parts) >= 2
-            # Handle both 0-indexed and 1-indexed safely by shifting
-            u = parse(Int, parts[1])
-            v = parse(Int, parts[2])
-            push!(edges_list, (u, v))
-            max_node = max(max_node, u, v)
-        end
-    end
-    
-    # Check if 0-indexed
-    min_node = isempty(edges_list) ? 0 : minimum(min(u, v) for (u, v) in edges_list)
-    shift = min_node == 0 ? 1 : 0
-    
-    g = is_directed ? SimpleDiGraph(max_node + shift) : SimpleGraph(max_node + shift)
-    for (u, v) in edges_list
-        add_edge!(g, u + shift, v + shift)
-    end
-    
-    return g
-end
 
 """
     get_exact_betweenness(g::AbstractGraph, cache_file::String)
@@ -94,16 +60,17 @@ function run_benchmarks()
         Kendall_Tau = Float64[]
     )
     
-    # We will test on the facebook_combined graph inside cpp_reference/example_input as a sanity check
-    test_files = [joinpath(dirname(@__DIR__), "cpp_reference", "example_input", "facebook_combined.txt")]
+    instances_file = joinpath(dirname(@__DIR__), "Instances", "instances.txt")
+    instances = BenchmarkUtils.read_instances(instances_file)
     
     datasets = []
     
     # 1. Real graphs
-    for filepath in test_files
+    for (rel_path, is_directed) in instances
+        filepath = joinpath(dirname(@__DIR__), "Instances", rel_path)
         if isfile(filepath)
-            g = load_graph_from_edgelist(filepath, false)
-            push!(datasets, (basename(filepath), false, g))
+            g = BenchmarkUtils.load_graph_from_edgelist(filepath, is_directed)
+            push!(datasets, (basename(filepath), is_directed, g))
         else
             @warn "File not found: $filepath. Skipping."
         end
