@@ -128,7 +128,7 @@ estimated betweenness is within an additive error bound with high probability.
 - `Vector{Float64}`: A vector of length `nv(g)` containing the estimated betweenness centrality 
   for each vertex.
 """
-function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100, endpoints::Bool=false, normalize::Symbol=:graphs)
+function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Float64; start_factor::Int=100, endpoints::Bool=false, normalize::Symbol=:graphs) where T
     # --- Input validation ---
     nv(g) >= 2    || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
     err  > 0      || throw(ArgumentError("err must be positive (got $err)"))
@@ -248,7 +248,7 @@ function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float
     return res
 end
 
-function kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64, distmx::AbstractMatrix; kwargs...)
+function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Float64, distmx::AbstractMatrix; kwargs...) where T
     throw(ArgumentError("KADABRA centrality does not support weighted graphs. Please do not provide a distmx argument."))
 end
 
@@ -258,7 +258,7 @@ end
 Convenience wrapper that runs KADABRA and efficiently extracts only the top `k` most central nodes.
 Returns a vector of `NamedTuple`s containing the `node` ID and its `centrality` score, sorted in descending order.
 """
-function kadabra_top_k(g::AbstractGraph, k::Int, err::Float64, delta::Float64; kwargs...)
+function kadabra_top_k(g::AbstractGraph{T}, k::Int, err::Float64, delta::Float64; kwargs...) where T
     k > 0 || throw(ArgumentError("k must be greater than 0 to extract top k nodes"))
     
     # Run the standard Kadabra algorithm
@@ -415,7 +415,7 @@ end
 Sample a single shortest path uniformly at random using pre-allocated workspace memory,
 and directly increment `counts` for every vertex on the path. No heap allocations occur.
 """
-function sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g::AbstractGraph, s::Integer, t::Integer; dir=:out, endpoints::Bool=false) where T
+function sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g::AbstractGraph{T}, s::Integer, t::Integer; dir=:out, endpoints::Bool=false) where T
     s == t && return
     if (dir == :out)
         _bb_bfs_sample!(counts, ws, g, s, t, outneighbors, inneighbors, endpoints)
