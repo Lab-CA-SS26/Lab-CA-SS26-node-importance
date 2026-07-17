@@ -84,8 +84,15 @@ function run_benchmarks()
         push!(datasets, ("BA_$(n)_10", false, g_syn))
     end
     
-    # Initialize a dummy trained BRAVA model
+    # Initialize and load trained BRAVA model
     model = BRAVAModel(m_hops=5, hidden_dim=12)
+    weight_path = joinpath(dirname(@__DIR__), "bravagnn_weights.jld2")
+    if isfile(weight_path)
+        println("Loading trained BRAVA-GNN weights from $weight_path...")
+        @load weight_path model
+    else
+        println("No trained weights found. Using random initialized BRAVA-GNN weights.")
+    end
     
     for (dataset_name, is_directed, g) in datasets
         println("\n=== Benchmarking Dataset: $dataset_name ===")
