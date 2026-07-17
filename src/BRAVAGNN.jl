@@ -38,7 +38,7 @@ function compute_pagerank_feature(A::AbstractSparseMatrix, alpha::Float32=0.85f0
     end
     
     pr_feat = log1p.(p .* N)
-    return pr_feat
+    return pr_feat ./ (maximum(pr_feat) + 1f-6)
 end
 
 """
@@ -59,11 +59,11 @@ function compute_degree_masses(A, pr_feat::AbstractVector{Float32}, m::Int=5)
         F[k, :] .= v
     end
     
-    # Append PageRank as the final feature
-    F[m+1, :] .= pr_feat
+    # Apply log1p exactly like PyTorch (but ONLY to degree features)
+    F[1:m, :] .= log1p.(F[1:m, :])
     
-    # Apply log1p exactly like PyTorch
-    F .= log1p.(F)
+    # Append PageRank as the final feature (already normalized and scaled)
+    F[m+1, :] .= pr_feat
     return F
 end
 

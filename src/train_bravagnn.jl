@@ -73,8 +73,8 @@ function train()
         
         pr_feat = compute_pagerank_feature(A)
         
-        X_out = compute_degree_masses(A, pr_feat, 5)
-        X_in = compute_degree_masses(A_t, pr_feat, 5)
+        X_out = compute_degree_masses(A, pr_feat, 6)
+        X_in = compute_degree_masses(A_t, pr_feat, 6)
         
         # GPU transfer if available
         device = CUDA.functional() ? gpu : cpu
@@ -90,7 +90,7 @@ function train()
     device = CUDA.functional() ? gpu : cpu
     
     # 2. Initialize Model
-    model = BRAVAModel(m_hops=5, hidden_dim=12, num_layers=2) |> device
+    model = BRAVAModel(m_hops=6, hidden_dim=12, num_layers=2) |> device
     opt_state = Flux.setup(Flux.Adam(LEARNING_RATE), model)
     
     # 3. Training Loop
