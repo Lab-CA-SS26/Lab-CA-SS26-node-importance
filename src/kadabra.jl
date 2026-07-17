@@ -164,13 +164,14 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     bet_buf = zeros(Float64, union_sample)
     err_l_buf = zeros(Float64, union_sample)
     err_u_buf = zeros(Float64, union_sample)
+    top_k_nodes = collect(1:n)
     
     # ---------------------------------------------------------
     # PHASE 1: Initial burn-in sampling (exactly tau samples)
     # ---------------------------------------------------------
     phase1_claimed = Threads.Atomic{Int}(0)
     Threads.@threads for tid in 1:nthreads
-        let g=g, n=n, tau=tau, endpoints=endpoints, phase1_claimed=phase1_claimed, n_pairs=n_pairs
+        let g=g, n=n, tau=tau, endpoints=endpoints, phase1_claimed=phase1_claimed, n_pairs=n_pairs, workspaces=workspaces, approx_local=approx_local
             ws = workspaces[tid]
             counts = approx_local[tid]
             while true
@@ -192,7 +193,7 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     stop_flag = Threads.Atomic{Bool}(false)
     
     Threads.@threads for tid in 1:nthreads
-        let g=g, n=n, endpoints=endpoints, check_interval=check_interval, n_pairs=n_pairs, stop_flag=stop_flag, global_approx=global_approx, approx_local=approx_local, k=k, err=err, delta_l_guess=delta_l_guess, delta_u_guess=delta_u_guess, omega=omega, absolute=absolute, union_sample=union_sample, bet_buf=bet_buf, err_l_buf=err_l_buf, err_u_buf=err_u_buf
+        let g=g, n=n, endpoints=endpoints, check_interval=check_interval, n_pairs=n_pairs, stop_flag=stop_flag, global_approx=global_approx, approx_local=approx_local, k=k, err=err, delta_l_guess=delta_l_guess, delta_u_guess=delta_u_guess, omega=omega, absolute=absolute, union_sample=union_sample, bet_buf=bet_buf, err_l_buf=err_l_buf, err_u_buf=err_u_buf, workspaces=workspaces, top_k_nodes=top_k_nodes
             ws = workspaces[tid]
             counts = approx_local[tid]
             
@@ -214,9 +215,12 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
                     end
                     
                     # O(N log K) partial sort instead of O(N log N) full sort
-                    top_k_nodes = partialsortperm(global_approx, 1:union_sample, rev=true)
+                    for i in 1:n
+                        top_k_nodes[i] = i
+                    end
+                    partialsortperm!(top_k_nodes, global_approx, 1:union_sample, rev=true)
                     
-                    if check_finished(global_approx, top_k_nodes, n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute, bet_buf, err_l_buf, err_u_buf)
+                    if check_finished(global_approx, view(top_k_nodes, 1:union_sample), n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute, bet_buf, err_l_buf, err_u_buf)
                         Threads.atomic_xchg!(stop_flag, true)
                     end
                 end
