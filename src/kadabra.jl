@@ -385,7 +385,10 @@ struct KadabraWorkspace{T<:Integer}
     ball_indicator::Vector{UInt8}
     n_paths::Vector{Float64}   
     dist::Vector{Int}          
-    preds::Vector{Vector{T}}
+    
+    preds_data::Vector{T}
+    preds_count::Vector{Int}
+    preds_offset::Vector{Int}
     
     cur_s::Vector{T}
     next_s::Vector{T}
@@ -399,8 +402,17 @@ end
 function KadabraWorkspace(g::AbstractGraph{T}) where {T}
     n = nv(g)
     
-    preds = [Vector{T}() for _ in 1:n]
-    for p in preds; sizehint!(p, 5); end
+    preds_offset = zeros(Int, n + 1)
+    offset = 1
+    for v in 1:n
+        preds_offset[v] = offset
+        # maximum predecessors a node can have in a shortest path BFS is bounded by its degree
+        offset += max(indegree(g, v), outdegree(g, v))
+    end
+    preds_offset[n + 1] = offset
+    
+    preds_data = Vector{T}(undef, offset - 1)
+    preds_count = zeros(Int, n)
     
     cur_s = Vector{T}(); sizehint!(cur_s, n ÷ 4)
     next_s = Vector{T}(); sizehint!(next_s, n ÷ 4)
@@ -414,7 +426,7 @@ function KadabraWorkspace(g::AbstractGraph{T}) where {T}
         zeros(UInt8, n),
         zeros(Float64, n),   
         fill(typemax(Int), n), 
-        preds,
+        preds_data, preds_count, preds_offset,
         cur_s, next_s, cur_t, next_t,
         sp_edges,
         visited_nodes
@@ -461,7 +473,9 @@ function _bb_bfs_sample!(
     ball_indicator = ws.ball_indicator
     n_paths = ws.n_paths
     dist = ws.dist
-    preds = ws.preds
+    preds_data = ws.preds_data
+    preds_count = ws.preds_count
+    preds_offset = ws.preds_offset
     cur_s = ws.cur_s
     next_s = ws.next_s
     cur_t = ws.cur_t
@@ -494,7 +508,11 @@ function _bb_bfs_sample!(
                         ball_indicator[y] = 0x01
                         n_paths[y] = n_paths[x]
                         dist[y] = dist[x] + 1
-                        push!(preds[y], x)
+                        
+                        count = preds_count[y]
+                        preds_data[preds_offset[y] + count] = x
+                        preds_count[y] = count + 1
+                        
                         push!(next_s, y)
                         push!(visited_nodes, y) 
                         sum_degs_s += length(neighborfn_s(g, y))
@@ -505,7 +523,9 @@ function _bb_bfs_sample!(
                         
                     elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x01
                         n_paths[y] += n_paths[x]
-                        push!(preds[y], x)
+                        count = preds_count[y]
+                        preds_data[preds_offset[y] + count] = x
+                        preds_count[y] = count + 1
                     end
                 end
             end
@@ -520,7 +540,11 @@ function _bb_bfs_sample!(
                         ball_indicator[y] = 0x02
                         n_paths[y] = n_paths[x]
                         dist[y] = dist[x] + 1
-                        push!(preds[y], x)
+                        
+                        count = preds_count[y]
+                        preds_data[preds_offset[y] + count] = x
+                        preds_count[y] = count + 1
+                        
                         push!(next_t, y)
                         push!(visited_nodes, y) 
                         sum_degs_t += length(neighborfn_t(g, y))
@@ -531,7 +555,9 @@ function _bb_bfs_sample!(
                         
                     elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x02
                         n_paths[y] += n_paths[x]
-                        push!(preds[y], x)
+                        count = preds_count[y]
+                        preds_data[preds_offset[y] + count] = x
+                        preds_count[y] = count + 1
                     end
                 end
             end
@@ -558,15 +584,15 @@ function _bb_bfs_sample!(
             end
         end
 
-        _backtrack!(counts, selected_edge[1], s, preds, n_paths, endpoints)
-        _backtrack!(counts, selected_edge[2], t, preds, n_paths, endpoints)
+        _backtrack!(counts, selected_edge[1], s, preds_data, preds_count, preds_offset, n_paths, endpoints)
+        _backtrack!(counts, selected_edge[2], t, preds_data, preds_count, preds_offset, n_paths, endpoints)
     end
 
     @inbounds for v in visited_nodes
         ball_indicator[v] = 0x00
         n_paths[v] = 0.0
         dist[v] = typemax(Int)
-        empty!(preds[v])
+        preds_count[v] = 0
     end
     
     empty!(visited_nodes)
@@ -588,18 +614,26 @@ If multiple optimal predecessors exist, one is selected randomly weighted by the
 shortest paths `n_paths` arriving through that predecessor.
 The thread-local `counts` buffer is incremented in-place for every node visited.
 """
-function _backtrack!(counts::Vector{Int}, curr::T, target::T, preds::Vector{Vector{T}}, n_paths::Vector{Float64}, endpoints::Bool) where {T}
+function _backtrack!(counts::Vector{Int}, curr::T, target::T, preds_data::Vector{T}, preds_count::Vector{Int}, preds_offset::Vector{Int}, n_paths::Vector{Float64}, endpoints::Bool) where {T}
     @inbounds while curr != target
         counts[curr] += 1
-        parents = preds[curr]
         
-        if length(parents) == 1
-            curr = parents[1]
+        count = preds_count[curr]
+        offset = preds_offset[curr]
+        
+        if count == 1
+            curr = preds_data[offset]
         else
-            tot = sum(p -> n_paths[p], parents; init=0.0)
+            tot = 0.0
+            for i in 1:count
+                p = preds_data[offset + i - 1]
+                tot += n_paths[p]
+            end
+            
             r = rand() * tot          
             c = 0.0
-            for p in parents
+            for i in 1:count
+                p = preds_data[offset + i - 1]
                 c += n_paths[p]
                 if c >= r
                     curr = p

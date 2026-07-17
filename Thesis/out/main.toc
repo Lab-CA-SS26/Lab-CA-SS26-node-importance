@@ -19,10 +19,12 @@
 \contentsline {chapter}{\numberline {3}brava}{11}{chapter.3}%
 \contentsline {chapter}{\numberline {4}Experimental Setup}{12}{chapter.4}%
 \contentsline {section}{\numberline {4.1}Hardware}{12}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Implementation}{12}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Instances}{12}{section.4.3}%
-\contentsline {section}{\numberline {4.4}Algorithm Performance Metrics}{13}{section.4.4}%
-\contentsline {section}{\numberline {4.5}Results}{13}{section.4.5}%
+\contentsline {section}{\numberline {4.2}Instances}{12}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Experimental Design}{12}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Top-$k$ Accuracy and Runtime Comparison}{12}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Multi-Threading Scalability}{13}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Error Bounds and Parameter Tuning}{13}{subsection.4.3.3}%
+\contentsline {section}{\numberline {4.4}Results}{13}{section.4.4}%
 \contentsline {chapter}{\numberline {5}Conclusion}{15}{chapter.5}%
 \contentsline {chapter}{\numberline {A}Absolute Runtimes}{16}{appendix.A}%
 \contentsline {chapter}{\nonumberline Bibliography}{17}{chapter*.4}%

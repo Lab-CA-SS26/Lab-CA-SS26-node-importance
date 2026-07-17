@@ -20,19 +20,6 @@ Our implementation of KADABRA and BRAVA-GNN was implemented and run with \textbf
 %The project was implemented in \textbf{C++20} and compiled using \textbf{CMake version 3.26.3} with \textbf{Apple Clang 17.0.0}.
 \textbf{Simexpal 1.1}~\parencite{simexpal2019} was used to conduct the experiments.
 
-
-\section{Implementation}\label{sec:implementation}
-As basis for the implementation serves the framework for parametric maximum flow created by \textcite{beines_simpler_2024} in which we included the implementation of
-pseudoflow and PPF by \textcite{Sauer_PPF_2025}.
-Using these implementation of push relabel, pseudoflow, PBFS and PPF we implemented the Algorithms for DSP as described above.
-For Greedy++ we based it on the implementation by \textcite{boob_flowless_2020}.
-For a fairer comparison we adapted this implementation to use the same C++ datastructures and encapsulate it in a class, as
-we did with the flow based algorithms.
-Since constructing the flow network (Section~\ref{sec:reduction_to_flow}) plays an important role in the runtime for parametric maximum flow,
-we therefore must also include the initiation of the necessary data structures for Greedy++.
-%All algorithms receive the previously read edge list(see \ref{sec:Instances} for details).
-
-
 \section[Instances]{Instances}\label{sec:Instances}
 
 For comparability, we use the same instances as \textcite{noauthor_degree-mass_2026}.
@@ -40,10 +27,10 @@ A variety of instances are obtained from the SNAP database~\parencite{leskovec_s
 ASU’s Social Computing Data Repository~\parencite{zafarani_social_2009}, and the Koblenz Network Collection
 \parencite{kunegis_konect_2013}.
 
-All unweighted instances used in our experiments are listed in Table~\ref{tab:wei}
+All instances used in our experiments are listed in Table~\ref{tab:instance_table}
 \begin{table}[h]
     \centering
-    \resizebox{\textwidth}{!}{
+    \resizebox{.4\textwidth}{!}{
         \input{tables/instance_table_new}
     }
     \caption{Overview of instances: $n$ is the number of vertices, $m$ the number of edges, 
@@ -51,52 +38,31 @@ All unweighted instances used in our experiments are listed in Table~\ref{tab:we
     \label{tab:instance_table}
 \end{table}
 
-\section[Algorithm Performance Metrics]{Algorithm Performance Metrics}
-\label{sec:algorithm-performance-metrics}
-%Additionally, for  \emph{IPC} and \emph{DSPwithIntersect} algorithms, we recorded the number of iterations performed,
-We conducted a detailed performance analysis of each exact algorithm on every graph instance.
-For the exact methods, we recorded two primary metrics:
-\begin{enumerate}
-    \item the time required to construct the flow network,
-    \item the runtime of the algorithm.
-\end{enumerate}
+\section{Experimental Design}
 
-For \emph{Greedy++}, we evaluated its performance as an approximation algorithm.
-Given the optimal solution value, we specified target percentages
-$(0.80, 0.90, 0.95, 0.99, 1.00)$ and measured both runtime and number of iterations
-until the algorithm achieved at least each target fraction of the optimum.
-Following \textcite{boob_flowless_2020} and confirmed by our experiments that
-three iterations always reach at least 90\% of the optimum for the unweighted instances,
-we also executed Greedy++ with exactly three iterations and recorded its runtime.
+To provide a comprehensive evaluation, we divide our experiments into three main categories: accuracy and runtime comparisons, multi-threading scalability, and error bound analysis for approximation algorithms.
 
-All experiments were repeated on both the original and the \emph{pruned} graphs
-(see Chapter~\ref{ch:pruning}).
-For pruning we tracked the pruning time and the resulting graph size.
+\subsection{Top-$k$ Accuracy and Runtime Comparison}
+The primary objective of betweenness centrality algorithms in practice is often to identify the top-$k$ most central nodes in a network. We compare our Julia implementation of KADABRA and the trained BRAVA-GNN model against the exact Brandes algorithm, which serves as our ground truth. We also include the original C++ implementation of KADABRA and fast heuristic baselines such as Degree Centrality and PageRank.
 
-Each algorithm–instance pair was run five times with a 30-minute time limit;
-we report the median of these runs.
-For pruning statistics we used the median of all instances and runs.
-
-Throughout this thesis we use the following shorthand:
+For each instance, we measure the end-to-end runtime (wall-clock time) and memory consumption. To assess the quality of the top-$k$ approximations, we compute the following metrics:
 \begin{itemize}
-    \item \textbf{PF}: IPC or {\DSPwithR} using pseudoflow, depending on context.
-    \item \textbf{PR}: IPC or {\DSPwithR} using push–relabel, depending on context.
-    \item \textbf{FPPF}: {\DSPwithFBA} using parametric pseudoflow.
-    \item \textbf{FPBFS}: {\DSPwithFBA} using parametric breadth-first search.
-    \item \textbf{G-XX}: Greedy++ run until XX\% of the optimum is reached (e.g., G-90).
-    \item \textbf{G-3}: Greedy++ run for exactly three iterations.
-    \item \textbf{P-X}: Pruning Version.
+    \item \textbf{Precision at $k$ (Overlap):} The fraction of the true top-$k$ nodes that are present in the predicted top-$k$ set.
+    \item \textbf{Kendall's $\tau$:} The rank correlation coefficient computed over the true top-$k$ nodes to measure how well the relative ordering is preserved.
+    \item \textbf{NDCG at $k$:} Normalized Discounted Cumulative Gain, which heavily penalizes ranking errors at the very top of the list.
 \end{itemize}
+We evaluate these metrics across various $k$ values (e.g., $k=10, 50, 100$) to observe how approximation quality degrades as the desired number of central nodes increases.
 
+\subsection{Multi-Threading Scalability}
+Since our KADABRA implementation is designed to fully utilize modern multi-core architectures, we conduct a strong scaling experiment. We select a subset of representative graphs and execute the Julia KADABRA implementation with an increasing number of threads $t \in \{1, 2, 4, 8, 16, 24, 32, 48\}$. 
 
+By measuring the execution time $T_t$ for $t$ threads, we analyze the parallel speedup $S_t = T_1 / T_t$. This allows us to quantify the overhead of thread synchronization and the efficiency of our thread-local memory workspace design, particularly as $t$ approaches the physical and logical core limits of our hardware.
 
-
-
-%
-%livehournal groupmemberships timeout bei peeler100 und pbfs->immernoch, aber das einzige
-%orkut-links bei peeler100 -> weiterhin.
-%twitter follows bei fpbfs-> immernoch, aber nur bei nicht reduced.
-%
-%Hab jetzt nur die instanzen aus flowless: also alle entfernt, besonders diese hier, weil funtkionierte nicht:
-%Instanz rausgenommen: US-Airport_2010 bei Peeler 80 weighted
-%US-Airport500 komische density 12184817 bei Peeler 80 weighted
+\subsection{Error Bounds and Parameter Tuning}
+Approximation algorithms like KADABRA rely heavily on user-defined confidence parameters, specifically the absolute error margin $\epsilon$ and the failure probability $\delta$. 
+We perform a grid search over a range of parameter combinations:
+\begin{align*}
+    \epsilon &\in \{0.1, 0.05, 0.01, 0.005, 0.001\} \\
+    \delta &\in \{0.1, 0.05, 0.01\}
+\end{align*}
+For each combination, we measure the empirical runtime and the overall Kendall's $\tau$ correlation against the exact betweenness centrality scores. This experiment illustrates the trade-off between strict theoretical guarantees and practical computation time, guiding users in selecting optimal parameters for their specific use cases.

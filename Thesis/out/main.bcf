@@ -2384,20 +2384,16 @@
     <bcf:citekey order="19" intorder="1">borassi2019kadabra</bcf:citekey>
     <bcf:citekey order="20" intorder="1">borassi_kadabra_2019</bcf:citekey>
     <bcf:citekey order="21" intorder="1">simexpal2019</bcf:citekey>
-    <bcf:citekey order="22" intorder="1">beines_simpler_2024</bcf:citekey>
-    <bcf:citekey order="23" intorder="1">Sauer_PPF_2025</bcf:citekey>
-    <bcf:citekey order="24" intorder="1">boob_flowless_2020</bcf:citekey>
-    <bcf:citekey order="25" intorder="1">noauthor_degree-mass_2026</bcf:citekey>
-    <bcf:citekey order="26" intorder="1">leskovec_snap_2014</bcf:citekey>
+    <bcf:citekey order="22" intorder="1">noauthor_degree-mass_2026</bcf:citekey>
+    <bcf:citekey order="23" intorder="1">leskovec_snap_2014</bcf:citekey>
+    <bcf:citekey order="24" intorder="1">zafarani_social_2009</bcf:citekey>
+    <bcf:citekey order="25" intorder="1">kunegis_konect_2013</bcf:citekey>
+    <bcf:citekey order="26" intorder="1">kunegis_konect_2013</bcf:citekey>
     <bcf:citekey order="27" intorder="1">zafarani_social_2009</bcf:citekey>
-    <bcf:citekey order="28" intorder="1">kunegis_konect_2013</bcf:citekey>
+    <bcf:citekey order="28" intorder="1">leskovec_snap_2014</bcf:citekey>
     <bcf:citekey order="29" intorder="1">kunegis_konect_2013</bcf:citekey>
     <bcf:citekey order="30" intorder="1">zafarani_social_2009</bcf:citekey>
     <bcf:citekey order="31" intorder="1">leskovec_snap_2014</bcf:citekey>
-    <bcf:citekey order="32" intorder="1">kunegis_konect_2013</bcf:citekey>
-    <bcf:citekey order="33" intorder="1">zafarani_social_2009</bcf:citekey>
-    <bcf:citekey order="34" intorder="1">leskovec_snap_2014</bcf:citekey>
-    <bcf:citekey order="35" intorder="1">boob_flowless_2020</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nyt">

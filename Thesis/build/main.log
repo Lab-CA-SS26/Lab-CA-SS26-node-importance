@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.5.8)  7 JUL 2026 14:57
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.5.8)  17 JUL 2026 14:14
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1519,84 +1519,65 @@ Overfull \hbox (36.32004pt too wide) in paragraph at lines 12--22
  []
 
 
-LaTeX Warning: Citation 'beines_simpler_2024' on page 12 undefined on input line 25.
+LaTeX Warning: Citation 'leskovec_snap_2014' on page 12 undefined on input line 26.
 
 
-LaTeX Warning: Citation 'Sauer_PPF_2025' on page 12 undefined on input line 26.
+LaTeX Warning: Citation 'zafarani_social_2009' on page 12 undefined on input line 27.
 
 
-LaTeX Warning: Citation 'boob_flowless_2020' on page 12 undefined on input line 28.
+LaTeX Warning: Citation 'kunegis_konect_2013' on page 12 undefined on input line 28.
 
 
-LaTeX Warning: Reference `sec:reduction_to_flow' on page 12 undefined on input line 31.
-
-
-LaTeX Warning: Citation 'leskovec_snap_2014' on page 12 undefined on input line 39.
-
-
-LaTeX Warning: Citation 'zafarani_social_2009' on page 12 undefined on input line 40.
-
-
-LaTeX Warning: Citation 'kunegis_konect_2013' on page 12 undefined on input line 41.
-
-
-LaTeX Warning: Reference `tab:wei' on page 12 undefined on input line 43.
+LaTeX Warning: Reference `tab:instance_table' on page 12 undefined on input line 30.
 
 (./tables/instance_table_new.tex)
 
-LaTeX Warning: Citation 'kunegis_konect_2013' on page 12 undefined on input line 50.
+LaTeX Warning: Citation 'kunegis_konect_2013' on page 12 undefined on input line 37.
 
 
-LaTeX Warning: Citation 'zafarani_social_2009' on page 12 undefined on input line 50.
+LaTeX Warning: Citation 'zafarani_social_2009' on page 12 undefined on input line 37.
 
 
-LaTeX Warning: Citation 'leskovec_snap_2014' on page 12 undefined on input line 50.
+LaTeX Warning: Citation 'leskovec_snap_2014' on page 12 undefined on input line 37.
 
 
-LaTeX Warning: Citation 'kunegis_konect_2013' on page 12 undefined on input line 50.
+LaTeX Warning: Citation 'kunegis_konect_2013' on page 12 undefined on input line 37.
 
 
-LaTeX Warning: Citation 'zafarani_social_2009' on page 12 undefined on input line 50.
+LaTeX Warning: Citation 'zafarani_social_2009' on page 12 undefined on input line 37.
 
 
-LaTeX Warning: Citation 'leskovec_snap_2014' on page 12 undefined on input line 50.
+LaTeX Warning: Citation 'leskovec_snap_2014' on page 12 undefined on input line 37.
 
 
-Underfull \hbox (badness 2556) in paragraph at lines 50--50
+Underfull \hbox (badness 2556) in paragraph at lines 37--37
 [][][]|\T1/cmr/m/n/10.95 Over-view of in-stances: $\OML/cmm/m/it/10.95 n$ \T1/cmr/m/n/10.95 is the num-ber of ver-tices, $\OML/cmm/m/it/10.95 m$ \T1/cmr/m/n/10.95 the num-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 50--50
+Underfull \hbox (badness 10000) in paragraph at lines 37--37
 \T1/cmr/m/n/10.95 ber of edges, Sources: [1] KONECT ([]),
  []
 
 
-Underfull \hbox (badness 5245) in paragraph at lines 50--50
+Underfull \hbox (badness 5245) in paragraph at lines 37--37
 \T1/cmr/m/n/10.95 [2] Za-frani ([]); un-marked in-stances are from
  []
 
 
-LaTeX Warning: Float too large for page by 40.30052pt on input line 52.
-
-
 LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 45.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 45.
 
 [12
 
-]
-
-LaTeX Warning: Citation 'boob_flowless_2020' on page 13 undefined on input line 68.
-
-
-LaTeX Warning: Reference `ch:pruning' on page 13 undefined on input line 73.
-
-
-Overfull \hbox (18.04243pt too wide) in paragraph at lines 72--75
-[]\T1/cmr/m/n/10.95 All ex-per-i-ments were re-peated on both the ori-ginal and the \T1/cmr/m/it/10.95 pruned \T1/cmr/m/n/10.95 graphs (see Chapter []).
- []
-
-) (./sections/results.tex) (./sections/conclusion.tex [13] [14]
+] [13]) (./sections/results.tex) (./sections/conclusion.tex [14]
 chapter 5.
 ) (./sections/appendix.tex [15
 
@@ -1636,18 +1617,18 @@ Package logreq Info: Writing requests to 'main.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 45009 strings out of 476025
- 943195 string characters out of 5790018
- 1870388 words of memory out of 5000000
- 64739 multiletter control sequences out of 15000+600000
+ 45004 strings out of 476025
+ 943068 string characters out of 5790018
+ 1872388 words of memory out of 5000000
+ 64734 multiletter control sequences out of 15000+600000
  532160 words of font info for 78 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  108i,20n,106p,10696b,2451s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfbx1095.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfcc1095.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfsl1095.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfss1095.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfss1440.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfss1728.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfsx1095.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfsx1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfsx1440.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfsx1728.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfsx2074.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sftt1095.pfb>
-Output written on build/main.pdf (21 pages, 500187 bytes).
+Output written on build/main.pdf (21 pages, 502191 bytes).
 PDF statistics:
- 405 PDF objects out of 1000 (max. 8388607)
- 325 compressed objects within 4 object streams
+ 411 PDF objects out of 1000 (max. 8388607)
+ 331 compressed objects within 4 object streams
  76 named destinations out of 1000 (max. 500000)
- 234 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 250 words of extra memory for PDF output out of 10000 (max. 10000000)
 
