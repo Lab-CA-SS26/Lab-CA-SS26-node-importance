@@ -67,12 +67,14 @@ function train()
         scores_df = CSV.read(joinpath(TRAINING_DIR, "$(name)_scores.csv"), DataFrame)
         scores = scores_df.betweenness
         
-        # Precompute degree masses
+        # Precompute PageRank feature once for the graph
         A = Float32.(sparse(g))
         A_t = A'
         
-        X_out = compute_degree_masses(A, 5)
-        X_in = compute_degree_masses(A_t, 5)
+        pr_feat = compute_pagerank_feature(A)
+        
+        X_out = compute_degree_masses(A, pr_feat, 5)
+        X_in = compute_degree_masses(A_t, pr_feat, 5)
         
         # GPU transfer if available
         device = CUDA.functional() ? gpu : cpu

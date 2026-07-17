@@ -152,14 +152,16 @@ function run_benchmarks()
         Flux.testmode!(model)
         
         # Warmup
-        _X_out = compute_degree_masses(A, 5)
-        _X_in = compute_degree_masses(A_t, 5)
+        pr_feat = compute_pagerank_feature(A)
+        _X_out = compute_degree_masses(A, pr_feat, 5)
+        _X_in = compute_degree_masses(A_t, pr_feat, 5)
         _ = model(A, A_t, _X_in, _X_out)
         
         mem_gnn_bytes = @allocated begin
             t_gnn = @elapsed begin
-                X_out = compute_degree_masses(A, 5)
-                X_in = compute_degree_masses(A_t, 5)
+                pr_feat_val = compute_pagerank_feature(A)
+                X_out = compute_degree_masses(A, pr_feat_val, 5)
+                X_in = compute_degree_masses(A_t, pr_feat_val, 5)
                 scores_gnn = model(A, A_t, X_in, X_out)
             end
         end

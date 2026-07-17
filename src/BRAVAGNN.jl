@@ -12,14 +12,44 @@ export compute_degree_masses, BRAVALayer, BRAVAModel, PairwiseDataLoader, margin
 # ==============================================================================
 
 """
-    compute_degree_masses(A, m::Int=5)
+    compute_pagerank_feature(A::AbstractSparseMatrix, alpha::Float32=0.85f0, iters::Int=80)
 
-Computes the degree mass features up to order `m` for a sparse adjacency matrix `A`.
-Applies log1p to perfectly match the PyTorch reference implementation.
+Computes the PageRank of the graph and applies the exact same transformation as the PyTorch reference:
+log1p(PageRank * N) followed by Max-Normalization.
 """
-function compute_degree_masses(A, m::Int=5)
+function compute_pagerank_feature(A::AbstractSparseMatrix, alpha::Float32=0.85f0, iters::Int=80)
     N = size(A, 1)
-    F = zeros(Float32, m + 1, N)
+    # Compute out-degree (row sums)
+    deg = vec(sum(A, dims=2))
+    deg_inv = Float32[d > 0 ? 1.0f0 / d : 0.0f0 for d in deg]
+    
+    # Transition matrix P
+    P = spdiagm(deg_inv) * A
+    P_t = P'
+    
+    p = fill(1.0f0 / N, N)
+    for _ in 1:iters
+        new_p = alpha .* (P_t * p) .+ (1.0f0 - alpha) / N
+        if maximum(abs.(new_p .- p)) < 1e-9
+            p = new_p
+            break
+        end
+        p = new_p
+    end
+    
+    pr_feat = log1p.(p .* N)
+    return pr_feat ./ (maximum(pr_feat) + 1f-6)
+end
+
+"""
+    compute_degree_masses(A, pr_feat::AbstractVector{Float32}, m::Int=5)
+
+Computes the degree mass features up to order `m` for a sparse adjacency matrix `A`,
+applies log1p, and appends the precomputed PageRank feature to perfectly match `degree_mix_mass_5_pr`.
+"""
+function compute_degree_masses(A, pr_feat::AbstractVector{Float32}, m::Int=5)
+    N = size(A, 1)
+    F = zeros(Float32, m + 2, N)
     
     v = A * ones(Float32, N)
     F[1, :] .= v
@@ -30,8 +60,11 @@ function compute_degree_masses(A, m::Int=5)
         curr_mass .= curr_mass .+ v
         F[k+1, :] .= curr_mass
     end
+    
     # Apply log1p exactly like PyTorch
-    F .= log1p.(F)
+    F[1:m+1, :] .= log1p.(F[1:m+1, :])
+    # Append PageRank as the final feature
+    F[m+2, :] .= pr_feat
     return F
 end
 
@@ -96,8 +129,8 @@ end
 Flux.@layer BRAVAModel
 
 function BRAVAModel(; m_hops::Int=5, hidden_dim::Int=12, num_layers::Int=4, p_drop::Float32=0.3f0)
-    # 1. DegreeMassEmbedding
-    embedding = Dense(m_hops + 1 => hidden_dim, bias=true)
+    # 1. DegreeMassEmbedding + PageRank
+    embedding = Dense(m_hops + 2 => hidden_dim, bias=true)
     
     # 2. PyTorch uses independent GNN_Layers (not shared)
     layers = Tuple([BRAVALayer(Dense(hidden_dim => hidden_dim, bias=true).weight, Dense(hidden_dim => hidden_dim, bias=true).bias) for _ in 1:num_layers])
