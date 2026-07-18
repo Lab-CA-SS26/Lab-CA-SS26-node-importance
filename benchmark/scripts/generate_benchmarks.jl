@@ -68,13 +68,20 @@ function generate_benchmarks()
     println("Reading instances from $instances_file")
     
     # Initialize DataFrame for timings
-    results = DataFrame(
-        Dataset = String[],
-        Nodes = Int[],
-        Edges = Int[],
-        Runtime_s = Float64[],
-        Status = String[]
-    )
+    if isfile(out_csv)
+        results = CSV.read(out_csv, DataFrame)
+        println("Loaded existing timings from $out_csv")
+        processed_datasets = unique(results.Dataset)
+    else
+        results = DataFrame(
+            Dataset = String[],
+            Nodes = Int[],
+            Edges = Int[],
+            Runtime_s = Float64[],
+            Status = String[]
+        )
+        processed_datasets = String[]
+    end
     
     instances = BenchmarkUtils.read_instances(instances_file)
     
@@ -85,8 +92,13 @@ function generate_benchmarks()
             continue
         end
         
-        println("\nProcessing: $rel_path (Directed: $is_directed)")
         dataset_name = basename(full_path)
+        if dataset_name in processed_datasets
+            println("\nSkipping: $rel_path (Already processed)")
+            continue
+        end
+        
+        println("\nProcessing: $rel_path (Directed: $is_directed)")
         
         # 1. Load graph
         g = BenchmarkUtils.load_graph_from_edgelist(full_path, is_directed)
