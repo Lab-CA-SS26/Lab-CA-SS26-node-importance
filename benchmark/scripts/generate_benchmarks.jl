@@ -98,14 +98,14 @@ function generate_benchmarks()
         println("  Computing exact betweenness centrality (Timeout: 1h)...")
         start_time = time()
         
-        exact_bc = with_timeout(3600) do
+        exact_bc = with_timeout(3600*6) do
             betweenness_centrality(g, normalize=true)
         end
         
         elapsed = time() - start_time
         
         if exact_bc === nothing
-            println("  [TIMEOUT] Computation exceeded 1 hour. Skipping to next.")
+            println("  [TIMEOUT] Computation exceeded 6 hour. Skipping to next.")
             push!(results, (dataset_name, N, M, elapsed, "Timeout"))
         else
             println("  Computed in $(round(elapsed, digits=2)) seconds.")
