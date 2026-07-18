@@ -1,17 +1,17 @@
 # Undirected
 TestInstances/p2p-Gnutella31.txt U
-# ABCDE/com-youtube.txt U
-# ABCDE/amazon.txt U
-# ABCDE/cit-Patents.txt U
-# ABCDE/com-lj.txt U
-# ABCDE/dblp.txt U
+ABCDE/com-youtube.txt U
+ABCDE/amazon.txt U
+ABCDE/cit-Patents.txt U
+ABCDE/com-lj.txt U
+ABCDE/dblp.txt U
 
 # Directed
 TestInstances/soc-Epinions1.txt D
-# TestInstances/soc-Slashdot0902.txt D
-# TestInstances/email-EuAll.txt D
-# TestInstances/web-Google.txt D
-# TestInstances/soc-Pokec.txt D
-# TestInstances/wiki-topcats.txt D
-# TestInstances/wiki-Talk.txt D
-# TestInstances/soc-LiveJournal1.txt D
+TestInstances/soc-Slashdot0902.txt D
+TestInstances/email-EuAll.txt D
+TestInstances/web-Google.txt D
+TestInstances/soc-Pokec.txt D
+TestInstances/wiki-topcats.txt D
+TestInstances/wiki-Talk.txt D
+TestInstances/soc-LiveJournal1.txt D
