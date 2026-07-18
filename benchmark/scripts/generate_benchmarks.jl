@@ -56,9 +56,9 @@ function generate_benchmarks()
     instances_dir = joinpath(dirname(dirname(@__DIR__)), "Instances")
     instances_file = joinpath(instances_dir, "instances.txt")
     
-    # We output timings and JLD2 caches into the benchmark dir itself for easy loading by other scripts
+    # We output timings to benchmark/results and caches to benchmark/cache
     benchmark_dir = dirname(dirname(@__DIR__)) * "/benchmark"
-    out_csv = joinpath(benchmark_dir, "exact_brandes_timings.csv")
+    out_csv = joinpath(benchmark_dir, "results", "exact_brandes_timings.csv")
     
     if !isfile(instances_file)
         println("Error: Instances list not found at: $instances_file")
@@ -137,7 +137,7 @@ function generate_benchmarks()
             # 4. Save as JLD2 directly into the benchmark folder to make it easy for comparison later
             # (Using exact_bc and exact_scores variables since run_benchmarks.jl and compare_topk.jl use different names)
             exact_scores = exact_bc
-            jld2_file = joinpath(benchmark_dir, "$(dataset_name)_exact_bc.jld2")
+            jld2_file = joinpath(benchmark_dir, "cache", "$(dataset_name)_exact_bc.jld2")
             println("  Saving JLD2 cache to: $jld2_file")
             @save jld2_file exact_bc exact_scores
         end
