@@ -106,8 +106,8 @@ function generate_benchmarks()
         M = ne(g)
         println("  Nodes: $N, Edges: $M")
         
-        # 2. Compute Exact Betweenness Centrality with a 1-hour timeout (3600 seconds)
-        println("  Computing exact betweenness centrality (Timeout: 1h)...")
+        # 2. Compute Exact Betweenness Centrality with a 6-hour timeout (21600 seconds)
+        println("  Computing exact betweenness centrality (Timeout: 6h)...")
         start_time = time()
         
         exact_bc = with_timeout(3600*6) do
