@@ -62,3 +62,4 @@ benchmark/develop/
 benchmark/dev-builds/
 benchmark/*.cache
 benchmark/experiments_BA.yml
+benchmark/cache/*.jld2
