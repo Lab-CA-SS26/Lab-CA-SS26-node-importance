@@ -75,6 +75,7 @@ variants:
 # 3. Define Experiments
 experiments:
   - name: kadabra-cpp
+    timeout: 43200
     args:
       - "simexpal_runners/run_experiments_cpp"
       - "-i"
@@ -91,6 +92,7 @@ experiments:
       extensions: ['stats.json']
 
   - name: kadabra-julia
+    timeout: 43200
     args:
       - "julia"
       - "--project=.."
@@ -109,6 +111,7 @@ experiments:
       extensions: ['stats.json']
 
   - name: brava-julia
+    timeout: 43200
     args:
       - "julia"
       - "--project=.."
@@ -126,15 +129,42 @@ experiments:
     output:
       extensions: ['stats.json']
 
+  - name: brandes-julia
+    timeout: 43200
+    args:
+      - "julia"
+      - "--project=.."
+      - "simexpal_runners/run_experiments.jl"
+      - "-i"
+      - "@INSTANCE@"
+      - "-o"
+      - "@OUTPUT:stats.json@"
+      - "@EXTRA_ARGS@"
+      - "-a"
+      - "brandes"
+      - "-v"
+      - "julia"
+    stdout: out
+    output:
+      extensions: ['stats.json']
+
 # 6. Run Matrix
 matrix:
   include:
-    # Run undirected graphs
-    # - experiments: [kadabra-cpp, kadabra-julia, brava-julia]
+    # Run undirected graphs for kadabra
     - experiments: [kadabra-cpp, kadabra-julia]
       instsets: [TestInstances_Undirected]
-      # instsets: [TestInstances_Undirected, ABCDE_Undirected]
       variants: [undirected, t1, t4, k0, k10, err1]
+
+    # Run undirected graphs for brava
+    - experiments: [brava-julia]
+      instsets: [TestInstances_Undirected]
+      variants: [undirected, t1, k0, err1] # brava doesn't use threads/k/err, but we use defaults to satisfy simexpal axes
+
+    # Run undirected graphs for brandes
+    - experiments: [brandes-julia]
+      instsets: [TestInstances_Undirected]
+      variants: [undirected, t1, k0, err1] # brandes doesn't use threads/k/err, but we use defaults to satisfy simexpal axes
 
     # # Run directed graphs
     # - experiments: [kadabra-cpp, kadabra-julia, brava-julia]

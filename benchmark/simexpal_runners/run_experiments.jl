@@ -96,6 +96,16 @@ function main()
         end_time = time_ns()
         execution_time = (end_time - start_time) / 1e9
         
+    elseif algo == "brandes"
+        # For brandes (exact)
+        start_time = time_ns()
+        
+        centralities = Main.Graphs.betweenness_centrality(g; normalize=false, endpoints=false)
+        n_samples = 0
+        
+        end_time = time_ns()
+        execution_time = (end_time - start_time) / 1e9
+        
     else
         error("Unknown algorithm: $algo")
     end
