@@ -1,5 +1,6 @@
 # kadabra.jl
 using Graphs
+using Random
 
 """
     estimate_diameter(g::AbstractGraph)
@@ -198,66 +199,71 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     top_k_nodes = collect(1:n)
     
     # ---------------------------------------------------------
-    # PHASE 1: Initial burn-in sampling (exactly tau samples)
+    # PHASE 1: Initial burn-in sampling
     # ---------------------------------------------------------
-    phase1_claimed = Threads.Atomic{Int}(0)
+    tau_per_thread = cld(tau, nthreads) # Divide tau evenly across threads
+    
     Threads.@threads for tid in 1:nthreads
-        let g=g, n=n, tau=tau, endpoints=endpoints, phase1_claimed=phase1_claimed, n_pairs=n_pairs, workspaces=workspaces, approx_local=approx_local
-            ws = workspaces[tid]
-            counts = approx_local[tid]
-            while true
-                prev = Threads.atomic_add!(phase1_claimed, 1)
-                prev >= tau && break                            
-                s, t = rand(1:n), rand(1:n)
-                while s == t; t = rand(1:n); end
-                
-                # Zero-allocation increment
-                sample_shortest_path!(counts, ws, g, s, t; endpoints=endpoints)
-                Threads.atomic_add!(n_pairs, 1)
-            end
+        ws = workspaces[tid]
+        counts = approx_local[tid]
+        rng = Random.default_rng() 
+        
+        for _ in 1:tau_per_thread
+            s = rand(rng, 1:n)
+            t = rand(rng, 1:n)
+            while s == t; t = rand(rng, 1:n); end
+            
+            sample_shortest_path!(counts, ws, g, rng, T(s), T(t); endpoints=endpoints)
         end
     end
+    n_pairs[] = tau_per_thread * nthreads # Updates atomic counter safely
     
     # ---------------------------------------------------------
     # PHASE 2: Main loop until stopping condition is met
     # ---------------------------------------------------------
     stop_flag = Threads.Atomic{Bool}(false)
     
+    # Increase check interval to prevent Thread 1 from choking
+    check_interval = max(1000, tau ÷ 10) 
+    
     Threads.@threads for tid in 1:nthreads
-        let g=g, n=n, endpoints=endpoints, check_interval=check_interval, n_pairs=n_pairs, stop_flag=stop_flag, global_approx=global_approx, approx_local=approx_local, k=k, err=err, delta_l_guess=delta_l_guess, delta_u_guess=delta_u_guess, omega=omega, absolute=absolute, union_sample=union_sample, bet_buf=bet_buf, err_l_buf=err_l_buf, err_u_buf=err_u_buf, workspaces=workspaces, top_k_nodes=top_k_nodes
-            ws = workspaces[tid]
-            counts = approx_local[tid]
+        ws = workspaces[tid]
+        counts = approx_local[tid]
+        rng = Random.default_rng()
+        
+        local_pairs = 0 # Batch local counter to avoid atomic contention
+        
+        while !stop_flag[] && n_pairs[] < omega
+            for _ in 1:check_interval
+                s = rand(rng, 1:n)
+                t = rand(rng, 1:n)
+                while s == t; t = rand(rng, 1:n); end
+                
+                sample_shortest_path!(counts, ws, g, rng, T(s), T(t); endpoints=endpoints)
+                local_pairs += 1
+            end
             
-            while !stop_flag[] && n_pairs[] < omega
-                # Small batch before status check
-                for _ in 1:check_interval
-                    s, t = rand(1:n), rand(1:n)
-                    while s == t; t = rand(1:n); end
-                    
-                    sample_shortest_path!(counts, ws, g, s, t; endpoints=endpoints)
-                    Threads.atomic_add!(n_pairs, 1)
+            # Update the global counter only once per batch
+            Threads.atomic_add!(n_pairs, local_pairs)
+            local_pairs = 0
+            
+            # Only thread 1 handles the heavy stopping calculation
+            if tid == 1
+                fill!(global_approx, 0)
+                for t_approx in approx_local
+                    global_approx .+= t_approx
                 end
                 
-                # Only thread 1 handles the heavy stopping calculation
-                if tid == 1
-                    fill!(global_approx, 0)
-                    for t_approx in approx_local
-                        global_approx .+= t_approx
-                    end
-                    
-                    if absolute
-                        # Order doesn't matter for absolute mode since we check all elements
-                        for i in 1:union_sample
-                            top_k_nodes[i] = i
-                        end
-                    else
-                        # Zero-allocation top-K selection for relative ranking mode
-                        zero_alloc_top_k!(top_k_nodes, global_approx, union_sample)
-                    end
-                    
-                    if check_finished(global_approx, view(top_k_nodes, 1:union_sample), n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute, bet_buf, err_l_buf, err_u_buf)
-                        Threads.atomic_xchg!(stop_flag, true)
-                    end
+                if absolute
+                    for i in 1:union_sample; top_k_nodes[i] = i; end
+                else
+                    # Re-initialize top_k_nodes 1 to N, then use O(N) QuickSelect
+                    copyto!(top_k_nodes, 1:n)
+                    partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev=true)
+                end
+                
+                if check_finished(global_approx, view(top_k_nodes, 1:union_sample), n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute, bet_buf, err_l_buf, err_u_buf)
+                    Threads.atomic_xchg!(stop_flag, true)
                 end
             end
         end
@@ -491,18 +497,14 @@ function KadabraWorkspace(g::AbstractGraph{T}) where {T}
 end
 
 """
-    sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g, s, t[; dir=:out, endpoints=false])
+    sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g, s, t[; endpoints=false])
 
 Sample a single shortest path uniformly at random using pre-allocated workspace memory,
 and directly increment `counts` for every vertex on the path. No heap allocations occur.
 """
-function sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g::AbstractGraph{T}, s::Integer, t::Integer; dir=:out, endpoints::Bool=false) where T
+function sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g::AbstractGraph{T}, rng::AbstractRNG, s::T, t::T; endpoints::Bool=false) where T
     s == t && return
-    if (dir == :out)
-        _sample_shortest_path!(g, T(s), T(t), counts, ws, outneighbors, inneighbors, endpoints)
-    else
-        _sample_shortest_path!(g, T(s), T(t), counts, ws, inneighbors, outneighbors, endpoints)
-    end
+    _sample_shortest_path!(g, rng, s, t, counts, ws, outneighbors, inneighbors, endpoints)
 end
 
 """
@@ -514,7 +516,7 @@ When the frontiers intersect, it selects a single bridge edge uniformly at rando
 the number of shortest paths crossing it) and backtracks to construct the sampled path.
 The nodes on the resulting path are incremented directly in the `counts` array without allocating memory.
 """
-function _sample_shortest_path!(g::AbstractGraph{T}, s::T, t::T, counts::Vector{Int}, ws::KadabraWorkspace{T}, neighborfn_s::F1, neighborfn_t::F2, endpoints::Bool) where {T<:Integer, F1, F2}
+function _sample_shortest_path!(g::AbstractGraph{T}, rng::AbstractRNG, s::T, t::T, counts::Vector{Int}, ws::KadabraWorkspace{T}, neighborfn_s::F1, neighborfn_t::F2, endpoints::Bool) where {T<:Integer, F1, F2}
     ball_indicator = ws.ball_indicator
     n_paths = ws.n_paths
     dist = ws.dist
@@ -617,7 +619,7 @@ function _sample_shortest_path!(g::AbstractGraph{T}, s::T, t::T, counts::Vector{
             tot_weight += n_paths[u_bridge] * n_paths[v_bridge]
         end
 
-        rand_val = rand() * tot_weight
+        rand_val = rand(rng) * tot_weight
         cur_weight = 0.0
         selected_edge = sp_edges[1]
         
@@ -629,8 +631,8 @@ function _sample_shortest_path!(g::AbstractGraph{T}, s::T, t::T, counts::Vector{
             end
         end
 
-        _backtrack!(counts, selected_edge[1], s, preds_data, preds_count, preds_offset, n_paths, endpoints)
-        _backtrack!(counts, selected_edge[2], t, preds_data, preds_count, preds_offset, n_paths, endpoints)
+        _backtrack!(counts, selected_edge[1], s, preds_data, preds_count, preds_offset, n_paths, rng, endpoints)
+        _backtrack!(counts, selected_edge[2], t, preds_data, preds_count, preds_offset, n_paths, rng, endpoints)
     end
 
     @inbounds for v in visited_nodes
@@ -659,7 +661,7 @@ If multiple optimal predecessors exist, one is selected randomly weighted by the
 shortest paths `n_paths` arriving through that predecessor.
 The thread-local `counts` buffer is incremented in-place for every node visited.
 """
-function _backtrack!(counts::Vector{Int}, curr::T, target::T, preds_data::Vector{T}, preds_count::Vector{Int}, preds_offset::Vector{Int}, n_paths::Vector{Float64}, endpoints::Bool) where {T}
+function _backtrack!(counts::Vector{Int}, curr::T, target::T, preds_data::Vector{T}, preds_count::Vector{Int}, preds_offset::Vector{Int}, n_paths::Vector{Float64}, rng::AbstractRNG, endpoints::Bool) where {T}
     @inbounds while curr != target
         counts[curr] += 1
         
@@ -675,7 +677,7 @@ function _backtrack!(counts::Vector{Int}, curr::T, target::T, preds_data::Vector
                 tot += n_paths[p]
             end
             
-            r = rand() * tot          
+            r = rand(rng) * tot          
             c = 0.0
             for i in 1:count
                 p = preds_data[offset + i - 1]
