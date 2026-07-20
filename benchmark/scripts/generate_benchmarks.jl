@@ -22,12 +22,12 @@ function with_timeout(f, timeout_sec)
     # Add a single worker
     worker = addprocs(1)[1]
     
-    # Initialize the worker's environment
-    @everywhere [worker] begin
+    # Initialize the worker's environment using eval to avoid top-level syntax errors in functions
+    @everywhere [worker] Base.eval(Main, quote
         using Pkg
         Pkg.activate($(joinpath(@__DIR__, "..", "..")))
         using Graphs
-    end
+    end)
     
     # Send the closure to the worker
     future = @spawnat worker f()
@@ -35,7 +35,13 @@ function with_timeout(f, timeout_sec)
     start_time = time()
     while !isready(future)
         if (time() - start_time) > timeout_sec
-            rmprocs(worker)
+            try
+                # Force kill the OS process so rmprocs doesn't hang waiting for the C-loop to yield
+                proc = Distributed.worker_from_id(worker).config.process
+                kill(proc, Base.SIGKILL)
+            catch
+            end
+            rmprocs(worker; waitfor=0.0)
             return nothing
         end
         sleep(5.0)
@@ -110,7 +116,7 @@ function generate_benchmarks()
         println("  Computing exact betweenness centrality (Timeout: 6h)...")
         start_time = time()
         
-        exact_bc = with_timeout(3600*6) do
+        exact_bc = with_timeout(10) do
             betweenness_centrality(g, normalize=true)
         end
         
