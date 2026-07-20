@@ -76,7 +76,7 @@ function main()
     io_time = (io_end_time - io_start_time) / 1e9
 
     # JIT WARMUP: Run the algorithm on a tiny dummy graph to compile all functions
-    dummy_g = is_directed ? Main.Graphs.SimpleDiGraph(3) : Main.Graphs.SimpleGraph(3)
+    dummy_g = typeof(g)(3) # Create empty graph of exact same type (e.g. SimpleGraph{Int32} vs Int64)
     Main.Graphs.add_edge!(dummy_g, 1, 2)
     Main.Graphs.add_edge!(dummy_g, 2, 3)
     
