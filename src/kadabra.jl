@@ -160,7 +160,7 @@ estimated betweenness is within an additive error bound with high probability.
 - `NamedTuple`: A named tuple containing three `Vector{Float64}`: `centralities`, `lower_bounds`, 
   and `upper_bounds` for each vertex.
 """
-function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Float64; start_factor::Int=100, endpoints::Bool=false, normalize::Symbol=:graphs) where T
+function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Float64; start_factor::Int=100, endpoints::Bool=false, normalize::Symbol=:graphs, parallel::Bool=true, rng::Union{AbstractRNG, Nothing}=nothing) where T
     # --- Input validation ---
     nv(g) >= 2    || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
     err  > 0      || throw(ArgumentError("err must be positive (got $err)"))
@@ -177,13 +177,7 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     omega = 0.5 / (err^2) * (log2(diam_est - 1.0) + 1.0 + log2(1.0 / delta))
     tau = max(round(Int, omega / start_factor), 1)
     
-    # Thread-local storage to avoid locking when updating centralities
-    nthreads = Threads.nthreads()
-    approx_local = [zeros(Int, n) for _ in 1:nthreads]
-    workspaces = [KadabraWorkspace(g) for _ in 1:nthreads]
-    n_pairs = Threads.Atomic{Int}(0)
-    
-    # Pre-allocate Thread 1's aggregation buffer for Phase 2 checks
+    # Pre-allocate aggregation buffer for Phase 2 checks
     global_approx = zeros(Int, n)
     union_sample = Int(absolute ? k : min(n, k + 20))
     
@@ -198,87 +192,142 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     err_u_buf = zeros(Float64, union_sample)
     top_k_nodes = collect(1:n)
     
-    # ---------------------------------------------------------
-    # PHASE 1: Initial burn-in sampling
-    # ---------------------------------------------------------
-    tau_per_thread = cld(tau, nthreads) # Divide tau evenly across threads
-    
-    Threads.@threads for tid in 1:nthreads
-        ws = workspaces[tid]
-        counts = approx_local[tid]
-        rng = Random.default_rng() 
-        
-        for _ in 1:tau_per_thread
-            s = rand(rng, 1:n)
-            t = rand(rng, 1:n)
-            while s == t; t = rand(rng, 1:n); end
-            
-            sample_shortest_path!(counts, ws, g, rng, T(s), T(t); endpoints=endpoints)
-        end
+    if parallel && rng !== nothing
+        @warn "Custom RNG provided with parallel=true. Falling back to Random.default_rng() for threads to avoid race conditions. Pass parallel=false if you strictly need reproducible sampling from a single custom RNG."
     end
-    n_pairs[] = tau_per_thread * nthreads # Updates atomic counter safely
     
-    # ---------------------------------------------------------
-    # PHASE 2: Main loop until stopping condition is met
-    # ---------------------------------------------------------
-    stop_flag = Threads.Atomic{Bool}(false)
+    final_n_pairs = 0
     
-    # Increase check interval to prevent Thread 1 from choking
-    check_interval = max(1000, tau ÷ 10) 
-    
-    Threads.@threads for tid in 1:nthreads
-        ws = workspaces[tid]
-        counts = approx_local[tid]
-        rng = Random.default_rng()
+    if parallel
+        nthreads = Threads.nthreads()
+        approx_local = [zeros(Int, n) for _ in 1:nthreads]
+        workspaces = [KadabraWorkspace(g) for _ in 1:nthreads]
+        n_pairs = Threads.Atomic{Int}(0)
         
-        local_pairs = 0 # Batch local counter to avoid atomic contention
+        # ---------------------------------------------------------
+        # PHASE 1: Initial burn-in sampling (Threaded)
+        # ---------------------------------------------------------
+        tau_per_thread = cld(tau, nthreads)
         
-        while !stop_flag[] && n_pairs[] < omega
-            for _ in 1:check_interval
-                s = rand(rng, 1:n)
-                t = rand(rng, 1:n)
-                while s == t; t = rand(rng, 1:n); end
-                
-                sample_shortest_path!(counts, ws, g, rng, T(s), T(t); endpoints=endpoints)
-                local_pairs += 1
-            end
+        Threads.@threads for tid in 1:nthreads
+            ws = workspaces[tid]
+            counts = approx_local[tid]
+            t_rng = Random.default_rng() 
             
-            # Update the global counter only once per batch
-            Threads.atomic_add!(n_pairs, local_pairs)
+            for _ in 1:tau_per_thread
+                s = rand(t_rng, 1:n)
+                t = rand(t_rng, 1:n)
+                while s == t; t = rand(t_rng, 1:n); end
+                
+                sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints=endpoints)
+            end
+        end
+        n_pairs[] = tau_per_thread * nthreads
+        
+        # ---------------------------------------------------------
+        # PHASE 2: Main loop (Threaded)
+        # ---------------------------------------------------------
+        stop_flag = Threads.Atomic{Bool}(false)
+        check_interval = max(1000, tau ÷ 10) 
+        
+        Threads.@threads for tid in 1:nthreads
+            ws = workspaces[tid]
+            counts = approx_local[tid]
+            t_rng = Random.default_rng()
+            
             local_pairs = 0
             
-            # Only thread 1 handles the heavy stopping calculation
-            if tid == 1
-                fill!(global_approx, 0)
-                for t_approx in approx_local
-                    global_approx .+= t_approx
+            while !stop_flag[] && n_pairs[] < omega
+                for _ in 1:check_interval
+                    s = rand(t_rng, 1:n)
+                    t = rand(t_rng, 1:n)
+                    while s == t; t = rand(t_rng, 1:n); end
+                    
+                    sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints=endpoints)
+                    local_pairs += 1
                 end
                 
-                if absolute
-                    for i in 1:union_sample; top_k_nodes[i] = i; end
-                else
-                    # Re-initialize top_k_nodes 1 to N, then use O(N) QuickSelect
-                    copyto!(top_k_nodes, 1:n)
-                    partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev=true)
-                end
+                Threads.atomic_add!(n_pairs, local_pairs)
+                local_pairs = 0
                 
-                if check_finished(global_approx, view(top_k_nodes, 1:union_sample), n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute, bet_buf, err_l_buf, err_u_buf)
-                    Threads.atomic_xchg!(stop_flag, true)
+                if tid == 1
+                    fill!(global_approx, 0)
+                    for t_approx in approx_local
+                        global_approx .+= t_approx
+                    end
+                    
+                    if absolute
+                        for i in 1:union_sample; top_k_nodes[i] = i; end
+                    else
+                        copyto!(top_k_nodes, 1:n)
+                        partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev=true)
+                    end
+                    
+                    if check_finished(global_approx, view(top_k_nodes, 1:union_sample), n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute, bet_buf, err_l_buf, err_u_buf)
+                        Threads.atomic_xchg!(stop_flag, true)
+                    end
                 end
+            end
+        end
+        
+        fill!(global_approx, 0)
+        for t_approx in approx_local
+            global_approx .+= t_approx
+        end
+        final_n_pairs = n_pairs[]
+        
+    else
+        # ---------------------------------------------------------
+        # Sequential Execution (No Atomics)
+        # ---------------------------------------------------------
+        counts = global_approx
+        ws = KadabraWorkspace(g)
+        s_rng = rng === nothing ? Random.default_rng() : rng
+        
+        # PHASE 1
+        for _ in 1:tau
+            s = rand(s_rng, 1:n)
+            t = rand(s_rng, 1:n)
+            while s == t; t = rand(s_rng, 1:n); end
+            
+            sample_shortest_path!(counts, ws, g, s_rng, T(s), T(t); endpoints=endpoints)
+        end
+        final_n_pairs = tau
+        
+        # PHASE 2
+        stop_flag_seq = false
+        check_interval = max(1000, tau ÷ 10) 
+        
+        while !stop_flag_seq && final_n_pairs < omega
+            for _ in 1:check_interval
+                s = rand(s_rng, 1:n)
+                t = rand(s_rng, 1:n)
+                while s == t; t = rand(s_rng, 1:n); end
+                
+                sample_shortest_path!(counts, ws, g, s_rng, T(s), T(t); endpoints=endpoints)
+                final_n_pairs += 1
+            end
+            
+            if absolute
+                for i in 1:union_sample; top_k_nodes[i] = i; end
+            else
+                copyto!(top_k_nodes, 1:n)
+                partialsort!(top_k_nodes, 1:union_sample, by = x -> counts[x], rev=true)
+            end
+            
+            if check_finished(counts, view(top_k_nodes, 1:union_sample), final_n_pairs, k, err, delta_l_guess, delta_u_guess, omega, absolute, bet_buf, err_l_buf, err_u_buf)
+                stop_flag_seq = true
             end
         end
     end
     
-    # Final aggregation
-    fill!(global_approx, 0)
-    for t_approx in approx_local
-        global_approx .+= t_approx
-    end
+    # ---------------------------------------------------------
+    # Result Aggregation
+    # ---------------------------------------------------------
+    res = [global_approx[v] / final_n_pairs for v in 1:n]
     
-    res = [global_approx[v] / n_pairs[] for v in 1:n]
-    
-    lower_bounds = Float64[max(0.0, res[v] - compute_f(res[v], n_pairs[], delta_l_guess[v], omega)) for v in 1:n]
-    upper_bounds = Float64[min(1.0, res[v] + compute_g(res[v], n_pairs[], delta_u_guess[v], omega)) for v in 1:n]
+    lower_bounds = Float64[max(0.0, res[v] - compute_f(res[v], final_n_pairs, delta_l_guess[v], omega)) for v in 1:n]
+    upper_bounds = Float64[min(1.0, res[v] + compute_g(res[v], final_n_pairs, delta_u_guess[v], omega)) for v in 1:n]
     
     scale = 1.0
     if normalize == :graphs
@@ -303,7 +352,7 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
         upper_bounds .*= scale
     end
     
-    return (centralities = res, lower_bounds = lower_bounds, upper_bounds = upper_bounds, n_samples = n_pairs[])
+    return (centralities = res, lower_bounds = lower_bounds, upper_bounds = upper_bounds, n_samples = final_n_pairs)
 end
 
 function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Float64, distmx::AbstractMatrix; kwargs...) where T
