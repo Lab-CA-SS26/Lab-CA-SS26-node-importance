@@ -32,19 +32,38 @@ function with_timeout(f, timeout_sec)
     # Send the closure to the worker
     future = @spawnat worker f()
     
-    start_time = time()
-    while !isready(future)
-        if (time() - start_time) > timeout_sec
-            try
-                # Force kill the OS process so rmprocs doesn't hang waiting for the C-loop to yield
-                proc = Distributed.worker_from_id(worker).config.process
-                kill(proc, Base.SIGKILL)
-            catch
-            end
-            rmprocs(worker; waitfor=0.0)
-            return nothing
+    done = Channel{Bool}(1)
+    
+    @async begin
+        try
+            fetch(future)
+            put!(done, true)
+        catch
+            # Ignore errors if killed or failed
         end
-        sleep(5.0)
+    end
+    
+    @async begin
+        sleep(timeout_sec)
+        put!(done, false)
+    end
+    
+    success = take!(done)
+    
+    if !success
+        try
+            proc = Distributed.worker_from_id(worker).config.process
+            kill(proc, Base.SIGKILL)
+        catch
+        end
+        rmprocs(worker; waitfor=0.0)
+        return nothing
+    end
+    
+    # Check if the future threw an exception, or return value
+    if future.state == :failed || future.state == :error
+        rmprocs(worker; waitfor=0.0)
+        return nothing
     end
     
     try
@@ -116,7 +135,7 @@ function generate_benchmarks()
         println("  Computing exact betweenness centrality (Timeout: 6h)...")
         start_time = time()
         
-        exact_bc = with_timeout(10) do
+        exact_bc = with_timeout(3600*6) do
             betweenness_centrality(g, normalize=true)
         end
         
