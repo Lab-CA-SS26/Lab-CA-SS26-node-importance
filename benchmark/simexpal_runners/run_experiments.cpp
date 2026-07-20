@@ -47,7 +47,11 @@ int main(int argc, char* argv[]) {
     omp_set_num_threads(threads);
 
     // Load graph
+    auto io_start = chrono::high_resolution_clock::now();
     Probabilistic G(input_file, directed, 0); // verb = 0 (silent)
+    auto io_end = chrono::high_resolution_clock::now();
+    chrono::duration<double> io_diff = io_end - io_start;
+    double io_time = io_diff.count();
 
     // Run KADABRA and measure time
     auto start = chrono::high_resolution_clock::now();
@@ -68,6 +72,7 @@ int main(int argc, char* argv[]) {
     j["parameters"]["delta"] = delta;
     j["parameters"]["epsilon"] = epsilon;
     j["parameters"]["directed"] = directed;
+    j["io_time_seconds"] = io_time;
 
     j["execution_time_seconds"] = execution_time;
     j["num_samples"] = G.get_n_pairs();

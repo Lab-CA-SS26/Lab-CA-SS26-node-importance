@@ -70,7 +70,10 @@ function main()
     is_directed = parsed_args["directed"]
 
     # Load graph
+    io_start_time = time_ns()
     g = BenchmarkUtils.load_graph_from_edgelist(input_file, is_directed)
+    io_end_time = time_ns()
+    io_time = (io_end_time - io_start_time) / 1e9
 
     if algo == "kadabra"
         # Start timing
@@ -110,6 +113,7 @@ function main()
             "directed" => is_directed
         ),
         "execution_time_seconds" => execution_time,
+        "io_time_seconds" => io_time,
         "num_samples" => n_samples,
         "centralities" => Dict{String, Float64}()
     )
