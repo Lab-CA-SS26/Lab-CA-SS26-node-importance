@@ -62,6 +62,7 @@ function main()
         input_file = parsed_args["input_file"]
     output_file = parsed_args["output_file"]
     threads = parsed_args["threads"]
+    # println("Aktive Threads: ", Threads.nthreads())
     k = parsed_args["k"]
     delta = parsed_args["delta"]
     epsilon = parsed_args["epsilon"]
