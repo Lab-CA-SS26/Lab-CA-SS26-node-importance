@@ -10,43 +10,43 @@ using JLD2
 
 include("BenchmarkUtils.jl")
 
+using Distributed
+
 """
     with_timeout(f, timeout_sec)
 
-Runs function `f` asynchronously. If it doesn't finish within `timeout_sec`, 
-it throws an InterruptException to the task and returns `nothing`.
+Runs function `f` asynchronously in a separate worker process. If it doesn't finish 
+within `timeout_sec`, it kills the worker process and returns `nothing`.
 """
 function with_timeout(f, timeout_sec)
-    c = Channel(1)
-    task = @async begin
-        try
-            put!(c, f())
-        catch e
-            put!(c, e)
-        end
+    # Add a single worker
+    worker = addprocs(1)[1]
+    
+    # Initialize the worker's environment
+    @everywhere [worker] begin
+        using Pkg
+        Pkg.activate($(joinpath(@__DIR__, "..", "..")))
+        using Graphs
     end
     
-    timer = Timer(timeout_sec) do _
-        if !istaskdone(task)
-            Base.throwto(task, InterruptException())
+    # Send the closure to the worker
+    future = @spawnat worker f()
+    
+    start_time = time()
+    while !isready(future)
+        if (time() - start_time) > timeout_sec
+            rmprocs(worker)
+            return nothing
         end
+        sleep(5.0)
     end
     
     try
-        res = take!(c)
-        close(timer)
-        if isa(res, Exception)
-            if isa(res, InterruptException)
-                return nothing
-            end
-            throw(res)
-        end
+        res = fetch(future)
+        rmprocs(worker)
         return res
     catch e
-        close(timer)
-        if isa(e, InterruptException) || (isa(e, TaskFailedException) && isa(e.task.exception, InterruptException))
-            return nothing
-        end
+        rmprocs(worker)
         rethrow(e)
     end
 end
