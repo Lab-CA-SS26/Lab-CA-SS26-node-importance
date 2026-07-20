@@ -75,6 +75,20 @@ function main()
     io_end_time = time_ns()
     io_time = (io_end_time - io_start_time) / 1e9
 
+    # JIT WARMUP: Run the algorithm on a tiny dummy graph to compile all functions
+    dummy_g = is_directed ? Main.Graphs.SimpleDiGraph(3) : Main.Graphs.SimpleGraph(3)
+    Main.Graphs.add_edge!(dummy_g, 1, 2)
+    Main.Graphs.add_edge!(dummy_g, 2, 3)
+    
+    if algo == "kadabra"
+        Main.kadabra_centrality(dummy_g, k, epsilon, delta; start_factor=10, endpoints=false)
+    elseif algo == "brava"
+        Main.BRAVAGNN.brava_centrality(dummy_g, k, epsilon, delta)
+    elseif algo == "brandes"
+        Main.Graphs.betweenness_centrality(dummy_g; normalize=false, endpoints=false)
+    end
+    # END WARMUP
+
     if algo == "kadabra"
         # Start timing
         start_time = time_ns()
