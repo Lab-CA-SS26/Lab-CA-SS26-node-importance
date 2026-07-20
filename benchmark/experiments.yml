@@ -76,7 +76,7 @@ variants:
         extra_args: ['-k', '0']
       - name: 'k10'
         extra_args: ['-k', '10']
-      - name: 'k10'
+      - name: 'k100'
         extra_args: ['-k', '100']
 
   - axis: err
