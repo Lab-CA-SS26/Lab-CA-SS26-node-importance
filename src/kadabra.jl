@@ -156,8 +156,8 @@ estimated betweenness is within an additive error bound with high probability.
 - `normalize::Symbol`: How to normalize the output. `:graphs` matches Graphs.jl, `:kadabra` matches the raw KADABRA paper output, `:none` returns unnormalized counts (default: `:graphs`).
 
 # Returns
-- `Vector{Float64}`: A vector of length `nv(g)` containing the estimated betweenness centrality 
-  for each vertex.
+- `NamedTuple`: A named tuple containing three `Vector{Float64}`: `centralities`, `lower_bounds`, 
+  and `upper_bounds` for each vertex.
 """
 function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Float64; start_factor::Int=100, endpoints::Bool=false, normalize::Symbol=:graphs) where T
     # --- Input validation ---
@@ -271,6 +271,9 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     
     res = [global_approx[v] / n_pairs[] for v in 1:n]
     
+    lower_bounds = Float64[max(0.0, res[v] - compute_f(res[v], n_pairs[], delta_l_guess[v], omega)) for v in 1:n]
+    upper_bounds = Float64[min(1.0, res[v] + compute_g(res[v], n_pairs[], delta_u_guess[v], omega)) for v in 1:n]
+    
     scale = 1.0
     if normalize == :graphs
         if n > 2
@@ -290,9 +293,11 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     
     if scale != 1.0
         res .*= scale
+        lower_bounds .*= scale
+        upper_bounds .*= scale
     end
     
-    return res
+    return (centralities = res, lower_bounds = lower_bounds, upper_bounds = upper_bounds, n_samples = n_pairs[])
 end
 
 function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Float64, distmx::AbstractMatrix; kwargs...) where T
@@ -302,19 +307,32 @@ end
 """
     kadabra_top_k(g::AbstractGraph, k::Int, err::Float64, delta::Float64; kwargs...)
 
-Convenience wrapper that runs KADABRA and efficiently extracts only the top `k` most central nodes.
-Returns a vector of `NamedTuple`s containing the `node` ID and its `centrality` score, sorted in descending order.
+Convenience wrapper that runs KADABRA and efficiently extracts the top `k` most central nodes.
+Due to adaptive sampling, nodes with overlapping confidence intervals near the k-th rank cannot 
+be strictly ordered. Therefore, this function returns a candidate set of size `k' >= k` that 
+contains the true top-k nodes with high probability.
+Returns a vector of `NamedTuple`s containing the `node` ID, its `centrality` score, 
+`lower_bound`, and `upper_bound`, sorted in descending order of centrality.
 """
 function kadabra_top_k(g::AbstractGraph{T}, k::Int, err::Float64, delta::Float64; kwargs...) where T
     k > 0 || throw(ArgumentError("k must be greater than 0 to extract top k nodes"))
     
     # Run the standard Kadabra algorithm
-    centralities = kadabra_centrality(g, k, err, delta; kwargs...)
+    res = kadabra_centrality(g, k, err, delta; kwargs...)
+    centralities = res.centralities
+    lower_bounds = res.lower_bounds
+    upper_bounds = res.upper_bounds
     
-    # Efficiently find the indices of the top k nodes without doing a full sort
-    top_nodes = partialsortperm(centralities, 1:k, rev=true)
+    # Find the candidate threshold by determining the k-th highest lower bound
+    k_th_lower_bound = partialsort(lower_bounds, k, rev=true)
     
-    return [(node = v, centrality = centralities[v]) for v in top_nodes]
+    # Filter candidate nodes where upper_bound >= k_th_lower_bound
+    candidate_nodes = findall(u -> u >= k_th_lower_bound, upper_bounds)
+    
+    # Sort candidate nodes by centrality in descending order
+    sort!(candidate_nodes, by = v -> centralities[v], rev = true)
+    
+    return [(node = v, centrality = centralities[v], lower_bound = lower_bounds[v], upper_bound = upper_bounds[v]) for v in candidate_nodes]
 end
 
 

@@ -71,4 +71,3 @@ benchmark/simexpal_runners/run_experiments_cpp.dSYM/
 # Temporary files and legacy outputs
 test.json
 output.json
-benchmark_results.csv

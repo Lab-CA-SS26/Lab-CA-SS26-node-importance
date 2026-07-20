@@ -5,7 +5,7 @@ using SparseArrays
 using Random
 using Flux
 
-export compute_degree_masses, compute_pagerank_feature, BRAVALayer, BRAVAModel, PairwiseDataLoader, margin_ranking_loss
+export compute_degree_masses, compute_pagerank_feature, BRAVALayer, BRAVAModel, PairwiseDataLoader, margin_ranking_loss, brava_centrality
 
 # ==============================================================================
 # 1. Multi-hop Degree Mass Pipeline
@@ -248,6 +248,48 @@ function margin_ranking_loss(s, U, V, Y)
     diffs = s[U] .- s[V]
     margins = 1.0f0 .- Y .* diffs
     return sum(relu.(margins)) / length(U)
+end
+
+# ==============================================================================
+# 5. Brava Centrality Inference Wrapper
+# ==============================================================================
+
+using Graphs
+using JLD2
+
+"""
+    brava_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; m_hops::Int=5)
+
+Inference wrapper to compute betweenness centrality scores using the BRAVA GNN model.
+Provides a similar API interface to `kadabra_centrality` for benchmarking.
+Returns a tuple of `(centrality_scores, num_samples)`, where `num_samples` is 1 for GNN.
+"""
+function brava_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; m_hops::Int=5)
+    N = nv(g)
+    
+    # Extract sparse adjacency matrix
+    A = SparseMatrixCSC{Float32, Int}(adjacency_matrix(g))
+    A_t = SparseMatrixCSC{Float32, Int}(A')
+    
+    # 1. Feature Extraction
+    pr_feat = compute_pagerank_feature(A)
+    X_out = compute_degree_masses(A, pr_feat, m_hops)
+    X_in  = compute_degree_masses(A_t, pr_feat, m_hops)
+    
+    # 2. Initialize Model 
+    weight_path = joinpath(@__DIR__, "..", "benchmark", "cache", "bravagnn_weights.jld2")
+    if isfile(weight_path)
+        # Load the pre-trained model from the server cache
+        @load weight_path model
+    else
+        # Fallback to untrained model for local runtime tests if missing
+        model = BRAVAModel(; m_hops=m_hops, hidden_dim=12, num_layers=2)
+    end
+    
+    # 3. Inference
+    scores = model(A, A_t, X_in, X_out)
+    
+    return scores, 1
 end
 
 end # module BRAVAGNN
