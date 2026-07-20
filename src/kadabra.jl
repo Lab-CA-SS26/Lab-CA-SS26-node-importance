@@ -12,11 +12,11 @@ function estimate_diameter(g::AbstractGraph)
     n = nv(g)
     n == 0 && return 0.0
     n == 1 && return 0.0
-    
+
     # 1. Compute strongly/connected components
     sccs = is_directed(g) ? strongly_connected_components(g) : connected_components(g)
     n_components = length(sccs)
-    
+
     # Map each vertex to its component index
     cc = zeros(Int, n)
     for (i, component) in enumerate(sccs)
@@ -24,11 +24,11 @@ function estimate_diameter(g::AbstractGraph)
             cc[v] = i
         end
     end
-    
+
     # 2. Compute pivots for each component
     # The pivot vertex is the vertex maximizing the sum of the out-degree and the in-degree.
     pivots = zeros(Int, n_components)
-    for i in 1:n_components
+    for i = 1:n_components
         component = sccs[i]
         best_v = component[1]
         best_deg = outdegree(g, best_v) + indegree(g, best_v)
@@ -41,17 +41,17 @@ function estimate_diameter(g::AbstractGraph)
         end
         pivots[i] = best_v
     end
-    
+
     # 3. Compute SCC adjacency graph (DAG of components)
-    cc_adj = [Set{Int}() for _ in 1:n_components]
-    for u in 1:n
+    cc_adj = [Set{Int}() for _ = 1:n_components]
+    for u = 1:n
         for v in outneighbors(g, u)
             if cc[u] != cc[v]
                 push!(cc_adj[cc[u]], cc[v])
             end
         end
     end
-    
+
     # 4. Helper BFS to compute eccentricity of pivot in its SCC.
     ecc_dist = fill(-1, n)
 
@@ -60,12 +60,12 @@ function estimate_diameter(g::AbstractGraph)
         q = Int[]
         push!(q, start)
         ecc_dist[start] = 0
-        
+
         head = 1
         while head <= length(q)
             u = q[head]
             head += 1
-            
+
             neighbors = backward ? inneighbors(g, u) : outneighbors(g, u)
             for v in neighbors
                 if ecc_dist[v] == -1 && cc[v] == cc[u]
@@ -74,46 +74,56 @@ function estimate_diameter(g::AbstractGraph)
                 end
             end
         end
-        
+
         return isempty(q) ? 0 : ecc_dist[q[end]]
     end
-    
+
     # 5. Compute forward and backward eccentricities of pivots in their SCCs
     ecc_f_pivots_scc = zeros(Float64, n_components)
     ecc_b_pivots_scc = zeros(Float64, n_components)
-    for i in 1:n_components
+    for i = 1:n_components
         ecc_f_pivots_scc[i] = compute_ecc_in_scc(pivots[i], false)
         ecc_b_pivots_scc[i] = compute_ecc_in_scc(pivots[i], true)
     end
-    
+
     # 6. DP to compute bounds across components (memoized DFS).
     ecc_f_pivots = fill(-1.0, n_components)
-    
+
     function get_ecc_f_pivot(i::Int)
         ecc_f_pivots[i] != -1.0 && return ecc_f_pivots[i]
-        
+
         val = ecc_f_pivots_scc[i]
         for cc_dest in cc_adj[i]
-            val = max(val, ecc_f_pivots_scc[i] + 1 + ecc_b_pivots_scc[cc_dest] + get_ecc_f_pivot(cc_dest))
+            val = max(
+                val,
+                ecc_f_pivots_scc[i] +
+                1 +
+                ecc_b_pivots_scc[cc_dest] +
+                get_ecc_f_pivot(cc_dest),
+            )
         end
         ecc_f_pivots[i] = val
         return val
     end
-    
+
     diam = 0.0
-    for i in 1:n_components
+    for i = 1:n_components
         diam = max(diam, get_ecc_f_pivot(i) + ecc_b_pivots_scc[i])
     end
-    
+
     return max(diam, 1.0)
 end
 
-function zero_alloc_top_k!(top_k_nodes::AbstractVector{Int}, values::AbstractVector{Int}, k::Int)
+function zero_alloc_top_k!(
+    top_k_nodes::AbstractVector{Int},
+    values::AbstractVector{Int},
+    k::Int,
+)
     n = length(values)
-    for i in 1:k
+    for i = 1:k
         top_k_nodes[i] = i
     end
-    for i in 2:k
+    for i = 2:k
         curr = top_k_nodes[i]
         val = values[curr]
         j = i - 1
@@ -123,9 +133,9 @@ function zero_alloc_top_k!(top_k_nodes::AbstractVector{Int}, values::AbstractVec
         end
         top_k_nodes[j+1] = curr
     end
-    
+
     min_val = values[top_k_nodes[k]]
-    for i in k+1:n
+    for i = (k+1):n
         val = values[i]
         if val > min_val
             j = k - 1
@@ -160,125 +170,178 @@ estimated betweenness is within an additive error bound with high probability.
 - `NamedTuple`: A named tuple containing three `Vector{Float64}`: `centralities`, `lower_bounds`, 
   and `upper_bounds` for each vertex.
 """
-function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Float64; start_factor::Int=100, endpoints::Bool=false, normalize::Symbol=:graphs, parallel::Bool=true, rng::Union{AbstractRNG, Nothing}=nothing) where T
+function kadabra_centrality(
+    g::AbstractGraph{T},
+    k::Int,
+    err::Float64,
+    delta::Float64;
+    start_factor::Int = 100,
+    endpoints::Bool = false,
+    normalize::Symbol = :graphs,
+    parallel::Bool = true,
+    rng::Union{AbstractRNG,Nothing} = nothing,
+) where {T}
     # --- Input validation ---
-    nv(g) >= 2    || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
-    err  > 0      || throw(ArgumentError("err must be positive (got $err)"))
+    nv(g) >= 2 || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
+    err > 0 || throw(ArgumentError("err must be positive (got $err)"))
     0 < delta < 1 || throw(ArgumentError("delta must be in (0, 1) (got $delta)"))
 
     n = nv(g)
     absolute = (k == 0)
     k = Int(k == 0 ? n : min(k, n))
-    
+
     # Estimate diameter using AllCCUpperBound
     diam_est = max(estimate_diameter(g), 2.0)
-    
+
     # Sample-count upper bound
     omega = 0.5 / (err^2) * (log2(diam_est - 1.0) + 1.0 + log2(1.0 / delta))
     tau = max(round(Int, omega / start_factor), 1)
-    
+
     # Pre-allocate aggregation buffer for Phase 2 checks
     global_approx = zeros(Int, n)
     union_sample = Int(absolute ? k : min(n, k + 20))
-    
+
     # Adaptive check interval scales with burn-in tau to prevent hanging
     check_interval = max(10, tau ÷ 100)
-    
+
     delta_l_guess = fill(delta / (4 * n), n)
     delta_u_guess = fill(delta / (4 * n), n)
-    
+
     bet_buf = zeros(Float64, union_sample)
     err_l_buf = zeros(Float64, union_sample)
     err_u_buf = zeros(Float64, union_sample)
     top_k_nodes = collect(1:n)
-    
+
     # 1. Determine the base RNG (either custom or global default)
     base_rng = rng === nothing ? Random.default_rng() : rng
-    
+
     final_n_pairs = 0
-    
+
     if parallel
         nthreads = Threads.nthreads()
-        approx_local = [zeros(Int, n) for _ in 1:nthreads]
-        workspaces = [KadabraWorkspace(g) for _ in 1:nthreads]
+        approx_local = [zeros(Int, n) for _ = 1:nthreads]
+        workspaces = [KadabraWorkspace(g) for _ = 1:nthreads]
         n_pairs = Threads.Atomic{Int}(0)
-        
+
         # SEQUENTIALLY generate a seed for each thread before the loop
         # perfectly thread-safe and 100% reproducible
-        thread_seeds = [rand(base_rng, UInt64) for _ in 1:nthreads]
-        
+        thread_seeds = [rand(base_rng, UInt64) for _ = 1:nthreads]
+
         # ---------------------------------------------------------
         # PHASE 1: Initial burn-in sampling (Threaded)
         # ---------------------------------------------------------
         tau_per_thread = cld(tau, nthreads)
-        
-        Threads.@threads for tid in 1:nthreads
+
+        Threads.@threads for tid = 1:nthreads
             ws = workspaces[tid]
             counts = approx_local[tid]
             t_rng = Random.Xoshiro(thread_seeds[tid])
-            
-            for _ in 1:tau_per_thread
+
+            for _ = 1:tau_per_thread
                 s = rand(t_rng, 1:n)
                 t = rand(t_rng, 1:n)
-                while s == t; t = rand(t_rng, 1:n); end
-                
-                sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints=endpoints)
+                while s == t
+                    ;
+                    t = rand(t_rng, 1:n);
+                end
+
+                sample_shortest_path!(
+                    counts,
+                    ws,
+                    g,
+                    t_rng,
+                    T(s),
+                    T(t);
+                    endpoints = endpoints,
+                )
             end
         end
         n_pairs[] = tau_per_thread * nthreads
-        
+
         # ---------------------------------------------------------
         # PHASE 2: Main loop (Threaded)
         # ---------------------------------------------------------
         stop_flag = Threads.Atomic{Bool}(false)
-        check_interval = max(1000, tau ÷ 10) 
-        
-        Threads.@threads for tid in 1:nthreads
+        check_interval = max(1000, tau ÷ 10)
+
+        Threads.@threads for tid = 1:nthreads
             ws = workspaces[tid]
             counts = approx_local[tid]
             t_rng = Random.Xoshiro(thread_seeds[tid])
-            
+
             local_pairs = 0
-            
+
             while !stop_flag[] && n_pairs[] < omega
-                for _ in 1:check_interval
+                for _ = 1:check_interval
                     s = rand(t_rng, 1:n)
                     t = rand(t_rng, 1:n)
-                    while s == t; t = rand(t_rng, 1:n); end
-                    
-                    sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints=endpoints)
+                    while s == t
+                        ;
+                        t = rand(t_rng, 1:n);
+                    end
+
+                    sample_shortest_path!(
+                        counts,
+                        ws,
+                        g,
+                        t_rng,
+                        T(s),
+                        T(t);
+                        endpoints = endpoints,
+                    )
                     local_pairs += 1
                 end
-                
+
                 Threads.atomic_add!(n_pairs, local_pairs)
                 local_pairs = 0
-                
+
                 if tid == 1
                     fill!(global_approx, 0)
                     for t_approx in approx_local
                         global_approx .+= t_approx
                     end
-                    
+
                     if absolute
-                        for i in 1:union_sample; top_k_nodes[i] = i; end
+                        for i = 1:union_sample
+                            ;
+                            top_k_nodes[i] = i;
+                        end
                     else
                         copyto!(top_k_nodes, 1:n)
-                        partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev=true)
+                        partialsort!(
+                            top_k_nodes,
+                            1:union_sample,
+                            by = x -> global_approx[x],
+                            rev = true,
+                        )
                     end
-                    
-                    if check_finished(global_approx, view(top_k_nodes, 1:union_sample), n_pairs[], k, err, delta_l_guess, delta_u_guess, omega, absolute, bet_buf, err_l_buf, err_u_buf)
+
+                    if check_finished(
+                        global_approx,
+                        view(top_k_nodes, 1:union_sample),
+                        n_pairs[],
+                        k,
+                        err,
+                        delta_l_guess,
+                        delta_u_guess,
+                        omega,
+                        absolute,
+                        bet_buf,
+                        err_l_buf,
+                        err_u_buf,
+                    )
                         Threads.atomic_xchg!(stop_flag, true)
                     end
                 end
             end
         end
-        
+
         fill!(global_approx, 0)
         for t_approx in approx_local
             global_approx .+= t_approx
         end
         final_n_pairs = n_pairs[]
-        
+
     else
         # ---------------------------------------------------------
         # Sequential Execution (No Atomics)
@@ -286,52 +349,88 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
         counts = global_approx
         ws = KadabraWorkspace(g)
         s_rng = rng === nothing ? Random.default_rng() : rng
-        
+
         # PHASE 1
-        for _ in 1:tau
+        for _ = 1:tau
             s = rand(s_rng, 1:n)
             t = rand(s_rng, 1:n)
-            while s == t; t = rand(s_rng, 1:n); end
-            
-            sample_shortest_path!(counts, ws, g, s_rng, T(s), T(t); endpoints=endpoints)
+            while s == t
+                ;
+                t = rand(s_rng, 1:n);
+            end
+
+            sample_shortest_path!(counts, ws, g, s_rng, T(s), T(t); endpoints = endpoints)
         end
         final_n_pairs = tau
-        
+
         # PHASE 2
         stop_flag_seq = false
-        check_interval = max(1000, tau ÷ 10) 
-        
+        check_interval = max(1000, tau ÷ 10)
+
         while !stop_flag_seq && final_n_pairs < omega
-            for _ in 1:check_interval
+            for _ = 1:check_interval
                 s = rand(s_rng, 1:n)
                 t = rand(s_rng, 1:n)
-                while s == t; t = rand(s_rng, 1:n); end
-                
-                sample_shortest_path!(counts, ws, g, s_rng, T(s), T(t); endpoints=endpoints)
+                while s == t
+                    ;
+                    t = rand(s_rng, 1:n);
+                end
+
+                sample_shortest_path!(
+                    counts,
+                    ws,
+                    g,
+                    s_rng,
+                    T(s),
+                    T(t);
+                    endpoints = endpoints,
+                )
                 final_n_pairs += 1
             end
-            
+
             if absolute
-                for i in 1:union_sample; top_k_nodes[i] = i; end
+                for i = 1:union_sample
+                    ;
+                    top_k_nodes[i] = i;
+                end
             else
                 copyto!(top_k_nodes, 1:n)
-                partialsort!(top_k_nodes, 1:union_sample, by = x -> counts[x], rev=true)
+                partialsort!(top_k_nodes, 1:union_sample, by = x -> counts[x], rev = true)
             end
-            
-            if check_finished(counts, view(top_k_nodes, 1:union_sample), final_n_pairs, k, err, delta_l_guess, delta_u_guess, omega, absolute, bet_buf, err_l_buf, err_u_buf)
+
+            if check_finished(
+                counts,
+                view(top_k_nodes, 1:union_sample),
+                final_n_pairs,
+                k,
+                err,
+                delta_l_guess,
+                delta_u_guess,
+                omega,
+                absolute,
+                bet_buf,
+                err_l_buf,
+                err_u_buf,
+            )
                 stop_flag_seq = true
             end
         end
     end
-    
+
     # ---------------------------------------------------------
     # Result Aggregation
     # ---------------------------------------------------------
-    res = [global_approx[v] / final_n_pairs for v in 1:n]
-    
-    lower_bounds = Float64[max(0.0, res[v] - compute_f(res[v], final_n_pairs, delta_l_guess[v], omega)) for v in 1:n]
-    upper_bounds = Float64[min(1.0, res[v] + compute_g(res[v], final_n_pairs, delta_u_guess[v], omega)) for v in 1:n]
-    
+    res = [global_approx[v] / final_n_pairs for v = 1:n]
+
+    lower_bounds = Float64[
+        max(0.0, res[v] - compute_f(res[v], final_n_pairs, delta_l_guess[v], omega)) for
+        v = 1:n
+    ]
+    upper_bounds = Float64[
+        min(1.0, res[v] + compute_g(res[v], final_n_pairs, delta_u_guess[v], omega)) for
+        v = 1:n
+    ]
+
     scale = 1.0
     if normalize == :graphs
         if n > 2
@@ -348,20 +447,40 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     elseif normalize == :kadabra
         scale = 1.0 # KADABRA inherently outputs the fraction of pairs, which is already normalized by N(N-1)
     else
-        throw(ArgumentError("Unknown normalize option: $normalize. Use :graphs, :kadabra, or :none."))
+        throw(
+            ArgumentError(
+                "Unknown normalize option: $normalize. Use :graphs, :kadabra, or :none.",
+            ),
+        )
     end
-    
+
     if scale != 1.0
         res .*= scale
         lower_bounds .*= scale
         upper_bounds .*= scale
     end
-    
-    return (centralities = res, lower_bounds = lower_bounds, upper_bounds = upper_bounds, n_samples = final_n_pairs)
+
+    return (
+        centralities = res,
+        lower_bounds = lower_bounds,
+        upper_bounds = upper_bounds,
+        n_samples = final_n_pairs,
+    )
 end
 
-function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Float64, distmx::AbstractMatrix; kwargs...) where T
-    throw(ArgumentError("KADABRA centrality does not support weighted graphs. Please do not provide a distmx argument."))
+function kadabra_centrality(
+    g::AbstractGraph{T},
+    k::Int,
+    err::Float64,
+    delta::Float64,
+    distmx::AbstractMatrix;
+    kwargs...,
+) where {T}
+    throw(
+        ArgumentError(
+            "KADABRA centrality does not support weighted graphs. Please do not provide a distmx argument.",
+        ),
+    )
 end
 
 """
@@ -374,25 +493,38 @@ contains the true top-k nodes with high probability.
 Returns a vector of `NamedTuple`s containing the `node` ID, its `centrality` score, 
 `lower_bound`, and `upper_bound`, sorted in descending order of centrality.
 """
-function kadabra_top_k(g::AbstractGraph{T}, k::Int, err::Float64, delta::Float64; kwargs...) where T
+function kadabra_top_k(
+    g::AbstractGraph{T},
+    k::Int,
+    err::Float64,
+    delta::Float64;
+    kwargs...,
+) where {T}
     k > 0 || throw(ArgumentError("k must be greater than 0 to extract top k nodes"))
-    
+
     # Run the standard Kadabra algorithm
     res = kadabra_centrality(g, k, err, delta; kwargs...)
     centralities = res.centralities
     lower_bounds = res.lower_bounds
     upper_bounds = res.upper_bounds
-    
+
     # Find the candidate threshold by determining the k-th highest lower bound
-    k_th_lower_bound = partialsort(lower_bounds, k, rev=true)
-    
+    k_th_lower_bound = partialsort(lower_bounds, k, rev = true)
+
     # Filter candidate nodes where upper_bound >= k_th_lower_bound
     candidate_nodes = findall(u -> u >= k_th_lower_bound, upper_bounds)
-    
+
     # Sort candidate nodes by centrality in descending order
     sort!(candidate_nodes, by = v -> centralities[v], rev = true)
-    
-    return [(node = v, centrality = centralities[v], lower_bound = lower_bounds[v], upper_bound = upper_bounds[v]) for v in candidate_nodes]
+
+    return [
+        (
+            node = v,
+            centrality = centralities[v],
+            lower_bound = lower_bounds[v],
+            upper_bound = upper_bounds[v],
+        ) for v in candidate_nodes
+    ]
 end
 
 
@@ -405,7 +537,9 @@ satisfies the stopping condition.
 """
 function compute_f(btilde::Float64, iter_num::Int, delta_l::Float64, omega::Float64)
     tmp = (omega / iter_num) - (1.0 / 3.0)
-    err_chern = (log(1.0 / delta_l) / iter_num) * (-tmp + sqrt(tmp^2 + 2.0 * btilde * omega / log(1.0 / delta_l)))
+    err_chern =
+        (log(1.0 / delta_l) / iter_num) *
+        (-tmp + sqrt(tmp^2 + 2.0 * btilde * omega / log(1.0 / delta_l)))
     return min(err_chern, btilde)
 end
 
@@ -418,7 +552,9 @@ satisfies the stopping condition.
 """
 function compute_g(btilde::Float64, iter_num::Int, delta_u::Float64, omega::Float64)
     tmp = (omega / iter_num) + (1.0 / 3.0)
-    err_chern = (log(1.0 / delta_u) / iter_num) * (tmp + sqrt(tmp^2 + 2.0 * btilde * omega / log(1.0 / delta_u)))
+    err_chern =
+        (log(1.0 / delta_u) / iter_num) *
+        (tmp + sqrt(tmp^2 + 2.0 * btilde * omega / log(1.0 / delta_u)))
     return min(err_chern, 1.0 - btilde)
 end
 
@@ -430,41 +566,41 @@ Supports both absolute error mode (all vertices have error < err) and relative m
 the top-k rankings is strictly larger than their overlapping error bounds).
 """
 function check_finished(
-    approx_counts::Vector{Int}, 
-    top_k_nodes::AbstractVector{Int}, 
-    n_pairs::Int, 
-    k::Int, 
-    err::Float64, 
-    delta_l_guess::Vector{Float64}, 
-    delta_u_guess::Vector{Float64}, 
-    omega::Float64, 
+    approx_counts::Vector{Int},
+    top_k_nodes::AbstractVector{Int},
+    n_pairs::Int,
+    k::Int,
+    err::Float64,
+    delta_l_guess::Vector{Float64},
+    delta_u_guess::Vector{Float64},
+    omega::Float64,
     absolute::Bool,
     bet::Vector{Float64},
     err_l::Vector{Float64},
-    err_u::Vector{Float64}
+    err_u::Vector{Float64},
 )
     n_tracked = length(top_k_nodes)
-    
-    for i in 1:n_tracked
+
+    for i = 1:n_tracked
         v = top_k_nodes[i]
         bet[i] = approx_counts[v] / n_pairs
     end
-    
-    for i in 1:n_tracked
+
+    for i = 1:n_tracked
         v = top_k_nodes[i]
         err_l[i] = compute_f(bet[i], n_pairs, delta_l_guess[v], omega)
         err_u[i] = compute_g(bet[i], n_pairs, delta_u_guess[v], omega)
     end
-    
+
     all_finished = true
-    
+
     if absolute
-        for i in 1:k
+        for i = 1:k
             finished = (err_l[i] < err) && (err_u[i] < err)
             all_finished = all_finished && finished
         end
     else
-        for i in 1:n_tracked
+        for i = 1:n_tracked
             if i == 1
                 if n_tracked > 1
                     finished = (bet[1] - err_l[1]) > (bet[2] + err_u[2])
@@ -472,24 +608,26 @@ function check_finished(
                     finished = true
                 end
             elseif i < k
-                finished = ((bet[i-1] - err_l[i-1]) > (bet[i] + err_u[i])) && 
-                           ((bet[i] - err_l[i]) > (bet[i+1] + err_u[i+1]))
+                finished =
+                    ((bet[i-1] - err_l[i-1]) > (bet[i] + err_u[i])) &&
+                    ((bet[i] - err_l[i]) > (bet[i+1] + err_u[i+1]))
             elseif i == k
                 if k < n_tracked
-                    finished = ((bet[k-1] - err_l[k-1]) > (bet[k] + err_u[k])) &&
-                               ((bet[k] - err_l[k]) > (bet[k+1] + err_u[k+1]))
+                    finished =
+                        ((bet[k-1] - err_l[k-1]) > (bet[k] + err_u[k])) &&
+                        ((bet[k] - err_l[k]) > (bet[k+1] + err_u[k+1]))
                 else
                     finished = (bet[k-1] - err_l[k-1]) > (bet[k] + err_u[k])
                 end
             else
                 finished = (bet[k] - err_l[k]) > (bet[i] + err_u[i])
             end
-            
+
             finished = finished || ((err_l[i] < err) && (err_u[i] < err))
             all_finished = all_finished && finished
         end
     end
-    
+
     return all_finished
 end
 
@@ -500,53 +638,58 @@ end
 
 struct KadabraWorkspace{T<:Integer}
     ball_indicator::Vector{UInt8}
-    n_paths::Vector{Float64}   
-    dist::Vector{Int}          
-    
+    n_paths::Vector{Float64}
+    dist::Vector{Int}
+
     preds_data::Vector{T}
     preds_count::Vector{Int}
     preds_offset::Vector{Int}
-    
+
     cur_s::Vector{T}
     next_s::Vector{T}
     cur_t::Vector{T}
     next_t::Vector{T}
-    
-    sp_edges::Vector{Tuple{T, T}}
-    visited_nodes::Vector{T} 
+
+    sp_edges::Vector{Tuple{T,T}}
+    visited_nodes::Vector{T}
 end
 
 function KadabraWorkspace(g::AbstractGraph{T}) where {T}
     n = nv(g)
-    
+
     preds_offset = zeros(Int, n + 1)
     offset = 1
-    for v in 1:n
+    for v = 1:n
         preds_offset[v] = offset
         # maximum predecessors a node can have in a shortest path BFS is bounded by its degree
         offset += max(indegree(g, v), outdegree(g, v))
     end
-    preds_offset[n + 1] = offset
-    
+    preds_offset[n+1] = offset
+
     preds_data = Vector{T}(undef, offset - 1)
     preds_count = zeros(Int, n)
-    
+
     cur_s = Vector{T}(undef, n)
     next_s = Vector{T}(undef, n)
     cur_t = Vector{T}(undef, n)
     next_t = Vector{T}(undef, n)
-    
-    sp_edges = Vector{Tuple{T, T}}(undef, 100) # Keep small, reallocates rarely
+
+    sp_edges = Vector{Tuple{T,T}}(undef, 100) # Keep small, reallocates rarely
     visited_nodes = Vector{T}(undef, n)
-    
+
     return KadabraWorkspace{T}(
         zeros(UInt8, n),
-        zeros(Float64, n),   
-        fill(typemax(Int), n), 
-        preds_data, preds_count, preds_offset,
-        cur_s, next_s, cur_t, next_t,
+        zeros(Float64, n),
+        fill(typemax(Int), n),
+        preds_data,
+        preds_count,
+        preds_offset,
+        cur_s,
+        next_s,
+        cur_t,
+        next_t,
         sp_edges,
-        visited_nodes
+        visited_nodes,
     )
 end
 
@@ -556,7 +699,15 @@ end
 Sample a single shortest path uniformly at random using pre-allocated workspace memory,
 and directly increment `counts` for every vertex on the path. No heap allocations occur.
 """
-function sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g::AbstractGraph{T}, rng::AbstractRNG, s::T, t::T; endpoints::Bool=false) where T
+function sample_shortest_path!(
+    counts::Vector{Int},
+    ws::KadabraWorkspace{T},
+    g::AbstractGraph{T},
+    rng::AbstractRNG,
+    s::T,
+    t::T;
+    endpoints::Bool = false,
+) where {T}
     s == t && return
     _sample_shortest_path!(g, rng, s, t, counts, ws, outneighbors, inneighbors, endpoints)
 end
@@ -570,7 +721,17 @@ When the frontiers intersect, it selects a single bridge edge uniformly at rando
 the number of shortest paths crossing it) and backtracks to construct the sampled path.
 The nodes on the resulting path are incremented directly in the `counts` array without allocating memory.
 """
-function _sample_shortest_path!(g::AbstractGraph{T}, rng::AbstractRNG, s::T, t::T, counts::Vector{Int}, ws::KadabraWorkspace{T}, neighborfn_s::F1, neighborfn_t::F2, endpoints::Bool) where {T<:Integer, F1, F2}
+function _sample_shortest_path!(
+    g::AbstractGraph{T},
+    rng::AbstractRNG,
+    s::T,
+    t::T,
+    counts::Vector{Int},
+    ws::KadabraWorkspace{T},
+    neighborfn_s::F1,
+    neighborfn_t::F2,
+    endpoints::Bool,
+) where {T<:Integer,F1,F2}
     ball_indicator = ws.ball_indicator
     n_paths = ws.n_paths
     dist = ws.dist
@@ -607,93 +768,93 @@ function _sample_shortest_path!(g::AbstractGraph{T}, rng::AbstractRNG, s::T, t::
 
     @inbounds begin
         while !have_to_stop && (cur_s_len > 0 && cur_t_len > 0)
-            if sum_degs_s <= sum_degs_t 
+            if sum_degs_s <= sum_degs_t
                 sum_degs_s = 0
                 next_s_len = 0
-                for i in 1:cur_s_len
+                for i = 1:cur_s_len
                     x = cur_s[i]
                     for y in neighborfn_s(g, x)
                         if ball_indicator[y] == 0x00
                             ball_indicator[y] = 0x01
                             n_paths[y] = n_paths[x]
                             dist[y] = dist[x] + 1
-                            
+
                             count = preds_count[y]
-                            preds_data[preds_offset[y] + count] = x
+                            preds_data[preds_offset[y]+count] = x
                             preds_count[y] = count + 1
-                            
+
                             next_s_len += 1
                             next_s[next_s_len] = y
-                            
+
                             visited_len += 1
-                            visited_nodes[visited_len] = y 
+                            visited_nodes[visited_len] = y
                             sum_degs_s += length(neighborfn_s(g, y))
-                            
+
                         elseif ball_indicator[y] == 0x02
                             have_to_stop = true
                             sp_edges_len += 1
                             if sp_edges_len > length(sp_edges)
                                 resize!(sp_edges, length(sp_edges) * 2)
                             end
-                            sp_edges[sp_edges_len] = (x, y) 
-                            
+                            sp_edges[sp_edges_len] = (x, y)
+
                         elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x01
                             n_paths[y] += n_paths[x]
                             count = preds_count[y]
-                            preds_data[preds_offset[y] + count] = x
+                            preds_data[preds_offset[y]+count] = x
                             preds_count[y] = count + 1
                         end
                     end
                 end
                 cur_s_len = next_s_len
                 cur_s, next_s = next_s, cur_s
-                
+
             else
                 sum_degs_t = 0
                 next_t_len = 0
-                for i in 1:cur_t_len
+                for i = 1:cur_t_len
                     x = cur_t[i]
                     for y in neighborfn_t(g, x)
                         if ball_indicator[y] == 0x00
                             ball_indicator[y] = 0x02
                             n_paths[y] = n_paths[x]
                             dist[y] = dist[x] + 1
-                            
+
                             count = preds_count[y]
-                            preds_data[preds_offset[y] + count] = x
+                            preds_data[preds_offset[y]+count] = x
                             preds_count[y] = count + 1
-                            
+
                             next_t_len += 1
                             next_t[next_t_len] = y
-                            
+
                             visited_len += 1
-                            visited_nodes[visited_len] = y 
+                            visited_nodes[visited_len] = y
                             sum_degs_t += length(neighborfn_t(g, y))
-                            
+
                         elseif ball_indicator[y] == 0x01
                             have_to_stop = true
                             sp_edges_len += 1
                             if sp_edges_len > length(sp_edges)
                                 resize!(sp_edges, length(sp_edges) * 2)
                             end
-                            sp_edges[sp_edges_len] = (y, x) 
-                            
+                            sp_edges[sp_edges_len] = (y, x)
+
                         elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x02
                             n_paths[y] += n_paths[x]
                             count = preds_count[y]
-                            preds_data[preds_offset[y] + count] = x
+                            preds_data[preds_offset[y]+count] = x
                             preds_count[y] = count + 1
                         end
                     end
                 end
                 cur_t_len = next_t_len
-                cur_t, next_t = next_t, cur_t 
+                cur_t, next_t = next_t, cur_t
             end
         end
 
         if sp_edges_len > 0
             tot_weight = 0.0
-            for i in 1:sp_edges_len
+            for i = 1:sp_edges_len
                 (u_bridge, v_bridge) = sp_edges[i]
                 tot_weight += n_paths[u_bridge] * n_paths[v_bridge]
             end
@@ -701,8 +862,8 @@ function _sample_shortest_path!(g::AbstractGraph{T}, rng::AbstractRNG, s::T, t::
             rand_val = rand(rng) * tot_weight
             cur_weight = 0.0
             selected_edge = sp_edges[1]
-            
-            for i in 1:sp_edges_len
+
+            for i = 1:sp_edges_len
                 (u_bridge, v_bridge) = sp_edges[i]
                 cur_weight += n_paths[u_bridge] * n_paths[v_bridge]
                 if cur_weight >= rand_val
@@ -711,11 +872,31 @@ function _sample_shortest_path!(g::AbstractGraph{T}, rng::AbstractRNG, s::T, t::
                 end
             end
 
-            _backtrack!(counts, selected_edge[1], s, preds_data, preds_count, preds_offset, n_paths, rng, endpoints)
-            _backtrack!(counts, selected_edge[2], t, preds_data, preds_count, preds_offset, n_paths, rng, endpoints)
+            _backtrack!(
+                counts,
+                selected_edge[1],
+                s,
+                preds_data,
+                preds_count,
+                preds_offset,
+                n_paths,
+                rng,
+                endpoints,
+            )
+            _backtrack!(
+                counts,
+                selected_edge[2],
+                t,
+                preds_data,
+                preds_count,
+                preds_offset,
+                n_paths,
+                rng,
+                endpoints,
+            )
         end
 
-        for i in 1:visited_len
+        for i = 1:visited_len
             v = visited_nodes[i]
             ball_indicator[v] = 0x00
             n_paths[v] = 0.0
@@ -736,26 +917,36 @@ If multiple optimal predecessors exist, one is selected randomly weighted by the
 shortest paths `n_paths` arriving through that predecessor.
 The thread-local `counts` buffer is incremented in-place for every node visited.
 """
-function _backtrack!(counts::Vector{Int}, curr::T, target::T, preds_data::Vector{T}, preds_count::Vector{Int}, preds_offset::Vector{Int}, n_paths::Vector{Float64}, rng::AbstractRNG, endpoints::Bool) where {T}
+function _backtrack!(
+    counts::Vector{Int},
+    curr::T,
+    target::T,
+    preds_data::Vector{T},
+    preds_count::Vector{Int},
+    preds_offset::Vector{Int},
+    n_paths::Vector{Float64},
+    rng::AbstractRNG,
+    endpoints::Bool,
+) where {T}
     @inbounds while curr != target
         counts[curr] += 1
-        
+
         count = preds_count[curr]
         offset = preds_offset[curr]
-        
+
         if count == 1
             curr = preds_data[offset]
         else
             tot = 0.0
-            for i in 1:count
-                p = preds_data[offset + i - 1]
+            for i = 1:count
+                p = preds_data[offset+i-1]
                 tot += n_paths[p]
             end
-            
-            r = rand(rng) * tot          
+
+            r = rand(rng) * tot
             c = 0.0
-            for i in 1:count
-                p = preds_data[offset + i - 1]
+            for i = 1:count
+                p = preds_data[offset+i-1]
                 c += n_paths[p]
                 if c >= r
                     curr = p

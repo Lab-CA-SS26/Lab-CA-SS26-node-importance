@@ -6,7 +6,7 @@ instances_file = joinpath(dirname(dirname(@__DIR__)), "Instances", "instances.tx
 instances = BenchmarkUtils.read_instances(instances_file)
 
 # You can adjust these thread counts depending on your server's hardware (e.g. up to 128)
-thread_counts = [1, 2, 4, 8, 16, 24, 32, 48] 
+thread_counts = [1, 2, 4, 8, 16, 24, 32, 48]
 
 out_csv = joinpath(@__DIR__, "..", "results", "thread_scaling_results.csv")
 

@@ -12,7 +12,7 @@ include("../src/kadabra.jl")
 const testdir = joinpath(dirname(dirname(@__FILE__)), "..", "Graphs.jl", "test")
 
 # Replicate test_generic_graphs helper
-function test_generic_graphs(g; eltypes=[UInt8, Int16], skip_if_too_large::Bool=false)
+function test_generic_graphs(g; eltypes = [UInt8, Int16], skip_if_too_large::Bool = false)
     SG = is_directed(g) ? SimpleDiGraph : SimpleGraph
     GG = is_directed(g) ? GenericDiGraph : GenericGraph
     result = GG[]
@@ -35,16 +35,18 @@ end
 
     # 2. Path Graph tests
     g3 = GenericGraph(path_graph(5))
-    z3 = kadabra_centrality(g3, 0, 0.05, 0.1; endpoints=true, normalize=:none).centralities
+    z3 =
+        kadabra_centrality(g3, 0, 0.05, 0.1; endpoints = true, normalize = :none).centralities
 
     g2 = GenericGraph(path_graph(2))
-    z2 = kadabra_centrality(g2, 0, 0.1, 0.1; endpoints=true, normalize=:none).centralities
+    z2 =
+        kadabra_centrality(g2, 0, 0.1, 0.1; endpoints = true, normalize = :none).centralities
     # Both nodes appear in every sampled path (only one path exists)
 
     # 3. Standard dataset (graph-50-500) tests
     gint = loadgraph(joinpath(testdir, "testdata", "graph-50-500.jgz"), "graph-50-500")
     c = vec(readdlm(joinpath(testdir, "testdata", "graph-50-500-bc.txt"), ','))
-    
+
     for g in test_generic_graphs(gint)
         # KADABRA includes path endpoints, so its expected value differs from Brandes.
         # Let Bunnorm[v] = unnormalized Brandes BC. Then:
