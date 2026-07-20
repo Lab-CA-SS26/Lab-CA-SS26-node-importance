@@ -1,207 +1,70 @@
-# simexpal experiments.yml for KADABRA Benchmarks
+# simexpal experiments.yml for KADABRA and BRAVA Benchmarks
 
 # Configure simexpal to use your local Instances directory
 instdir: "../Instances"
 
-# 1. Instances (grouped into instance sets from local directories)
+# 1. Instances
 instances:
   - repo: local
     set:
-      - snap-undirected
-      - SNAP
-    subdir: SNAP_Instances
+      - TestInstances_Undirected
+    subdir: TestInstances
     items:
-      - facebook_combined.txt
+      - p2p-Gnutella31.txt
 
   - repo: local
     set:
-      - snap-directed
-      - SNAP
-    subdir: SNAP_Instances
+      - ABCDE_Undirected
+    subdir: ABCDE
     items:
-      - p2p-Gnutella08.txt
-
-  - repo: local
-    set:
-      - test
-    items:
-      - graph
-      - youtube
-
-  - repo: local
-    set:
-      - test2
-    items:
-      - testgraph
-
-  - repo: local
-    set:
-      - SNAP
-    subdir: SNAP_Instances
-    items:
-      - wiki-topcats.txt
+      - com-youtube.txt
+      - amazon.txt
       - cit-Patents.txt
-      - ego-gplus.txt
-      - com-dblp.ungraph.txt
-      - web-BerkStan.txt
-      - wiki-Talk.txt
-      - web-Google.txt
-      - com-youtube.ungraph.txt
-      - roadNet-CA.txt
-      - web-Stanford.txt
-      - roadNet-TX.txt
-      - roadNet-PA.txt
-      - Ego-twitter.txt
-      - com-amazon.ungraph.txt
-      - soc-Slashdot0902.txt
-      - soc-Slashdot0811.txt
-      - email-Enron.txt
-      - soc-sign-Slashdot081106.txt
-      - soc-sign-Slashdot090216.txt
-      - soc-sign-Slashdot090221.txt
+      - com-lj.txt
+      - dblp.txt
+
+  - repo: local
+    set:
+      - TestInstances_Directed
+    subdir: TestInstances
+    items:
       - soc-Epinions1.txt
+      - soc-Slashdot0902.txt
+      - email-EuAll.txt
+      - web-Google.txt
+      - soc-Pokec.txt
+      - wiki-topcats.txt
+      - wiki-Talk.txt
+      - soc-LiveJournal1.txt
 
-  - repo: local
-    set:
-      - SCMP
-    subdir: SCMP_instances
-    items:
-      - mouse_gene.txt
-      - cond-mat-2005.txt
-      - cond-mat-2003.txt
-      - human_gene1.txt
-      - cond-mat.txt
-      - astro-ph.txt
-      - human_gene2.txt
-      - Reuters911.txt
-      - hep-th.txt
-      - geom.txt
-      - netscience.txt
-      - USAir97.txt
-      - Journals.txt
-      - Sandi_authors.txt
-      - lesmis.txt
-      - GD97_b.txt
-      - Stranke94.txt
-
-  - repo: local
-    set:
-      - weightedSnap
-    subdir: weightedSnap
-    items:
-      - soc-sign-bitcoinalpha.csv
-      - soc-sign-bitcoinotc.csv
-
-  - repo: local
-    set:
-      - weightedToreOpsahl
-    subdir: weighted_sets_tore_opsahl
-    items:
-      - Cross_Parker-Consulting_info.txt
-      - celegans_n306.txt
-      - OClinks_w.txt
-      - Davis_southern_club_women-cooccurance.txt
-      - USpowergrid_n4941.txt
-      - OF_two-mode_weightedchar.txt
-      - Freemans_EIES-3_n32.txt
-      - Cross_Parker-Manufacturing_info.txt
-      - Newman-Cond_mat_95-99-Newman.txt
-      - USairport500.txt
-      - OClinks_w_chars.txt
-      - OF_one-mode_weightedchar_sum.txt
-      - OF_one-mode_weightedmsg_sum.txt
-      - Freemans_EIES-1_n48.txt
-      - Newman-Cond_mat_95-99-co_occurrence.txt
-      - Davis_southern_club_women-Newman.txt
-      - OF_one-mode_weightedmsg_Newman.txt
-      - Cross_Parker-Manufacturing_aware.txt
-      - Cross_Parker-Consulting_value.txt
-      - OF_one-mode_weightedchar_Newman.txt
-      - OF_two-mode_weightedmsg.txt
-      - Freemans_EIES-2_n48.txt
-      - openflights.txt
-
-  - repo: local
-    set:
-      - KONECT
-    subdir: KONECT
-    items:
-      - trackers.txt
-      - actor-collaboration.txt
-
-  - repo: local
-    set:
-      - KONECT_not_run
-    subdir: KONECT
-    items:
-      - livejournal-groupmemberships.txt
-      - orkut-links.txt
-
-  - repo: local
-    set:
-      - Zafarani
-    subdir: Zafarani
-    items:
-      - BlogCatalog3.csv
-
-  - repo: local
-    set:
-      - Twitter
-    subdir: The_Twitter_Mancer_Project-master
-    items:
-      - twitter-retweets.txt
-      - twitter-follows.txt
-      - twitter-quotes.txt
-      - twitter-replies.txt
-
-# 2. Builds Configuration
-builds:
-  - name: kadabra
-    git: ../cpp_reference
-    compile:
-      - args:
-          - 'make'
-          - 'build'
-        workdir: '@THIS_SOURCE_DIR@'
-    install:
-      - args:
-          - 'mkdir'
-          - '-p'
-          - '@THIS_PREFIX_DIR@/bin'
-      - args:
-          - 'cp'
-          - '@THIS_SOURCE_DIR@/kadabra'
-          - '@THIS_PREFIX_DIR@/bin/kadabra'
-
-# 3. Revisions Configuration
-revisions:
-  - name: 'main-head'
-    build_version:
-      'kadabra': 'refs/heads/master'
-
-# 4. Parameter Variants & Environments
+# 2. Parameter Variants & Environments
 variants:
-  # Thread configuration (via environment variables)
-  - axis: 'threads'
+  - axis: t
     items:
       - name: 't1'
+        extra_args: ['--threads', '1']
         environ:
-          OMP_NUM_THREADS: '1'
           JULIA_NUM_THREADS: '1'
       - name: 't4'
+        extra_args: ['--threads', '4']
         environ:
-          OMP_NUM_THREADS: '4'
           JULIA_NUM_THREADS: '4'
-          
-  # Top-K vertex selection
-  - axis: 'k-val'
+      - name: 't8'
+        extra_args: ['--threads', '8']
+        environ:
+          JULIA_NUM_THREADS: '8'
+
+  - axis: k
     items:
-      - name: 'k3'
-        extra_args: ['-k', '3']
+      - name: 'k0' # absolute error
+        extra_args: ['-k', '0']
       - name: 'k10'
         extra_args: ['-k', '10']
 
-  # Graph type (Directed vs Undirected)
+  - axis: err
+    items:
+      - name: 'err1'
+        extra_args: ['--epsilon', '0.01', '--delta', '0.1']
   - axis: 'graph-type'
     items:
       - name: 'undirected'
@@ -209,41 +72,71 @@ variants:
       - name: 'directed'
         extra_args: ['-d']
 
-# 5. Define Experiments (C++ binary and Julia driver)
+# 3. Define Experiments
 experiments:
   - name: kadabra-cpp
-    use_builds: [ kadabra ]
     args:
-      - "kadabra"
-      - "@EXTRA_ARGS@"
-      - "0.01"
-      - "0.1"
+      - "simexpal_runners/run_experiments_cpp"
+      - "-i"
       - "@INSTANCE@"
+      - "-o"
+      - "@OUTPUT:stats.json@"
+      - "@EXTRA_ARGS@"
+      - "-a"
+      - "kadabra"
+      - "-v"
+      - "cpp"
     stdout: out
+    output:
+      extensions: ['stats.json']
 
   - name: kadabra-julia
     args:
       - "julia"
-      - "compare_kadabra.jl"
-      - "@EXTRA_ARGS@"
-      - "0.01"
-      - "0.1"
+      - "--project=.."
+      - "simexpal_runners/run_experiments.jl"
+      - "-i"
       - "@INSTANCE@"
+      - "-o"
+      - "@OUTPUT:stats.json@"
+      - "@EXTRA_ARGS@"
+      - "-a"
+      - "kadabra"
+      - "-v"
+      - "julia"
     stdout: out
+    output:
+      extensions: ['stats.json']
 
-# 6. Run Matrix (maps instances to directed/undirected flags and parameters)
+  - name: brava-julia
+    args:
+      - "julia"
+      - "--project=.."
+      - "simexpal_runners/run_experiments.jl"
+      - "-i"
+      - "@INSTANCE@"
+      - "-o"
+      - "@OUTPUT:stats.json@"
+      - "@EXTRA_ARGS@"
+      - "-a"
+      - "brava"
+      - "-v"
+      - "julia"
+    stdout: out
+    output:
+      extensions: ['stats.json']
+
+# 6. Run Matrix
 matrix:
   include:
-    # Undirected Graph Benchmarks (No -d flag)
+    # Run undirected graphs
+    # - experiments: [kadabra-cpp, kadabra-julia, brava-julia]
     - experiments: [kadabra-cpp, kadabra-julia]
-      instsets: [snap-undirected]
-      variants: [undirected, t1, t4, k3, k10]
+      instsets: [TestInstances_Undirected]
+      # instsets: [TestInstances_Undirected, ABCDE_Undirected]
+      variants: [undirected, t1, t4, k0, k10, err1]
 
-    # Directed Graph Benchmarks (With -d flag)
-    - experiments: [kadabra-cpp, kadabra-julia]
-      instsets: [snap-directed]
-      variants: [directed, t1, t4, k3, k10]
-
-    - experiments: [kadabra-cpp, kadabra-julia]
-      instsets: [SNAP]
-      variants: [directed, t1, t4, k3, k10]
+    # # Run directed graphs
+    # - experiments: [kadabra-cpp, kadabra-julia, brava-julia]
+    #   instsets: [TestInstances_Directed]
+    #   variants: [directed, t1, t4, k0, k10, err1]
