@@ -192,9 +192,8 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     err_u_buf = zeros(Float64, union_sample)
     top_k_nodes = collect(1:n)
     
-    if parallel && rng !== nothing
-        @warn "Custom RNG provided with parallel=true. Falling back to Random.default_rng() for threads to avoid race conditions. Pass parallel=false if you strictly need reproducible sampling from a single custom RNG."
-    end
+    # 1. Determine the base RNG (either custom or global default)
+    base_rng = rng === nothing ? Random.default_rng() : rng
     
     final_n_pairs = 0
     
@@ -204,6 +203,10 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
         workspaces = [KadabraWorkspace(g) for _ in 1:nthreads]
         n_pairs = Threads.Atomic{Int}(0)
         
+        # SEQUENTIALLY generate a seed for each thread before the loop
+        # perfectly thread-safe and 100% reproducible
+        thread_seeds = [rand(base_rng, UInt64) for _ in 1:nthreads]
+        
         # ---------------------------------------------------------
         # PHASE 1: Initial burn-in sampling (Threaded)
         # ---------------------------------------------------------
@@ -212,7 +215,7 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
         Threads.@threads for tid in 1:nthreads
             ws = workspaces[tid]
             counts = approx_local[tid]
-            t_rng = Random.default_rng() 
+            t_rng = Random.Xoshiro(thread_seeds[tid])
             
             for _ in 1:tau_per_thread
                 s = rand(t_rng, 1:n)
@@ -233,7 +236,7 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
         Threads.@threads for tid in 1:nthreads
             ws = workspaces[tid]
             counts = approx_local[tid]
-            t_rng = Random.default_rng()
+            t_rng = Random.Xoshiro(thread_seeds[tid])
             
             local_pairs = 0
             
