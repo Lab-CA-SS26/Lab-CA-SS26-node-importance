@@ -335,9 +335,11 @@ function kadabra_centrality(g::AbstractGraph{T}, k::Int, err::Float64, delta::Fl
     scale = 1.0
     if normalize == :graphs
         if n > 2
-            # Graphs.jl normalizes by (N-1)(N-2) for directed, and (N-1)(N-2)/2 for undirected
-            graphs_norm = is_directed(g) ? ((n - 1.0) * (n - 2.0)) : ((n - 1.0) * (n - 2.0)) / 2.0
-            scale = (n * (n - 1.0)) / graphs_norm
+            # KADABRA samples ordered pairs (s,t), so its expectation is E = 2*B(v)/(N*(N-1)) for undirected 
+            # and B(v)/(N*(N-1)) for directed. 
+            # Graphs.jl normalizes by (N-1)(N-2)/2 for undirected and (N-1)(N-2) for directed.
+            # In both cases, the conversion factor from E to Graphs.jl's normalized score is exactly N(N-1) / ((N-1)(N-2)).
+            scale = (n * (n - 1.0)) / ((n - 1.0) * (n - 2.0))
         else
             scale = 0.0
         end
