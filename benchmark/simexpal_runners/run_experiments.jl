@@ -1,6 +1,15 @@
+using Pkg
+Pkg.add("StaticGraphs")
+Pkg.add("JLD2")
+
 using ArgParse
 using JSON
 using Graphs
+
+const USE_STATIC_GRAPHS = true
+if USE_STATIC_GRAPHS
+    using StaticGraphs
+end
 
 # Wait, let's load what we need dynamically based on the algorithm argument or include them directly.
 
@@ -20,7 +29,7 @@ function parse_cmdline()
             help = "Path to the output JSON file"
             required = true
         "--threads", "-t"
-            help = "Number of threads to use (Julia uses JULIA_NUM_THREADS env by default, but we accept this parameter for logging/override if possible)"
+            help = "Number of threads to use (Julia uses JULIA_NUM_THREADS env by default, but we accept this parameter for logging)"
             arg_type = Int
             default = 1
         "-k"
@@ -72,14 +81,16 @@ function main()
 
     # Load graph
     io_start_time = time_ns()
-    g = BenchmarkUtils.load_graph_from_edgelist(input_file, is_directed)
+    g_raw = BenchmarkUtils.load_graph_from_edgelist(input_file, is_directed)
+    g = USE_STATIC_GRAPHS ? (is_directed ? StaticDiGraph(g_raw) : StaticGraph(g_raw)) : g_raw
     io_end_time = time_ns()
     io_time = (io_end_time - io_start_time) / 1e9
 
     # JIT WARMUP: Run the algorithm on a tiny dummy graph to compile all functions
-    dummy_g = typeof(g)(3) # Create empty graph of exact same type (e.g. SimpleGraph{Int32} vs Int64)
-    Main.Graphs.add_edge!(dummy_g, 1, 2)
-    Main.Graphs.add_edge!(dummy_g, 2, 3)
+    dummy_g_raw = typeof(g_raw)(3) # Create empty graph of exact same type (e.g. SimpleGraph{Int32} vs Int64)
+    Main.Graphs.add_edge!(dummy_g_raw, 1, 2)
+    Main.Graphs.add_edge!(dummy_g_raw, 2, 3)
+    dummy_g = USE_STATIC_GRAPHS ? (is_directed ? StaticDiGraph(dummy_g_raw) : StaticGraph(dummy_g_raw)) : dummy_g_raw
     
     if algo == "kadabra"
         Main.kadabra_centrality(dummy_g, k, epsilon, delta; start_factor=10, endpoints=false)
