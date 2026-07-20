@@ -1,0 +1,3 @@
+Dataset,Nodes,Edges,Runtime_s,Status
+p2p-Gnutella31.txt,62586,147892,2222.5444231033325,Success
+soc-Epinions1.txt,75888,508837,1568.6199629306793,Success
