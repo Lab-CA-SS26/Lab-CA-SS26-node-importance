@@ -76,6 +76,8 @@ variants:
         extra_args: ['-k', '0']
       - name: 'k10'
         extra_args: ['-k', '10']
+      - name: 'k10'
+        extra_args: ['-k', '100']
 
   - axis: err
     items:
@@ -174,11 +176,11 @@ matrix:
 
     - experiments: [kadabra-cpp, kadabra-julia]
       instsets: [TestInstances_Undirected,ABCDE_Undirected]
-      variants: [undirected, k0, k10, err1]
+      variants: [undirected, k0, k10, k100, err1]
 
     - experiments: [kadabra-cpp, kadabra-julia]
       instsets: [TestInstances_Directed]
-      variants: [undirected, k0, k10, err1]
+      variants: [undirected, k0, k10, k100, err1]
 
     # Run undirected graphs for brava
     # - experiments: [brava-julia]
