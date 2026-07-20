@@ -1,7 +1,3 @@
-using Pkg
-Pkg.add("StaticGraphs")
-Pkg.add("JLD2")
-
 using ArgParse
 using JSON
 using Graphs

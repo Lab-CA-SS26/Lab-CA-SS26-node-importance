@@ -477,13 +477,13 @@ function KadabraWorkspace(g::AbstractGraph{T}) where {T}
     preds_data = Vector{T}(undef, offset - 1)
     preds_count = zeros(Int, n)
     
-    cur_s = Vector{T}(); sizehint!(cur_s, n ÷ 4)
-    next_s = Vector{T}(); sizehint!(next_s, n ÷ 4)
-    cur_t = Vector{T}(); sizehint!(cur_t, n ÷ 4)
-    next_t = Vector{T}(); sizehint!(next_t, n ÷ 4)
+    cur_s = Vector{T}(undef, n)
+    next_s = Vector{T}(undef, n)
+    cur_t = Vector{T}(undef, n)
+    next_t = Vector{T}(undef, n)
     
-    sp_edges = Vector{Tuple{T, T}}(); sizehint!(sp_edges, 100)
-    visited_nodes = Vector{T}(); sizehint!(visited_nodes, n ÷ 2)
+    sp_edges = Vector{Tuple{T, T}}(undef, 100) # Keep small, reallocates rarely
+    visited_nodes = Vector{T}(undef, n)
     
     return KadabraWorkspace{T}(
         zeros(UInt8, n),
@@ -533,121 +533,142 @@ function _sample_shortest_path!(g::AbstractGraph{T}, rng::AbstractRNG, s::T, t::
     ball_indicator[s] = 0x01
     n_paths[s] = 1.0
     dist[s] = 0
-    push!(cur_s, s)
-    push!(visited_nodes, s)
+    cur_s_len = 1
+    cur_s[1] = s
+    visited_len = 1
+    visited_nodes[1] = s
     sum_degs_s = length(neighborfn_s(g, s))
 
     ball_indicator[t] = 0x02
     n_paths[t] = 1.0
     dist[t] = 0
-    push!(cur_t, t)
-    push!(visited_nodes, t)
+    cur_t_len = 1
+    cur_t[1] = t
+    visited_len += 1
+    visited_nodes[visited_len] = t
     sum_degs_t = length(neighborfn_t(g, t))
 
+    sp_edges_len = 0
     have_to_stop = false
 
-    while !have_to_stop && (!isempty(cur_s) && !isempty(cur_t))
-        if sum_degs_s <= sum_degs_t 
-            sum_degs_s = 0
-            @inbounds for x in cur_s
-                @inbounds for y in neighborfn_s(g, x)
-                    if ball_indicator[y] == 0x00
-                        ball_indicator[y] = 0x01
-                        n_paths[y] = n_paths[x]
-                        dist[y] = dist[x] + 1
-                        
-                        count = preds_count[y]
-                        preds_data[preds_offset[y] + count] = x
-                        preds_count[y] = count + 1
-                        
-                        push!(next_s, y)
-                        push!(visited_nodes, y) 
-                        sum_degs_s += length(neighborfn_s(g, y))
-                        
-                    elseif ball_indicator[y] == 0x02
-                        have_to_stop = true
-                        push!(sp_edges, (x, y)) 
-                        
-                    elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x01
-                        n_paths[y] += n_paths[x]
-                        count = preds_count[y]
-                        preds_data[preds_offset[y] + count] = x
-                        preds_count[y] = count + 1
+    @inbounds begin
+        while !have_to_stop && (cur_s_len > 0 && cur_t_len > 0)
+            if sum_degs_s <= sum_degs_t 
+                sum_degs_s = 0
+                next_s_len = 0
+                for i in 1:cur_s_len
+                    x = cur_s[i]
+                    for y in neighborfn_s(g, x)
+                        if ball_indicator[y] == 0x00
+                            ball_indicator[y] = 0x01
+                            n_paths[y] = n_paths[x]
+                            dist[y] = dist[x] + 1
+                            
+                            count = preds_count[y]
+                            preds_data[preds_offset[y] + count] = x
+                            preds_count[y] = count + 1
+                            
+                            next_s_len += 1
+                            next_s[next_s_len] = y
+                            
+                            visited_len += 1
+                            visited_nodes[visited_len] = y 
+                            sum_degs_s += length(neighborfn_s(g, y))
+                            
+                        elseif ball_indicator[y] == 0x02
+                            have_to_stop = true
+                            sp_edges_len += 1
+                            if sp_edges_len > length(sp_edges)
+                                resize!(sp_edges, length(sp_edges) * 2)
+                            end
+                            sp_edges[sp_edges_len] = (x, y) 
+                            
+                        elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x01
+                            n_paths[y] += n_paths[x]
+                            count = preds_count[y]
+                            preds_data[preds_offset[y] + count] = x
+                            preds_count[y] = count + 1
+                        end
                     end
                 end
+                cur_s_len = next_s_len
+                cur_s, next_s = next_s, cur_s
+                
+            else
+                sum_degs_t = 0
+                next_t_len = 0
+                for i in 1:cur_t_len
+                    x = cur_t[i]
+                    for y in neighborfn_t(g, x)
+                        if ball_indicator[y] == 0x00
+                            ball_indicator[y] = 0x02
+                            n_paths[y] = n_paths[x]
+                            dist[y] = dist[x] + 1
+                            
+                            count = preds_count[y]
+                            preds_data[preds_offset[y] + count] = x
+                            preds_count[y] = count + 1
+                            
+                            next_t_len += 1
+                            next_t[next_t_len] = y
+                            
+                            visited_len += 1
+                            visited_nodes[visited_len] = y 
+                            sum_degs_t += length(neighborfn_t(g, y))
+                            
+                        elseif ball_indicator[y] == 0x01
+                            have_to_stop = true
+                            sp_edges_len += 1
+                            if sp_edges_len > length(sp_edges)
+                                resize!(sp_edges, length(sp_edges) * 2)
+                            end
+                            sp_edges[sp_edges_len] = (y, x) 
+                            
+                        elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x02
+                            n_paths[y] += n_paths[x]
+                            count = preds_count[y]
+                            preds_data[preds_offset[y] + count] = x
+                            preds_count[y] = count + 1
+                        end
+                    end
+                end
+                cur_t_len = next_t_len
+                cur_t, next_t = next_t, cur_t 
             end
-            empty!(cur_s)
-            cur_s, next_s = next_s, cur_s
+        end
+
+        if sp_edges_len > 0
+            tot_weight = 0.0
+            for i in 1:sp_edges_len
+                (u_bridge, v_bridge) = sp_edges[i]
+                tot_weight += n_paths[u_bridge] * n_paths[v_bridge]
+            end
+
+            rand_val = rand(rng) * tot_weight
+            cur_weight = 0.0
+            selected_edge = sp_edges[1]
             
-        else
-            sum_degs_t = 0
-            @inbounds for x in cur_t
-                @inbounds for y in neighborfn_t(g, x)
-                    if ball_indicator[y] == 0x00
-                        ball_indicator[y] = 0x02
-                        n_paths[y] = n_paths[x]
-                        dist[y] = dist[x] + 1
-                        
-                        count = preds_count[y]
-                        preds_data[preds_offset[y] + count] = x
-                        preds_count[y] = count + 1
-                        
-                        push!(next_t, y)
-                        push!(visited_nodes, y) 
-                        sum_degs_t += length(neighborfn_t(g, y))
-                        
-                    elseif ball_indicator[y] == 0x01
-                        have_to_stop = true
-                        push!(sp_edges, (y, x)) 
-                        
-                    elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x02
-                        n_paths[y] += n_paths[x]
-                        count = preds_count[y]
-                        preds_data[preds_offset[y] + count] = x
-                        preds_count[y] = count + 1
-                    end
+            for i in 1:sp_edges_len
+                (u_bridge, v_bridge) = sp_edges[i]
+                cur_weight += n_paths[u_bridge] * n_paths[v_bridge]
+                if cur_weight >= rand_val
+                    selected_edge = (u_bridge, v_bridge)
+                    break
                 end
             end
-            empty!(cur_t)
-            cur_t, next_t = next_t, cur_t 
-        end
-    end
 
-    if !isempty(sp_edges)
-        tot_weight = 0.0
-        @inbounds for (u_bridge, v_bridge) in sp_edges
-            tot_weight += n_paths[u_bridge] * n_paths[v_bridge]
+            _backtrack!(counts, selected_edge[1], s, preds_data, preds_count, preds_offset, n_paths, rng, endpoints)
+            _backtrack!(counts, selected_edge[2], t, preds_data, preds_count, preds_offset, n_paths, rng, endpoints)
         end
 
-        rand_val = rand(rng) * tot_weight
-        cur_weight = 0.0
-        selected_edge = sp_edges[1]
-        
-        @inbounds for (u_bridge, v_bridge) in sp_edges
-            cur_weight += n_paths[u_bridge] * n_paths[v_bridge]
-            if cur_weight >= rand_val
-                selected_edge = (u_bridge, v_bridge)
-                break
-            end
+        for i in 1:visited_len
+            v = visited_nodes[i]
+            ball_indicator[v] = 0x00
+            n_paths[v] = 0.0
+            dist[v] = typemax(Int)
+            preds_count[v] = 0
         end
-
-        _backtrack!(counts, selected_edge[1], s, preds_data, preds_count, preds_offset, n_paths, rng, endpoints)
-        _backtrack!(counts, selected_edge[2], t, preds_data, preds_count, preds_offset, n_paths, rng, endpoints)
     end
-
-    @inbounds for v in visited_nodes
-        ball_indicator[v] = 0x00
-        n_paths[v] = 0.0
-        dist[v] = typemax(Int)
-        preds_count[v] = 0
-    end
-    
-    empty!(visited_nodes)
-    empty!(ws.cur_s)
-    empty!(ws.next_s)
-    empty!(ws.cur_t)
-    empty!(ws.next_t)
-    empty!(sp_edges)
 
     return
 end
