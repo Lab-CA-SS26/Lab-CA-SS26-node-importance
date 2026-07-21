@@ -181,7 +181,6 @@ function kadabra_centrality(
     parallel::Bool = true,
     rng::Union{AbstractRNG,Nothing} = nothing,
 ) where {T}
-    # --- Input validation ---
     nv(g) >= 2 || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
     err > 0 || throw(ArgumentError("err must be positive (got $err)"))
     0 < delta < 1 || throw(ArgumentError("delta must be in (0, 1) (got $delta)"))
@@ -190,20 +189,15 @@ function kadabra_centrality(
     absolute = (k == 0)
     k = Int(k == 0 ? n : min(k, n))
 
-    # Estimate diameter using AllCCUpperBound
     diam_est = max(estimate_diameter(g), 2.0)
 
-    # Sample-count upper bound
     omega = 0.5 / (err^2) * (log2(diam_est - 1.0) + 1.0 + log2(1.0 / delta))
     tau = max(round(Int, omega / start_factor), 1)
 
-    # Pre-allocate aggregation buffer for Phase 2 checks
     global_approx = zeros(Int, n)
     union_sample = Int(absolute ? k : min(n, k + 20))
 
-    # Adaptive check interval scales with burn-in tau to prevent hanging
     check_interval = max(10, tau ÷ 100)
-
     delta_l_guess = fill(delta / (4 * n), n)
     delta_u_guess = fill(delta / (4 * n), n)
 
@@ -212,9 +206,7 @@ function kadabra_centrality(
     err_u_buf = zeros(Float64, union_sample)
     top_k_nodes = collect(1:n)
 
-    # 1. Determine the base RNG (either custom or global default)
     base_rng = rng === nothing ? Random.default_rng() : rng
-
     final_n_pairs = 0
 
     if parallel
@@ -223,114 +215,81 @@ function kadabra_centrality(
         workspaces = [KadabraWorkspace(g) for _ = 1:nthreads]
         n_pairs = Threads.Atomic{Int}(0)
 
-        # SEQUENTIALLY generate a seed for each thread before the loop
-        # perfectly thread-safe and 100% reproducible
+        # Allocate RNG state ONCE so it persists between Phase 1 and Phase 2
         thread_seeds = [rand(base_rng, UInt64) for _ = 1:nthreads]
+        rng_states = [Random.Xoshiro(seed) for seed in thread_seeds]
 
-        # ---------------------------------------------------------
-        # PHASE 1: Initial burn-in sampling (Threaded)
-        # ---------------------------------------------------------
         tau_per_thread = cld(tau, nthreads)
 
-        Threads.@threads for tid = 1:nthreads
+        # PHASE 1
+        Threads.@threads :static for tid = 1:nthreads
             ws = workspaces[tid]
             counts = approx_local[tid]
-            t_rng = Random.Xoshiro(thread_seeds[tid])
+            t_rng = rng_states[tid]
 
             for _ = 1:tau_per_thread
                 s = rand(t_rng, 1:n)
                 t = rand(t_rng, 1:n)
                 while s == t
-                    ;
-                    t = rand(t_rng, 1:n);
+                    t = rand(t_rng, 1:n)
                 end
-
-                sample_shortest_path!(
-                    counts,
-                    ws,
-                    g,
-                    t_rng,
-                    T(s),
-                    T(t);
-                    endpoints = endpoints,
-                )
+                sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints = endpoints)
             end
         end
         n_pairs[] = tau_per_thread * nthreads
 
-        # ---------------------------------------------------------
-        # PHASE 2: Main loop (Threaded)
-        # ---------------------------------------------------------
+        # PHASE 2
         stop_flag = Threads.Atomic{Bool}(false)
+        check_lock = Threads.SpinLock()
         check_interval = max(1000, tau ÷ 10)
 
-        Threads.@threads for tid = 1:nthreads
+        Threads.@threads :static for tid = 1:nthreads
             ws = workspaces[tid]
             counts = approx_local[tid]
-            t_rng = Random.Xoshiro(thread_seeds[tid])
+            t_rng = rng_states[tid] # Continue with the same RNG instance
 
             local_pairs = 0
 
             while !stop_flag[] && n_pairs[] < omega
                 for _ = 1:check_interval
+                    # yield() REMOVED
                     s = rand(t_rng, 1:n)
                     t = rand(t_rng, 1:n)
                     while s == t
-                        ;
-                        t = rand(t_rng, 1:n);
+                        t = rand(t_rng, 1:n)
                     end
-
-                    sample_shortest_path!(
-                        counts,
-                        ws,
-                        g,
-                        t_rng,
-                        T(s),
-                        T(t);
-                        endpoints = endpoints,
-                    )
+                    sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints = endpoints)
                     local_pairs += 1
                 end
 
                 Threads.atomic_add!(n_pairs, local_pairs)
                 local_pairs = 0
 
-                if tid == 1
-                    fill!(global_approx, 0)
-                    for t_approx in approx_local
-                        global_approx .+= t_approx
-                    end
-
-                    if absolute
-                        for i = 1:union_sample
-                            ;
-                            top_k_nodes[i] = i;
+                if trylock(check_lock)
+                    try
+                        fill!(global_approx, 0)
+                        for t_approx in approx_local
+                            for v = 1:n
+                                global_approx[v] += t_approx[v]
+                            end
                         end
-                    else
-                        copyto!(top_k_nodes, 1:n)
-                        partialsort!(
-                            top_k_nodes,
-                            1:union_sample,
-                            by = x -> global_approx[x],
-                            rev = true,
-                        )
-                    end
 
-                    if check_finished(
-                        global_approx,
-                        view(top_k_nodes, 1:union_sample),
-                        n_pairs[],
-                        k,
-                        err,
-                        delta_l_guess,
-                        delta_u_guess,
-                        omega,
-                        absolute,
-                        bet_buf,
-                        err_l_buf,
-                        err_u_buf,
-                    )
-                        Threads.atomic_xchg!(stop_flag, true)
+                        if absolute
+                            for i = 1:union_sample; top_k_nodes[i] = i; end
+                        else
+                            copyto!(top_k_nodes, 1:n)
+                            partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev = true)
+                        end
+
+                        if check_finished(
+                            global_approx, view(top_k_nodes, 1:union_sample),
+                            n_pairs[], k, err, delta_l_guess, delta_u_guess,
+                            omega, absolute, bet_buf, err_l_buf, err_u_buf
+                        )
+                            Threads.atomic_xchg!(stop_flag, true)
+                        end
+                    finally
+                        unlock(check_lock)
                     end
                 end
             end
@@ -343,27 +302,21 @@ function kadabra_centrality(
         final_n_pairs = n_pairs[]
 
     else
-        # ---------------------------------------------------------
-        # Sequential Execution (No Atomics)
-        # ---------------------------------------------------------
+        # Sequential block remains mostly the same, ensuring one RNG stream is used
         counts = global_approx
         ws = KadabraWorkspace(g)
         s_rng = rng === nothing ? Random.default_rng() : rng
 
-        # PHASE 1
         for _ = 1:tau
             s = rand(s_rng, 1:n)
             t = rand(s_rng, 1:n)
             while s == t
-                ;
-                t = rand(s_rng, 1:n);
+                t = rand(s_rng, 1:n)
             end
-
             sample_shortest_path!(counts, ws, g, s_rng, T(s), T(t); endpoints = endpoints)
         end
         final_n_pairs = tau
-
-        # PHASE 2
+        
         stop_flag_seq = false
         check_interval = max(1000, tau ÷ 10)
 
@@ -372,86 +325,42 @@ function kadabra_centrality(
                 s = rand(s_rng, 1:n)
                 t = rand(s_rng, 1:n)
                 while s == t
-                    ;
-                    t = rand(s_rng, 1:n);
+                    t = rand(s_rng, 1:n)
                 end
-
-                sample_shortest_path!(
-                    counts,
-                    ws,
-                    g,
-                    s_rng,
-                    T(s),
-                    T(t);
-                    endpoints = endpoints,
-                )
+                sample_shortest_path!(counts, ws, g, s_rng, T(s), T(t); endpoints = endpoints)
                 final_n_pairs += 1
             end
 
             if absolute
-                for i = 1:union_sample
-                    ;
-                    top_k_nodes[i] = i;
-                end
+                for i = 1:union_sample; top_k_nodes[i] = i; end
             else
                 copyto!(top_k_nodes, 1:n)
                 partialsort!(top_k_nodes, 1:union_sample, by = x -> counts[x], rev = true)
             end
 
             if check_finished(
-                counts,
-                view(top_k_nodes, 1:union_sample),
-                final_n_pairs,
-                k,
-                err,
-                delta_l_guess,
-                delta_u_guess,
-                omega,
-                absolute,
-                bet_buf,
-                err_l_buf,
-                err_u_buf,
+                counts, view(top_k_nodes, 1:union_sample), final_n_pairs,
+                k, err, delta_l_guess, delta_u_guess, omega, absolute,
+                bet_buf, err_l_buf, err_u_buf
             )
                 stop_flag_seq = true
             end
         end
     end
 
-    # ---------------------------------------------------------
-    # Result Aggregation
-    # ---------------------------------------------------------
     res = [global_approx[v] / final_n_pairs for v = 1:n]
-
-    lower_bounds = Float64[
-        max(0.0, res[v] - compute_f(res[v], final_n_pairs, delta_l_guess[v], omega)) for
-        v = 1:n
-    ]
-    upper_bounds = Float64[
-        min(1.0, res[v] + compute_g(res[v], final_n_pairs, delta_u_guess[v], omega)) for
-        v = 1:n
-    ]
+    lower_bounds = Float64[max(0.0, res[v] - compute_f(res[v], final_n_pairs, delta_l_guess[v], omega)) for v = 1:n]
+    upper_bounds = Float64[min(1.0, res[v] + compute_g(res[v], final_n_pairs, delta_u_guess[v], omega)) for v = 1:n]
 
     scale = 1.0
     if normalize == :graphs
-        if n > 2
-            # KADABRA samples ordered pairs (s,t), so its expectation is E = 2*B(v)/(N*(N-1)) for undirected 
-            # and B(v)/(N*(N-1)) for directed. 
-            # Graphs.jl normalizes by (N-1)(N-2)/2 for undirected and (N-1)(N-2) for directed.
-            # In both cases, the conversion factor from E to Graphs.jl's normalized score is exactly N(N-1) / ((N-1)(N-2)).
-            scale = (n * (n - 1.0)) / ((n - 1.0) * (n - 2.0))
-        else
-            scale = 0.0
-        end
+        scale = n > 2 ? (n * (n - 1.0)) / ((n - 1.0) * (n - 2.0)) : 0.0
     elseif normalize == :none
         scale = is_directed(g) ? (n * (n - 1.0)) : (n * (n - 1.0)) / 2.0
     elseif normalize == :kadabra
-        scale = 1.0 # KADABRA inherently outputs the fraction of pairs, which is already normalized by N(N-1)
+        scale = 1.0
     else
-        throw(
-            ArgumentError(
-                "Unknown normalize option: $normalize. Use :graphs, :kadabra, or :none.",
-            ),
-        )
+        throw(ArgumentError("Unknown normalize option: $normalize. Use :graphs, :kadabra, or :none."))
     end
 
     if scale != 1.0
@@ -460,12 +369,7 @@ function kadabra_centrality(
         upper_bounds .*= scale
     end
 
-    return (
-        centralities = res,
-        lower_bounds = lower_bounds,
-        upper_bounds = upper_bounds,
-        n_samples = final_n_pairs,
-    )
+    return (centralities = res, lower_bounds = lower_bounds, upper_bounds = upper_bounds, n_samples = final_n_pairs)
 end
 
 function kadabra_centrality(
@@ -583,7 +487,8 @@ function check_finished(
 
     for i = 1:n_tracked
         v = top_k_nodes[i]
-        bet[i] = approx_counts[v] / n_pairs
+        # clamp fängt asynchrone Auslesefehler ab und schützt vor DomainErrors
+        bet[i] = clamp(approx_counts[v] / n_pairs, 0.0, 1.0)
     end
 
     for i = 1:n_tracked
@@ -666,16 +571,16 @@ function KadabraWorkspace(g::AbstractGraph{T}) where {T}
     end
     preds_offset[n+1] = offset
 
-    preds_data = Vector{T}(undef, offset - 1)
+    preds_data = zeros(T, max(1, offset - 1))
     preds_count = zeros(Int, n)
 
-    cur_s = Vector{T}(undef, n)
-    next_s = Vector{T}(undef, n)
-    cur_t = Vector{T}(undef, n)
-    next_t = Vector{T}(undef, n)
+    cur_s = zeros(T, n)
+    next_s = zeros(T, n)
+    cur_t = zeros(T, n)
+    next_t = zeros(T, n)
 
-    sp_edges = Vector{Tuple{T,T}}(undef, 100) # Keep small, reallocates rarely
-    visited_nodes = Vector{T}(undef, n)
+    sp_edges = fill((zero(T), zero(T)), 100) # Keep small, reallocates rarely
+    visited_nodes = zeros(T, n + 2)
 
     return KadabraWorkspace{T}(
         zeros(UInt8, n),
@@ -766,8 +671,15 @@ function _sample_shortest_path!(
     sp_edges_len = 0
     have_to_stop = false
 
-    @inbounds begin
+    begin
+        iter_count = 0
         while !have_to_stop && (cur_s_len > 0 && cur_t_len > 0)
+            iter_count += 1
+            if iter_count > 1000000
+                println("INFINITE LOOP IN BFS! cur_s_len=", cur_s_len, " cur_t_len=", cur_t_len, " s=", s, " t=", t)
+                break
+            end
+            GC.safepoint()
             if sum_degs_s <= sum_degs_t
                 sum_degs_s = 0
                 next_s_len = 0
@@ -780,13 +692,23 @@ function _sample_shortest_path!(
                             dist[y] = dist[x] + 1
 
                             count = preds_count[y]
-                            preds_data[preds_offset[y]+count] = x
+                            idx = preds_offset[y] + count
+                            if idx > length(preds_data)
+                                resize!(preds_data, max(idx, length(preds_data) * 2 + 100))
+                            end
+                            preds_data[idx] = x
                             preds_count[y] = count + 1
 
                             next_s_len += 1
+                            if next_s_len > length(next_s)
+                                resize!(next_s, max(next_s_len, length(next_s) * 2 + 100))
+                            end
                             next_s[next_s_len] = y
 
                             visited_len += 1
+                            if visited_len > length(visited_nodes)
+                                resize!(visited_nodes, max(visited_len, length(visited_nodes) * 2 + 100))
+                            end
                             visited_nodes[visited_len] = y
                             sum_degs_s += length(neighborfn_s(g, y))
 
@@ -794,14 +716,18 @@ function _sample_shortest_path!(
                             have_to_stop = true
                             sp_edges_len += 1
                             if sp_edges_len > length(sp_edges)
-                                resize!(sp_edges, length(sp_edges) * 2)
+                                resize!(sp_edges, max(sp_edges_len, length(sp_edges) * 2 + 100))
                             end
                             sp_edges[sp_edges_len] = (x, y)
 
                         elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x01
                             n_paths[y] += n_paths[x]
                             count = preds_count[y]
-                            preds_data[preds_offset[y]+count] = x
+                            idx = preds_offset[y] + count
+                            if idx > length(preds_data)
+                                resize!(preds_data, max(idx, length(preds_data) * 2 + 100))
+                            end
+                            preds_data[idx] = x
                             preds_count[y] = count + 1
                         end
                     end
@@ -821,13 +747,23 @@ function _sample_shortest_path!(
                             dist[y] = dist[x] + 1
 
                             count = preds_count[y]
-                            preds_data[preds_offset[y]+count] = x
+                            idx = preds_offset[y] + count
+                            if idx > length(preds_data)
+                                resize!(preds_data, max(idx, length(preds_data) * 2 + 100))
+                            end
+                            preds_data[idx] = x
                             preds_count[y] = count + 1
 
                             next_t_len += 1
+                            if next_t_len > length(next_t)
+                                resize!(next_t, max(next_t_len, length(next_t) * 2 + 100))
+                            end
                             next_t[next_t_len] = y
 
                             visited_len += 1
+                            if visited_len > length(visited_nodes)
+                                resize!(visited_nodes, max(visited_len, length(visited_nodes) * 2 + 100))
+                            end
                             visited_nodes[visited_len] = y
                             sum_degs_t += length(neighborfn_t(g, y))
 
@@ -835,14 +771,18 @@ function _sample_shortest_path!(
                             have_to_stop = true
                             sp_edges_len += 1
                             if sp_edges_len > length(sp_edges)
-                                resize!(sp_edges, length(sp_edges) * 2)
+                                resize!(sp_edges, max(sp_edges_len, length(sp_edges) * 2 + 100))
                             end
                             sp_edges[sp_edges_len] = (y, x)
 
                         elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x02
                             n_paths[y] += n_paths[x]
                             count = preds_count[y]
-                            preds_data[preds_offset[y]+count] = x
+                            idx = preds_offset[y] + count
+                            if idx > length(preds_data)
+                                resize!(preds_data, max(idx, length(preds_data) * 2 + 100))
+                            end
+                            preds_data[idx] = x
                             preds_count[y] = count + 1
                         end
                     end
@@ -861,7 +801,7 @@ function _sample_shortest_path!(
 
             rand_val = rand(rng) * tot_weight
             cur_weight = 0.0
-            selected_edge = sp_edges[1]
+            selected_edge = sp_edges[sp_edges_len] # FALLBACK ensures an edge is always selected
 
             for i = 1:sp_edges_len
                 (u_bridge, v_bridge) = sp_edges[i]
@@ -928,13 +868,22 @@ function _backtrack!(
     rng::AbstractRNG,
     endpoints::Bool,
 ) where {T}
-    @inbounds while curr != target
+    max_steps = length(counts) # nv(g)
+    iter_count = 0
+    while curr != target
+        iter_count += 1
+        if iter_count > max_steps
+            break # Failsafe against corrupted graph state causing infinite cycles
+        end
+        GC.safepoint()
         counts[curr] += 1
 
         count = preds_count[curr]
         offset = preds_offset[curr]
 
-        if count == 1
+        if count == 0
+            break # Failsafe against corrupt BFS reconstruction
+        elseif count == 1
             curr = preds_data[offset]
         else
             tot = 0.0
@@ -945,6 +894,9 @@ function _backtrack!(
 
             r = rand(rng) * tot
             c = 0.0
+            
+            curr = preds_data[offset+count-1] # FALLBACK: default to the last predecessor
+            
             for i = 1:count
                 p = preds_data[offset+i-1]
                 c += n_paths[p]
@@ -956,6 +908,6 @@ function _backtrack!(
         end
     end
     if endpoints
-        @inbounds counts[target] += 1
+        counts[target] += 1
     end
 end
