@@ -211,13 +211,13 @@ function kadabra_centrality(
 
     if parallel
         nthreads = Threads.nthreads()
-        println("[MAIN] Starting parallel KADABRA with $nthreads tasks.")
+        # println("[MAIN] Starting parallel KADABRA with $nthreads tasks.")
         
         approx_local = [zeros(Int, n) for _ = 1:nthreads]
         n_pairs = Threads.Atomic{Int}(0)
         
         tau_per_thread = cld(tau, nthreads)
-        println("[MAIN] Target omega = $omega, tau = $tau. Each task will do $tau_per_thread pairs in Phase 1.")
+        # println("[MAIN] Target omega = $omega, tau = $tau. Each task will do $tau_per_thread pairs in Phase 1.")
 
         stop_flag = Threads.Atomic{Bool}(false)
         check_lock = Threads.SpinLock()
@@ -238,7 +238,7 @@ function kadabra_centrality(
             
                     local t_rng = Random.Xoshiro(seed)
 
-                    println("[TASK $tid] Workspace-ID: $(objectid(ws)), Ball-ID: $(objectid(ws.ball_indicator))")
+                    # println("[TASK $tid] Workspace-ID: $(objectid(ws)), Ball-ID: $(objectid(ws.ball_indicator))")
 
                     # --- PHASE 1 ---
                     for _ = 1:tau_per_thread
@@ -687,10 +687,10 @@ function _sample_shortest_path!(
         iter_count = 0
         while !have_to_stop && (cur_s_len > 0 && cur_t_len > 0)
             iter_count += 1
-            if iter_count > 1000000
-                println("INFINITE LOOP IN BFS! cur_s_len=", cur_s_len, " cur_t_len=", cur_t_len, " s=", s, " t=", t)
-                break
-            end
+            # if iter_count > 1000000
+            #     println("INFINITE LOOP IN BFS! cur_s_len=", cur_s_len, " cur_t_len=", cur_t_len, " s=", s, " t=", t)
+            #     break
+            # end
             GC.safepoint()
             if sum_degs_s <= sum_degs_t
                 sum_degs_s = 0
@@ -712,9 +712,9 @@ function _sample_shortest_path!(
                             next_s[next_s_len] = y
 
                             visited_len += 1
-                            if visited_len > length(visited_nodes)
-                                println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
-                            end
+                            # if visited_len > length(visited_nodes)
+                            #     println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
+                            # end
                             visited_nodes[visited_len] = y
                             sum_degs_s += length(neighborfn_s(g, y))
 
@@ -755,9 +755,9 @@ function _sample_shortest_path!(
                             next_t[next_t_len] = y
 
                             visited_len += 1
-                            if visited_len > length(visited_nodes)
-                                println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
-                            end
+                            # if visited_len > length(visited_nodes)
+                            #     println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
+                            # end
                             visited_nodes[visited_len] = y
                             sum_degs_t += length(neighborfn_t(g, y))
 
