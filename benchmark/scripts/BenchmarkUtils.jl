@@ -35,7 +35,11 @@ function load_graph_from_edgelist(filepath::String, is_directed::Bool)
     edges_list = Tuple{Int,Int}[]
     max_node = 0
     for line in eachline(filepath)
-        parts = split(strip(line))
+        line = strip(line)
+        if isempty(line) || startswith(line, "#") || startswith(line, "%")
+            continue
+        end
+        parts = split(line)
         if length(parts) >= 2
             u = parse(Int, parts[1])
             v = parse(Int, parts[2])
