@@ -4,6 +4,7 @@ using LinearAlgebra
 using SparseArrays
 using Random
 using Flux
+using Graphs
 
 export compute_degree_masses,
     compute_pagerank_feature,
@@ -11,10 +12,55 @@ export compute_degree_masses,
     BRAVAModel,
     PairwiseDataLoader,
     margin_ranking_loss,
-    brava_centrality
+    brava_centrality,
+    brava_clique_mask
 
 # ==============================================================================
-# 1. Multi-hop Degree Mass Pipeline
+# 1. Preprocessing Heuristics
+# ==============================================================================
+
+"""
+    brava_clique_mask(g::AbstractGraph)
+
+Returns a `Vector{Float32}` of length `nv(g)` where the value is 0.0f0 for pruned nodes
+and 1.0f0 for kept nodes, following the BRAVA clique-neighborhood preprocessing rule.
+"""
+function brava_clique_mask(g::AbstractGraph)
+    N = nv(g)
+    mask = ones(Float32, N)
+    
+    for v in 1:N
+        if indegree(g, v) == 0 || outdegree(g, v) == 0
+            mask[v] = 0.0f0
+            continue
+        end
+        
+        in_nodes = inneighbors(g, v)
+        out_nodes = outneighbors(g, v)
+        
+        is_clique = true
+        for u in in_nodes
+            for w in out_nodes
+                if w != u && !has_edge(g, u, w)
+                    is_clique = false
+                    break
+                end
+            end
+            if !is_clique
+                break
+            end
+        end
+        
+        if is_clique
+            mask[v] = 0.0f0
+        end
+    end
+    
+    return mask
+end
+
+# ==============================================================================
+# 2. Multi-hop Degree Mass Pipeline
 # ==============================================================================
 
 """

@@ -83,6 +83,11 @@ function train()
         A = Float32.(sparse(g))
         A_t = A'
 
+        # Apply preprocessing heuristic
+        mask = brava_clique_mask(g)
+        A = spdiagm(mask) * A
+        A_t = spdiagm(mask) * A_t
+
         pr_feat = compute_pagerank_feature(A)
 
         X_out = compute_degree_masses(A, pr_feat, 6)
