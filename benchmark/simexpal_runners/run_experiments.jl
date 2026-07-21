@@ -66,8 +66,8 @@ function main()
 
         input_file = parsed_args["input_file"]
         output_file = parsed_args["output_file"]
-        threads = parsed_args["threads"]
-        # println("Aktive Threads: ", Threads.nthreads())
+        threads = Threads.nthreads()
+        println("Aktive Threads: ", Threads.nthreads())
         k = parsed_args["k"]
         delta = parsed_args["delta"]
         epsilon = parsed_args["epsilon"]
@@ -94,6 +94,7 @@ function main()
             dummy_g_raw
 
         if algo == "kadabra"
+            
             Main.kadabra_centrality(
                 dummy_g,
                 k,
@@ -112,6 +113,7 @@ function main()
             )
         end
         # END WARMUP
+        println("Warmup done")
 
         if algo == "kadabra"
             # Start timing

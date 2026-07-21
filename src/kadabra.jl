@@ -211,96 +211,108 @@ function kadabra_centrality(
 
     if parallel
         nthreads = Threads.nthreads()
+        println("[MAIN] Starting parallel KADABRA with $nthreads tasks.")
+        
         approx_local = [zeros(Int, n) for _ = 1:nthreads]
-        workspaces = [KadabraWorkspace(g) for _ = 1:nthreads]
         n_pairs = Threads.Atomic{Int}(0)
-
-        # Allocate RNG state ONCE so it persists between Phase 1 and Phase 2
-        thread_seeds = [rand(base_rng, UInt64) for _ = 1:nthreads]
-        rng_states = [Random.Xoshiro(seed) for seed in thread_seeds]
-
+        
         tau_per_thread = cld(tau, nthreads)
+        println("[MAIN] Target omega = $omega, tau = $tau. Each task will do $tau_per_thread pairs in Phase 1.")
 
-        # PHASE 1
-        Threads.@threads :static for tid = 1:nthreads
-            ws = workspaces[tid]
-            counts = approx_local[tid]
-            t_rng = rng_states[tid]
-
-            for _ = 1:tau_per_thread
-                s = rand(t_rng, 1:n)
-                t = rand(t_rng, 1:n)
-                while s == t
-                    t = rand(t_rng, 1:n)
-                end
-                sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints = endpoints)
-            end
-        end
-        n_pairs[] = tau_per_thread * nthreads
-
-        # PHASE 2
         stop_flag = Threads.Atomic{Bool}(false)
         check_lock = Threads.SpinLock()
         check_interval = max(1000, tau ÷ 10)
 
-        Threads.@threads :static for tid = 1:nthreads
-            ws = workspaces[tid]
-            counts = approx_local[tid]
-            t_rng = rng_states[tid] # Continue with the same RNG instance
+        # Generate seeds beforehand to avoid base_rng thread-safety issues
+        thread_seeds = [rand(base_rng, UInt64) for _ in 1:nthreads]
+        tasks = Vector{Task}(undef, nthreads)
+        
+        for i = 1:nthreads
+            # $ interpolation freezes $i and $(thread_seeds[i]) immediately 
+            # into the spawned task closure, preventing the closure bug.
+            tasks[i] = let tid = i, seed = thread_seeds[i]
+                Threads.@spawn begin
+                    local ws = KadabraWorkspace(g)
+            
+                    local counts = approx_local[tid]
+            
+                    local t_rng = Random.Xoshiro(seed)
 
-            local_pairs = 0
+                    println("[TASK $tid] Workspace-ID: $(objectid(ws)), Ball-ID: $(objectid(ws.ball_indicator))")
 
-            while !stop_flag[] && n_pairs[] < omega
-                for _ = 1:check_interval
-                    # yield() REMOVED
-                    s = rand(t_rng, 1:n)
-                    t = rand(t_rng, 1:n)
-                    while s == t
+                    # --- PHASE 1 ---
+                    for _ = 1:tau_per_thread
+                        s = rand(t_rng, 1:n)
                         t = rand(t_rng, 1:n)
+                        while s == t
+                            t = rand(t_rng, 1:n)
+                        end
+                        sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints = endpoints)
                     end
-                    sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints = endpoints)
-                    local_pairs += 1
-                end
+                    
+                    Threads.atomic_add!(n_pairs, tau_per_thread)
 
-                Threads.atomic_add!(n_pairs, local_pairs)
-                local_pairs = 0
+                    # --- PHASE 2 ---
+                    local_pairs = 0
+                    while !stop_flag[] && n_pairs[] < omega
+                        for _ = 1:check_interval
+                            s = rand(t_rng, 1:n)
+                            t = rand(t_rng, 1:n)
+                            while s == t
+                                t = rand(t_rng, 1:n)
+                            end
+                            sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints = endpoints)
+                            local_pairs += 1
+                        end
 
-                if trylock(check_lock)
-                    try
-                        fill!(global_approx, 0)
-                        for t_approx in approx_local
-                            for v = 1:n
-                                global_approx[v] += t_approx[v]
+                        Threads.atomic_add!(n_pairs, local_pairs)
+                        local_pairs = 0
+
+                        if trylock(check_lock)
+                            try
+                                if stop_flag[]
+                                    continue
+                                end
+
+                                fill!(global_approx, 0)
+                                for t_approx in approx_local
+                                    for v = 1:n
+                                        global_approx[v] += t_approx[v]
+                                    end
+                                end
+
+                                if absolute
+                                    for j = 1:union_sample; top_k_nodes[j] = j; end
+                                else
+                                    copyto!(top_k_nodes, 1:n)
+                                    partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev = true)
+                                end
+
+                                if check_finished(
+                                    global_approx, view(top_k_nodes, 1:union_sample),
+                                    n_pairs[], k, err, delta_l_guess, delta_u_guess,
+                                    omega, absolute, bet_buf, err_l_buf, err_u_buf
+                                )
+                                    Threads.atomic_xchg!(stop_flag, true)
+                                end
+                            finally
+                                unlock(check_lock)
                             end
                         end
-
-                        if absolute
-                            for i = 1:union_sample; top_k_nodes[i] = i; end
-                        else
-                            copyto!(top_k_nodes, 1:n)
-                            partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev = true)
-                        end
-
-                        if check_finished(
-                            global_approx, view(top_k_nodes, 1:union_sample),
-                            n_pairs[], k, err, delta_l_guess, delta_u_guess,
-                            omega, absolute, bet_buf, err_l_buf, err_u_buf
-                        )
-                            Threads.atomic_xchg!(stop_flag, true)
-                        end
-                    finally
-                        unlock(check_lock)
                     end
                 end
             end
         end
 
+        # Wait for all worker tasks to finish safely
+        wait.(tasks)
+
+        # Final accurate aggregation of all counts
         fill!(global_approx, 0)
         for t_approx in approx_local
             global_approx .+= t_approx
         end
         final_n_pairs = n_pairs[]
-
     else
         # Sequential block remains mostly the same, ensuring one RNG stream is used
         counts = global_approx
@@ -579,7 +591,7 @@ function KadabraWorkspace(g::AbstractGraph{T}) where {T}
     cur_t = zeros(T, n)
     next_t = zeros(T, n)
 
-    sp_edges = fill((zero(T), zero(T)), 100) # Keep small, reallocates rarely
+    sp_edges = fill((zero(T), zero(T)), max(1, ne(g)))
     visited_nodes = zeros(T, n + 2)
 
     return KadabraWorkspace{T}(
@@ -693,21 +705,15 @@ function _sample_shortest_path!(
 
                             count = preds_count[y]
                             idx = preds_offset[y] + count
-                            if idx > length(preds_data)
-                                resize!(preds_data, max(idx, length(preds_data) * 2 + 100))
-                            end
                             preds_data[idx] = x
                             preds_count[y] = count + 1
 
                             next_s_len += 1
-                            if next_s_len > length(next_s)
-                                resize!(next_s, max(next_s_len, length(next_s) * 2 + 100))
-                            end
                             next_s[next_s_len] = y
 
                             visited_len += 1
                             if visited_len > length(visited_nodes)
-                                resize!(visited_nodes, max(visited_len, length(visited_nodes) * 2 + 100))
+                                println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
                             end
                             visited_nodes[visited_len] = y
                             sum_degs_s += length(neighborfn_s(g, y))
@@ -715,18 +721,12 @@ function _sample_shortest_path!(
                         elseif ball_indicator[y] == 0x02
                             have_to_stop = true
                             sp_edges_len += 1
-                            if sp_edges_len > length(sp_edges)
-                                resize!(sp_edges, max(sp_edges_len, length(sp_edges) * 2 + 100))
-                            end
                             sp_edges[sp_edges_len] = (x, y)
 
                         elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x01
                             n_paths[y] += n_paths[x]
                             count = preds_count[y]
                             idx = preds_offset[y] + count
-                            if idx > length(preds_data)
-                                resize!(preds_data, max(idx, length(preds_data) * 2 + 100))
-                            end
                             preds_data[idx] = x
                             preds_count[y] = count + 1
                         end
@@ -748,21 +748,15 @@ function _sample_shortest_path!(
 
                             count = preds_count[y]
                             idx = preds_offset[y] + count
-                            if idx > length(preds_data)
-                                resize!(preds_data, max(idx, length(preds_data) * 2 + 100))
-                            end
                             preds_data[idx] = x
                             preds_count[y] = count + 1
 
                             next_t_len += 1
-                            if next_t_len > length(next_t)
-                                resize!(next_t, max(next_t_len, length(next_t) * 2 + 100))
-                            end
                             next_t[next_t_len] = y
 
                             visited_len += 1
                             if visited_len > length(visited_nodes)
-                                resize!(visited_nodes, max(visited_len, length(visited_nodes) * 2 + 100))
+                                println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
                             end
                             visited_nodes[visited_len] = y
                             sum_degs_t += length(neighborfn_t(g, y))
@@ -770,18 +764,12 @@ function _sample_shortest_path!(
                         elseif ball_indicator[y] == 0x01
                             have_to_stop = true
                             sp_edges_len += 1
-                            if sp_edges_len > length(sp_edges)
-                                resize!(sp_edges, max(sp_edges_len, length(sp_edges) * 2 + 100))
-                            end
                             sp_edges[sp_edges_len] = (y, x)
 
                         elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x02
                             n_paths[y] += n_paths[x]
                             count = preds_count[y]
                             idx = preds_offset[y] + count
-                            if idx > length(preds_data)
-                                resize!(preds_data, max(idx, length(preds_data) * 2 + 100))
-                            end
                             preds_data[idx] = x
                             preds_count[y] = count + 1
                         end
