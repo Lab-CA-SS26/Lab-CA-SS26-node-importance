@@ -1,0 +1,5 @@
+graph,k,threads,julia,cpp,speedup_julia_vs_cpp
+amazon,0,1,7.071444042,,
+cit-Patents,0,1,20.174602,,
+com-lj,0,1,23.270398125,,
+com-youtube,0,1,5.94665275,,
