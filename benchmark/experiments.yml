@@ -187,10 +187,10 @@ matrix:
     #   instsets: [TestInstances_Undirected]
     #   variants: [undirected, t1, k0, err1] # brava doesn't use threads/k/err, but we use defaults to satisfy simexpal axes
 
-    # # Run undirected graphs for brandes
-    # - experiments: [brandes-julia]
-    #   instsets: [TestInstances_Undirected]
-    #   variants: [undirected, t1, k0, err1] # brandes doesn't use threads/k/err, but we use defaults to satisfy simexpal axes
+    # Run undirected graphs for brandes
+    - experiments: [brandes-julia]
+      instsets: [TestInstances_Undirected]
+      variants: [undirected, t1, k0, err1] # brandes doesn't use threads/k/err, but we use defaults to satisfy simexpal axes
 
     # # Run directed graphs
     # - experiments: [kadabra-cpp, kadabra-julia, brava-julia]
