@@ -15,7 +15,7 @@ using json = nlohmann::json;
 using namespace std;
 
 void print_usage() {
-    cerr << "Usage: run_experiments -i <input_file> -o <output_file> -threads <int> -k <int> -delta <float> -epsilon <float> -a <algorithm> -v <implementation_language> [-d]" << endl;
+    cerr << "Usage: run_experiments -i <input_file> -o <output_file> -threads <int> -k <int> -delta <float> -epsilon <float> -a <algorithm> -v <implementation_language> [-s <seed>] [-d]" << endl;
     cerr << "  -d: treat graph as directed (optional)" << endl;
 }
 
@@ -42,6 +42,7 @@ int main(int argc, char* argv[]) {
         cerr << "Error: C++ version only supports 'kadabra' algorithm." << endl;
         return 1;
     }
+    const auto seed = clp.value<int>("s", 0);
 
     // Set threads
     omp_set_num_threads(threads);
@@ -55,6 +56,10 @@ int main(int argc, char* argv[]) {
 
     // Run KADABRA and measure time
     auto start = chrono::high_resolution_clock::now();
+    
+    if (seed != 0) {
+        G.set_seed((uint32_t)seed);
+    }
     
     G.run((uint32_t) k, delta, epsilon);
 
@@ -72,6 +77,7 @@ int main(int argc, char* argv[]) {
     j["parameters"]["delta"] = delta;
     j["parameters"]["epsilon"] = epsilon;
     j["parameters"]["directed"] = directed;
+    j["parameters"]["seed"] = seed;
     j["io_time_seconds"] = io_time;
 
     j["execution_time_seconds"] = execution_time;
