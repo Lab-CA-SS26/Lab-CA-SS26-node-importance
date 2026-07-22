@@ -115,6 +115,9 @@ function main()
         # END WARMUP
         println("Warmup done")
 
+        local lower_bounds = nothing
+        local upper_bounds = nothing
+
         if algo == "kadabra"
             # Start timing
             start_time = time_ns()
@@ -129,6 +132,8 @@ function main()
                 endpoints = false,
             )
             centralities = res.centralities
+            lower_bounds = res.lower_bounds
+            upper_bounds = res.upper_bounds
             n_samples = res.n_samples
 
             end_time = time_ns()
@@ -176,12 +181,21 @@ function main()
             "centralities" => Dict{String,Float64}(),
         )
 
+        if lower_bounds !== nothing
+            results["lower_bounds"] = Dict{String,Float64}()
+            results["upper_bounds"] = Dict{String,Float64}()
+        end
+
         # Convert centralities array/dict to the expected schema
         for (v, cent) in enumerate(centralities)
             if cent > 0.0
                 # Assuming 1-based indexing for vertices in Julia, converting to 0-based for JSON?
                 # Or just use the 1-based vertex ID as string.
                 results["centralities"][string(v)] = cent
+                if lower_bounds !== nothing
+                    results["lower_bounds"][string(v)] = lower_bounds[v]
+                    results["upper_bounds"][string(v)] = upper_bounds[v]
+                end
             end
         end
 
