@@ -35,6 +35,7 @@ class Probabilistic : public Graph
         inline double get_centrality(const uint32_t v) const {
             return (double) approx[v] / n_pairs;
         }
+        void set_seed(uint32_t seed) { m_seed = seed; }
         inline long get_n_pairs() const {
             return n_pairs;
         }
@@ -73,6 +74,7 @@ class Probabilistic : public Graph
         double *time_critical;
         double *time_comp_finished;
         double omega;
+        uint32_t m_seed = 42;
 };
 
 
