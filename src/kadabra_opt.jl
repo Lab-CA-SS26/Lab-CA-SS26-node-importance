@@ -8,68 +8,6 @@ using Random
 Computes an upper bound on the diameter of the graph using the AllCCUpperBound technique
 (Borassi et al. 2015). Highly efficient for both directed and undirected graphs.
 """
-
-mutable struct KadabraWorkspace{T<:Integer}
-    ball_indicator::Vector{UInt8}
-    n_paths::Vector{Float64}
-    dist::Vector{Int}
-
-    preds_data::Vector{T}
-    preds_count::Vector{Int}
-    preds_offset::Vector{Int}
-
-    cur_s::Vector{T}
-    next_s::Vector{T}
-    cur_t::Vector{T}
-    next_t::Vector{T}
-
-    sp_edges::Vector{Tuple{T,T}}
-    visited_nodes::Vector{T}
-    local_top_k::Vector{T}
-    min_count_local::Base.RefValue{Int}
-end
-
-function KadabraWorkspace(g::AbstractGraph{T}) where {T}
-    n = nv(g)
-
-    preds_offset = zeros(Int, n + 1)
-    offset = 1
-    for v = 1:n
-        preds_offset[v] = offset
-        # maximum predecessors a node can have in a shortest path BFS is bounded by its degree
-        offset += max(indegree(g, v), outdegree(g, v))
-    end
-    preds_offset[n+1] = offset
-
-    preds_data = zeros(T, max(1, offset - 1))
-    preds_count = zeros(Int, n)
-
-    cur_s = zeros(T, n)
-    next_s = zeros(T, n)
-    cur_t = zeros(T, n)
-    next_t = zeros(T, n)
-
-    sp_edges = fill((zero(T), zero(T)), max(1, ne(g)))
-    visited_nodes = zeros(T, n + 2)
-
-    return KadabraWorkspace{T}(
-        zeros(UInt8, n),
-        zeros(Float64, n),
-        fill(typemax(Int), n),
-        preds_data,
-        preds_count,
-        preds_offset,
-        cur_s,
-        next_s,
-        cur_t,
-        next_t,
-        sp_edges,
-        visited_nodes,
-        zeros(T, 0), # initialized later in kadabra_centrality
-        Ref(0)
-    )
-end
-
 function estimate_diameter(g::AbstractGraph)
     n = nv(g)
     n == 0 && return 0.0
@@ -232,118 +170,6 @@ estimated betweenness is within an additive error bound with high probability.
 - `NamedTuple`: A named tuple containing three `Vector{Float64}`: `centralities`, `lower_bounds`, 
   and `upper_bounds` for each vertex.
 """
-function _kadabra_worker_task!(
-    g::AbstractGraph{T},
-    n::Integer,
-    seed::UInt64,
-    tid::Integer,
-    n_pairs::Threads.Atomic{Int},
-    tau_per_thread::Integer,
-    omega::Float64,
-    stop_flag::Threads.Atomic{Bool},
-    check_lock::Threads.SpinLock,
-    global_approx::Vector{Int},
-    top_k_nodes::Vector{Int},
-    union_sample::Integer,
-    absolute::Bool,
-    k::Integer,
-    err::Float64,
-    delta_l_guess::Vector{Float64},
-    delta_u_guess::Vector{Float64},
-    bet_buf::Vector{Float64},
-    err_l_buf::Vector{Float64},
-    err_u_buf::Vector{Float64},
-    endpoints::Bool,
-    workspaces::Vector{KadabraWorkspace{T}}
-) where {T}
-    local ws = workspaces[tid]
-    local counts = global_approx
-    local t_rng = Random.Xoshiro(seed)
-
-    # --- PHASE 1 ---
-    for _ = 1:tau_per_thread
-        s = rand(t_rng, 1:n)
-        t = rand(t_rng, 1:n)
-        while s == t
-            t = rand(t_rng, 1:n)
-        end
-        sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints = endpoints)
-    end
-    
-    Threads.atomic_add!(n_pairs, tau_per_thread)
-
-    # --- PHASE 2 ---
-    local_pairs = 0
-    while !stop_flag[] && n_pairs[] < omega
-        check_interval_dynamic = max(500, min(10000, cld(ceil(Int, omega - n_pairs[]), 2 * Threads.nthreads())))
-        for _ = 1:check_interval_dynamic
-            s = rand(t_rng, 1:n)
-            t = rand(t_rng, 1:n)
-            while s == t
-                t = rand(t_rng, 1:n)
-            end
-            sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints = endpoints)
-            local_pairs += 1
-        end
-
-        Threads.atomic_add!(n_pairs, local_pairs)
-        local_pairs = 0
-
-        if trylock(check_lock)
-            try
-                if stop_flag[]
-                    continue
-                end
-
-                if absolute
-                    @inbounds for j = 1:union_sample; top_k_nodes[j] = j; end
-                else
-                    # Aggregate local top Ks
-                    # We can use top_k_nodes as a buffer initially since it has size union_sample
-                    # We collect all candidates
-                    candidates = Int[]
-                    for i = 1:Threads.nthreads()
-                        tk = workspaces[i].local_top_k
-                        for j = 1:length(tk)
-                            if tk[j] > 0
-                                push!(candidates, tk[j])
-                            end
-                        end
-                    end
-                    unique!(candidates)
-                    
-                    num_active = length(candidates)
-                    if num_active < union_sample
-                        copyto!(top_k_nodes, 1, candidates, 1, num_active)
-                        idx = num_active + 1
-                        v = 1
-                        while idx <= union_sample && v <= n
-                            if global_approx[v] == 0
-                                top_k_nodes[idx] = v
-                                idx += 1
-                            end
-                            v += 1
-                        end
-                    else
-                        partialsort!(candidates, 1:union_sample, by = x -> global_approx[x], rev = true)
-                        copyto!(top_k_nodes, 1, candidates, 1, union_sample)
-                    end
-                end
-
-                if check_finished(
-                    global_approx, view(top_k_nodes, 1:union_sample),
-                    n_pairs[], k, err, delta_l_guess, delta_u_guess,
-                    omega, absolute, bet_buf, err_l_buf, err_u_buf
-                )
-                    Threads.atomic_xchg!(stop_flag, true)
-                end
-            finally
-                unlock(check_lock)
-            end
-        end
-    end
-end
-
 function kadabra_centrality(
     g::AbstractGraph{T},
     k::Int,
@@ -387,51 +213,112 @@ function kadabra_centrality(
         nthreads = Threads.nthreads()
         # println("[MAIN] Starting parallel KADABRA with $nthreads tasks.")
         
-        global_approx = zeros(Int, n)
-        workspaces = [KadabraWorkspace(g) for _ = 1:nthreads]
-        for w in workspaces
-            w.local_top_k = zeros(Int, union_sample)
-        end
-        
-        # Buffer arrays for evaluating convergence (allocated per worker task? 
-        # No, these are used inside check_lock, so shared is fine)
-        bet_buf = zeros(Float64, union_sample)
-        err_l_buf = zeros(Float64, union_sample)
-        err_u_buf = zeros(Float64, union_sample)
-
-        stop_flag = Threads.Atomic{Bool}(false)
-        check_lock = Threads.SpinLock()
-        check_interval = max(1000, tau ÷ 10)
-
+        approx_local = [zeros(Int, n) for _ = 1:nthreads]
         n_pairs = Threads.Atomic{Int}(0)
         
         tau_per_thread = cld(tau, nthreads)
         # println("[MAIN] Target omega = $omega, tau = $tau. Each task will do $tau_per_thread pairs in Phase 1.")
+
+        stop_flag = Threads.Atomic{Bool}(false)
+        check_lock = Threads.SpinLock()
+        check_interval = max(1000, tau ÷ 10)
 
         # Generate seeds beforehand to avoid base_rng thread-safety issues
         thread_seeds = [rand(base_rng, UInt64) for _ in 1:nthreads]
         tasks = Vector{Task}(undef, nthreads)
         
         for i = 1:nthreads
-            tasks[i] = Threads.@spawn _kadabra_worker_task!(
-                g, n, thread_seeds[i], i, n_pairs, tau_per_thread,
-                omega, stop_flag, check_lock, global_approx,
-                top_k_nodes, union_sample, absolute, k, err, delta_l_guess,
-                delta_u_guess, bet_buf, err_l_buf, err_u_buf, endpoints, workspaces
-            )
+            # $ interpolation freezes $i and $(thread_seeds[i]) immediately 
+            # into the spawned task closure, preventing the closure bug.
+            tasks[i] = let tid = i, seed = thread_seeds[i]
+                Threads.@spawn begin
+                    local ws = KadabraWorkspace(g)
+            
+                    local counts = approx_local[tid]
+            
+                    local t_rng = Random.Xoshiro(seed)
+
+                    # println("[TASK $tid] Workspace-ID: $(objectid(ws)), Ball-ID: $(objectid(ws.ball_indicator))")
+
+                    # --- PHASE 1 ---
+                    for _ = 1:tau_per_thread
+                        s = rand(t_rng, 1:n)
+                        t = rand(t_rng, 1:n)
+                        while s == t
+                            t = rand(t_rng, 1:n)
+                        end
+                        sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints = endpoints)
+                    end
+                    
+                    Threads.atomic_add!(n_pairs, tau_per_thread)
+
+                    # --- PHASE 2 ---
+                    local_pairs = 0
+                    while !stop_flag[] && n_pairs[] < omega
+                        for _ = 1:check_interval
+                            s = rand(t_rng, 1:n)
+                            t = rand(t_rng, 1:n)
+                            while s == t
+                                t = rand(t_rng, 1:n)
+                            end
+                            sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints = endpoints)
+                            local_pairs += 1
+                        end
+
+                        Threads.atomic_add!(n_pairs, local_pairs)
+                        local_pairs = 0
+
+                        if trylock(check_lock)
+                            try
+                                if stop_flag[]
+                                    continue
+                                end
+
+                                fill!(global_approx, 0)
+                                for t_approx in approx_local
+                                    for v = 1:n
+                                        global_approx[v] += t_approx[v]
+                                    end
+                                end
+
+                                if absolute
+                                    for j = 1:union_sample; top_k_nodes[j] = j; end
+                                else
+                                    copyto!(top_k_nodes, 1:n)
+                                    partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev = true)
+                                end
+
+                                if check_finished(
+                                    global_approx, view(top_k_nodes, 1:union_sample),
+                                    n_pairs[], k, err, delta_l_guess, delta_u_guess,
+                                    omega, absolute, bet_buf, err_l_buf, err_u_buf
+                                )
+                                    Threads.atomic_xchg!(stop_flag, true)
+                                end
+                            finally
+                                unlock(check_lock)
+                            end
+                        end
+                    end
+                end
+            end
         end
 
         # Wait for all worker tasks to finish safely
         wait.(tasks)
+
+        # Final accurate aggregation of all counts
+        fill!(global_approx, 0)
+        for t_approx in approx_local
+            global_approx .+= t_approx
+        end
         final_n_pairs = n_pairs[]
     else
-        # Single-threaded fallback
-        s_rng = rng === nothing ? Random.default_rng() : rng
+        # Sequential block remains mostly the same, ensuring one RNG stream is used
         counts = global_approx
         ws = KadabraWorkspace(g)
-        ws.local_top_k = zeros(Int, union_sample)
+        s_rng = rng === nothing ? Random.default_rng() : rng
 
-        # --- PHASE 1 ---
         for _ = 1:tau
             s = rand(s_rng, 1:n)
             t = rand(s_rng, 1:n)
@@ -610,13 +497,13 @@ function check_finished(
 )
     n_tracked = length(top_k_nodes)
 
-    @inbounds for i = 1:n_tracked
+    for i = 1:n_tracked
         v = top_k_nodes[i]
         # clamp fängt asynchrone Auslesefehler ab und schützt vor DomainErrors
         bet[i] = clamp(approx_counts[v] / n_pairs, 0.0, 1.0)
     end
 
-    @inbounds for i = 1:n_tracked
+    for i = 1:n_tracked
         v = top_k_nodes[i]
         err_l[i] = compute_f(bet[i], n_pairs, delta_l_guess[v], omega)
         err_u[i] = compute_g(bet[i], n_pairs, delta_u_guess[v], omega)
@@ -625,12 +512,12 @@ function check_finished(
     all_finished = true
 
     if absolute
-        @inbounds for i = 1:k
+        for i = 1:k
             finished = (err_l[i] < err) && (err_u[i] < err)
             all_finished = all_finished && finished
         end
     else
-        @inbounds for i = 1:n_tracked
+        for i = 1:n_tracked
             if i == 1
                 if n_tracked > 1
                     finished = (bet[1] - err_l[1]) > (bet[2] + err_u[2])
@@ -666,7 +553,62 @@ end
 # Sampling
 # ---------------------------------------------------------------------------
 
+struct KadabraWorkspace{T<:Integer}
+    ball_indicator::Vector{UInt8}
+    n_paths::Vector{Float64}
+    dist::Vector{Int}
 
+    preds_data::Vector{T}
+    preds_count::Vector{Int}
+    preds_offset::Vector{Int}
+
+    cur_s::Vector{T}
+    next_s::Vector{T}
+    cur_t::Vector{T}
+    next_t::Vector{T}
+
+    sp_edges::Vector{Tuple{T,T}}
+    visited_nodes::Vector{T}
+end
+
+function KadabraWorkspace(g::AbstractGraph{T}) where {T}
+    n = nv(g)
+
+    preds_offset = zeros(Int, n + 1)
+    offset = 1
+    for v = 1:n
+        preds_offset[v] = offset
+        # maximum predecessors a node can have in a shortest path BFS is bounded by its degree
+        offset += max(indegree(g, v), outdegree(g, v))
+    end
+    preds_offset[n+1] = offset
+
+    preds_data = zeros(T, max(1, offset - 1))
+    preds_count = zeros(Int, n)
+
+    cur_s = zeros(T, n)
+    next_s = zeros(T, n)
+    cur_t = zeros(T, n)
+    next_t = zeros(T, n)
+
+    sp_edges = fill((zero(T), zero(T)), max(1, ne(g)))
+    visited_nodes = zeros(T, n + 2)
+
+    return KadabraWorkspace{T}(
+        zeros(UInt8, n),
+        zeros(Float64, n),
+        fill(typemax(Int), n),
+        preds_data,
+        preds_count,
+        preds_offset,
+        cur_s,
+        next_s,
+        cur_t,
+        next_t,
+        sp_edges,
+        visited_nodes,
+    )
+end
 
 """
     sample_shortest_path!(counts::Vector{Int}, ws::KadabraWorkspace{T}, g, s, t[; endpoints=false])
@@ -684,7 +626,7 @@ function sample_shortest_path!(
     endpoints::Bool = false,
 ) where {T}
     s == t && return
-    _sample_shortest_path!(g, rng, s, t, counts, ws, outneighbors, inneighbors, outdegree, indegree, endpoints)
+    _sample_shortest_path!(g, rng, s, t, counts, ws, outneighbors, inneighbors, endpoints)
 end
 
 """
@@ -705,10 +647,8 @@ The nodes on the resulting path are incremented directly in the `counts` array w
     ws::KadabraWorkspace{T},
     neighborfn_s::F1,
     neighborfn_t::F2,
-    degreefn_s::F3,
-    degreefn_t::F4,
     endpoints::Bool,
-) where {T<:Integer,F1,F2,F3,F4}
+) where {T<:Integer,F1,F2}
     ball_indicator = ws.ball_indicator
     n_paths = ws.n_paths
     dist = ws.dist
@@ -729,7 +669,7 @@ The nodes on the resulting path are incremented directly in the `counts` array w
     cur_s[1] = s
     visited_len = 1
     visited_nodes[1] = s
-    sum_degs_s = degreefn_s(g, s)
+    sum_degs_s = length(neighborfn_s(g, s))
 
     ball_indicator[t] = 0x02
     n_paths[t] = 1.0
@@ -738,7 +678,7 @@ The nodes on the resulting path are incremented directly in the `counts` array w
     cur_t[1] = t
     visited_len += 1
     visited_nodes[visited_len] = t
-    sum_degs_t = degreefn_t(g, t)
+    sum_degs_t = length(neighborfn_t(g, t))
 
     sp_edges_len = 0
     have_to_stop = false
@@ -747,40 +687,50 @@ The nodes on the resulting path are incremented directly in the `counts` array w
         iter_count = 0
         while !have_to_stop && (cur_s_len > 0 && cur_t_len > 0)
             iter_count += 1
+            # if iter_count > 1000000
+            #     println("INFINITE LOOP IN BFS! cur_s_len=", cur_s_len, " cur_t_len=", cur_t_len, " s=", s, " t=", t)
+            #     break
+            # end
+
             if sum_degs_s <= sum_degs_t
                 sum_degs_s = 0
                 next_s_len = 0
-                @inbounds for i = 1:cur_s_len
+                for i = 1:cur_s_len
                     x = cur_s[i]
-                    @inbounds for y in neighborfn_s(g, x)
-                        if ball_indicator[y] == 0x00
-                            ball_indicator[y] = 0x01
-                            n_paths[y] = n_paths[x]
-                            dist[y] = dist[x] + 1
-
-                            count = preds_count[y]
-                            idx = preds_offset[y] + count
-                            preds_data[idx] = x
-                            preds_count[y] = count + 1
-
-                            next_s_len += 1
-                            next_s[next_s_len] = y
-
-                            visited_len += 1
-                            visited_nodes[visited_len] = y
-                            sum_degs_s += degreefn_s(g, y)
-
-                        elseif ball_indicator[y] == 0x02
-                            have_to_stop = true
-                            sp_edges_len += 1
-                            sp_edges[sp_edges_len] = (x, y)
-
-                        elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x01
-                            n_paths[y] += n_paths[x]
-                            count = preds_count[y]
-                            idx = preds_offset[y] + count
-                            preds_data[idx] = x
-                            preds_count[y] = count + 1
+                    for y in neighborfn_s(g, x)
+                        @inbounds begin
+                            if ball_indicator[y] == 0x00
+                                ball_indicator[y] = 0x01
+                                n_paths[y] = n_paths[x]
+                                dist[y] = dist[x] + 1
+    
+                                count = preds_count[y]
+                                idx = preds_offset[y] + count
+                                preds_data[idx] = x
+                                preds_count[y] = count + 1
+    
+                                next_s_len += 1
+                                next_s[next_s_len] = y
+    
+                                visited_len += 1
+                                # if visited_len > length(visited_nodes)
+                                #     println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
+                                # end
+                                visited_nodes[visited_len] = y
+                                sum_degs_s += length(neighborfn_s(g, y))
+    
+                            elseif ball_indicator[y] == 0x02
+                                have_to_stop = true
+                                sp_edges_len += 1
+                                sp_edges[sp_edges_len] = (x, y)
+    
+                            elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x01
+                                n_paths[y] += n_paths[x]
+                                count = preds_count[y]
+                                idx = preds_offset[y] + count
+                                preds_data[idx] = x
+                                preds_count[y] = count + 1
+                            end
                         end
                     end
                 end
@@ -790,37 +740,42 @@ The nodes on the resulting path are incremented directly in the `counts` array w
             else
                 sum_degs_t = 0
                 next_t_len = 0
-                @inbounds for i = 1:cur_t_len
+                for i = 1:cur_t_len
                     x = cur_t[i]
-                    @inbounds for y in neighborfn_t(g, x)
-                        if ball_indicator[y] == 0x00
-                            ball_indicator[y] = 0x02
-                            n_paths[y] = n_paths[x]
-                            dist[y] = dist[x] + 1
+                    for y in neighborfn_t(g, x)
+                        @inbounds begin
+                            if ball_indicator[y] == 0x00
+                                ball_indicator[y] = 0x02
+                                n_paths[y] = n_paths[x]
+                                dist[y] = dist[x] + 1
 
-                            count = preds_count[y]
-                            idx = preds_offset[y] + count
-                            preds_data[idx] = x
-                            preds_count[y] = count + 1
+                                count = preds_count[y]
+                                idx = preds_offset[y] + count
+                                preds_data[idx] = x
+                                preds_count[y] = count + 1
 
-                            next_t_len += 1
-                            next_t[next_t_len] = y
+                                next_t_len += 1
+                                next_t[next_t_len] = y
 
-                            visited_len += 1
-                            visited_nodes[visited_len] = y
-                            sum_degs_t += degreefn_t(g, y)
+                                visited_len += 1
+                                # if visited_len > length(visited_nodes)
+                                #     println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
+                                # end
+                                visited_nodes[visited_len] = y
+                                sum_degs_t += length(neighborfn_t(g, y))
 
-                        elseif ball_indicator[y] == 0x01
-                            have_to_stop = true
-                            sp_edges_len += 1
-                            sp_edges[sp_edges_len] = (y, x)
+                            elseif ball_indicator[y] == 0x01
+                                have_to_stop = true
+                                sp_edges_len += 1
+                                sp_edges[sp_edges_len] = (y, x)
 
-                        elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x02
-                            n_paths[y] += n_paths[x]
-                            count = preds_count[y]
-                            idx = preds_offset[y] + count
-                            preds_data[idx] = x
-                            preds_count[y] = count + 1
+                            elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x02
+                                n_paths[y] += n_paths[x]
+                                count = preds_count[y]
+                                idx = preds_offset[y] + count
+                                preds_data[idx] = x
+                                preds_count[y] = count + 1
+                            end
                         end
                     end
                 end
@@ -838,7 +793,7 @@ The nodes on the resulting path are incremented directly in the `counts` array w
 
             rand_val = rand(rng) * tot_weight
             cur_weight = 0.0
-            selected_edge = sp_edges[sp_edges_len] 
+            selected_edge = sp_edges[sp_edges_len] # FALLBACK ensures an edge is always selected
 
             for i = 1:sp_edges_len
                 (u_bridge, v_bridge) = sp_edges[i]
@@ -850,18 +805,24 @@ The nodes on the resulting path are incremented directly in the `counts` array w
             end
 
             _backtrack!(
+                counts,
                 selected_edge[1],
                 s,
-                ws,
-                counts,
+                preds_data,
+                preds_count,
+                preds_offset,
+                n_paths,
                 rng,
                 endpoints,
             )
             _backtrack!(
+                counts,
                 selected_edge[2],
                 t,
-                ws,
-                counts,
+                preds_data,
+                preds_count,
+                preds_offset,
+                n_paths,
                 rng,
                 endpoints,
             )
@@ -880,7 +841,7 @@ The nodes on the resulting path are incremented directly in the `counts` array w
 end
 
 """
-    _backtrack!(curr, target, ws, counts, changed_nodes, rng, endpoints)
+    _backtrack!(counts, curr, target, preds, n_paths, endpoints)
 
 Internal helper that reconstructs a single shortest path by backtracking from the `curr` node 
 towards the `target` node using the predecessor map `preds` generated during the BFS.
@@ -888,73 +849,32 @@ If multiple optimal predecessors exist, one is selected randomly weighted by the
 shortest paths `n_paths` arriving through that predecessor.
 The thread-local `counts` buffer is incremented in-place for every node visited.
 """
-function update_local_top_k!(
-    local_top_k::Vector{T},
-    v::T,
-    c::Int,
-    global_approx::Vector{Int},
-    min_count_local::Base.RefValue{Int}
-) where {T}
-    k = length(local_top_k)
-    # Check if already in top K
-    @inbounds for i = 1:k
-        if local_top_k[i] == v
-            return
-        end
-    end
-
-    # Replace the minimum
-    min_idx = 1
-    min_val = typemax(Int)
-    @inbounds for i = 1:k
-        val = local_top_k[i] == 0 ? 0 : global_approx[local_top_k[i]]
-        if val < min_val
-            min_val = val
-            min_idx = i
-        end
-    end
-    
-    @inbounds local_top_k[min_idx] = v
-
-    # Recompute new minimum
-    new_min_val = typemax(Int)
-    @inbounds for i = 1:k
-        val = local_top_k[i] == 0 ? 0 : global_approx[local_top_k[i]]
-        if val < new_min_val
-            new_min_val = val
-        end
-    end
-    min_count_local[] = new_min_val
-    return
-end
-
 @inline function _backtrack!(
+    counts::Vector{Int},
     curr::T,
     target::T,
-    ws::KadabraWorkspace{T},
-    counts::Vector{Int},
+    preds_data::Vector{T},
+    preds_count::Vector{Int},
+    preds_offset::Vector{Int},
+    n_paths::Vector{Float64},
     rng::AbstractRNG,
     endpoints::Bool,
 ) where {T}
-    preds_data = ws.preds_data
-    preds_count = ws.preds_count
-    preds_offset = ws.preds_offset
-    n_paths = ws.n_paths
-    local_top_k = ws.local_top_k
-    min_count_local = ws.min_count_local
-
-    @inbounds while curr != target
-        counts[curr] += 1
-        c = counts[curr]
-        if c > min_count_local[] && length(local_top_k) > 0
-            update_local_top_k!(local_top_k, curr, c, counts, min_count_local)
+    max_steps = length(counts) # nv(g)
+    iter_count = 0
+    while curr != target
+        iter_count += 1
+        if iter_count > max_steps
+            break # Failsafe against corrupted graph state causing infinite cycles
         end
+        GC.safepoint()
+        counts[curr] += 1
 
         count = preds_count[curr]
         offset = preds_offset[curr]
 
         if count == 0
-            break
+            break # Failsafe against corrupt BFS reconstruction
         elseif count == 1
             curr = preds_data[offset]
         else
@@ -967,7 +887,7 @@ end
             r = rand(rng) * tot
             c = 0.0
             
-            curr = preds_data[offset+count-1] 
+            curr = preds_data[offset+count-1] # FALLBACK: default to the last predecessor
             
             for i = 1:count
                 p = preds_data[offset+i-1]
@@ -981,9 +901,5 @@ end
     end
     if endpoints
         counts[target] += 1
-        c = counts[target]
-        if c > min_count_local[] && length(local_top_k) > 0
-            update_local_top_k!(local_top_k, target, c, counts, min_count_local)
-        end
     end
 end
