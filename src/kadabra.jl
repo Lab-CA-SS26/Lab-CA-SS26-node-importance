@@ -638,7 +638,7 @@ When the frontiers intersect, it selects a single bridge edge uniformly at rando
 the number of shortest paths crossing it) and backtracks to construct the sampled path.
 The nodes on the resulting path are incremented directly in the `counts` array without allocating memory.
 """
-function _sample_shortest_path!(
+@inline function _sample_shortest_path!(
     g::AbstractGraph{T},
     rng::AbstractRNG,
     s::T,
@@ -691,44 +691,46 @@ function _sample_shortest_path!(
             #     println("INFINITE LOOP IN BFS! cur_s_len=", cur_s_len, " cur_t_len=", cur_t_len, " s=", s, " t=", t)
             #     break
             # end
-            GC.safepoint()
+
             if sum_degs_s <= sum_degs_t
                 sum_degs_s = 0
                 next_s_len = 0
                 for i = 1:cur_s_len
                     x = cur_s[i]
                     for y in neighborfn_s(g, x)
-                        if ball_indicator[y] == 0x00
-                            ball_indicator[y] = 0x01
-                            n_paths[y] = n_paths[x]
-                            dist[y] = dist[x] + 1
-
-                            count = preds_count[y]
-                            idx = preds_offset[y] + count
-                            preds_data[idx] = x
-                            preds_count[y] = count + 1
-
-                            next_s_len += 1
-                            next_s[next_s_len] = y
-
-                            visited_len += 1
-                            # if visited_len > length(visited_nodes)
-                            #     println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
-                            # end
-                            visited_nodes[visited_len] = y
-                            sum_degs_s += length(neighborfn_s(g, y))
-
-                        elseif ball_indicator[y] == 0x02
-                            have_to_stop = true
-                            sp_edges_len += 1
-                            sp_edges[sp_edges_len] = (x, y)
-
-                        elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x01
-                            n_paths[y] += n_paths[x]
-                            count = preds_count[y]
-                            idx = preds_offset[y] + count
-                            preds_data[idx] = x
-                            preds_count[y] = count + 1
+                        @inbounds begin
+                            if ball_indicator[y] == 0x00
+                                ball_indicator[y] = 0x01
+                                n_paths[y] = n_paths[x]
+                                dist[y] = dist[x] + 1
+    
+                                count = preds_count[y]
+                                idx = preds_offset[y] + count
+                                preds_data[idx] = x
+                                preds_count[y] = count + 1
+    
+                                next_s_len += 1
+                                next_s[next_s_len] = y
+    
+                                visited_len += 1
+                                # if visited_len > length(visited_nodes)
+                                #     println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
+                                # end
+                                visited_nodes[visited_len] = y
+                                sum_degs_s += length(neighborfn_s(g, y))
+    
+                            elseif ball_indicator[y] == 0x02
+                                have_to_stop = true
+                                sp_edges_len += 1
+                                sp_edges[sp_edges_len] = (x, y)
+    
+                            elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x01
+                                n_paths[y] += n_paths[x]
+                                count = preds_count[y]
+                                idx = preds_offset[y] + count
+                                preds_data[idx] = x
+                                preds_count[y] = count + 1
+                            end
                         end
                     end
                 end
@@ -741,37 +743,39 @@ function _sample_shortest_path!(
                 for i = 1:cur_t_len
                     x = cur_t[i]
                     for y in neighborfn_t(g, x)
-                        if ball_indicator[y] == 0x00
-                            ball_indicator[y] = 0x02
-                            n_paths[y] = n_paths[x]
-                            dist[y] = dist[x] + 1
+                        @inbounds begin
+                            if ball_indicator[y] == 0x00
+                                ball_indicator[y] = 0x02
+                                n_paths[y] = n_paths[x]
+                                dist[y] = dist[x] + 1
 
-                            count = preds_count[y]
-                            idx = preds_offset[y] + count
-                            preds_data[idx] = x
-                            preds_count[y] = count + 1
+                                count = preds_count[y]
+                                idx = preds_offset[y] + count
+                                preds_data[idx] = x
+                                preds_count[y] = count + 1
 
-                            next_t_len += 1
-                            next_t[next_t_len] = y
+                                next_t_len += 1
+                                next_t[next_t_len] = y
 
-                            visited_len += 1
-                            # if visited_len > length(visited_nodes)
-                            #     println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
-                            # end
-                            visited_nodes[visited_len] = y
-                            sum_degs_t += length(neighborfn_t(g, y))
+                                visited_len += 1
+                                # if visited_len > length(visited_nodes)
+                                #     println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
+                                # end
+                                visited_nodes[visited_len] = y
+                                sum_degs_t += length(neighborfn_t(g, y))
 
-                        elseif ball_indicator[y] == 0x01
-                            have_to_stop = true
-                            sp_edges_len += 1
-                            sp_edges[sp_edges_len] = (y, x)
+                            elseif ball_indicator[y] == 0x01
+                                have_to_stop = true
+                                sp_edges_len += 1
+                                sp_edges[sp_edges_len] = (y, x)
 
-                        elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x02
-                            n_paths[y] += n_paths[x]
-                            count = preds_count[y]
-                            idx = preds_offset[y] + count
-                            preds_data[idx] = x
-                            preds_count[y] = count + 1
+                            elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x02
+                                n_paths[y] += n_paths[x]
+                                count = preds_count[y]
+                                idx = preds_offset[y] + count
+                                preds_data[idx] = x
+                                preds_count[y] = count + 1
+                            end
                         end
                     end
                 end
@@ -845,7 +849,7 @@ If multiple optimal predecessors exist, one is selected randomly weighted by the
 shortest paths `n_paths` arriving through that predecessor.
 The thread-local `counts` buffer is incremented in-place for every node visited.
 """
-function _backtrack!(
+@inline function _backtrack!(
     counts::Vector{Int},
     curr::T,
     target::T,
