@@ -1,0 +1,5 @@
+graph,k,threads,version,execution_time,io_time,num_samples
+amazon,0,1,julia,7.071444042,3.752406542,29436
+cit-Patents,0,1,julia,20.174602,10.420056291,17464
+com-lj,0,1,julia,23.270398125,18.443583125,37442
+com-youtube,0,1,julia,5.94665275,1.712351625,44442
