@@ -51,6 +51,10 @@ function parse_cmdline()
         "--directed"
         help = "Treat graph as directed"
         action = :store_true
+        "--seed", "-s"
+        help = "Random seed (0 means no seed / random)"
+        arg_type = Int
+        default = 0
     end
 
     return parse_args(s)
@@ -102,6 +106,7 @@ function main()
                 delta;
                 start_factor = 10,
                 endpoints = false,
+                rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
             )
         elseif algo == "brava"
             Main.BRAVAGNN.brava_centrality(dummy_g, k, epsilon, delta)
@@ -130,6 +135,7 @@ function main()
                 delta;
                 start_factor = 100,
                 endpoints = false,
+                rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
             )
             centralities = res.centralities
             lower_bounds = res.lower_bounds

@@ -22,6 +22,7 @@ double delta;
 double err;
 char *graph_file;
 int64_t k = 0;
+uint32_t seed = 42; // default seed
 
 /**
  * Print usage on stderr.
@@ -36,6 +37,7 @@ void usage(const char *binary_name) {
     std::cerr << "\t-k: compute the top-k betweenness centralities (if 0, compute all of them with absolute error) " << std::endl;
     std::cerr << "\t-h: print this help message" << std::endl;
     std::cerr << "\t-v: print additional messages (verbosity is the time in second between subsequent outputs)" << std::endl;
+    std::cerr << "\t-s: random seed (default 42)" << std::endl;
     std::cerr << "\terr: accuracy (0 < epsilon < 1)" << std::endl;
     std::cerr << "\tdelta: confidence (0 < delta < 1)" << std::endl;
     std::cerr << "\tgraph: graph edge list file" << std::endl;
@@ -47,7 +49,7 @@ void usage(const char *binary_name) {
  */
 int parse_command_line(int& argc, char *argv[]) {
     int opt;
-    while ((opt = getopt(argc, argv, "dhk:v:")) != -1) {
+    while ((opt = getopt(argc, argv, "dhk:v:s:")) != -1) {
         switch (opt) {
         case 'd':
             directed = true;
@@ -72,6 +74,9 @@ int parse_command_line(int& argc, char *argv[]) {
                     << std::endl;
                 return 1;
             }
+            break;
+        case 's':
+            seed = std::strtoul(optarg, NULL, 10);
             break;
         }
     }
@@ -109,6 +114,7 @@ int main(int argc, char *argv[]){
     }
 
     Probabilistic G( graph_file, directed, verb );
+    G.set_seed(seed);
     G.run((uint32_t) k, delta, err);
     return 0;
 }

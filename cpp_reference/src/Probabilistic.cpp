@@ -11,7 +11,7 @@
 #include "Probabilistic.h"
 #include "Sp_sampler.h"
 
-#define SEED 42
+
 
 
 using namespace std;
@@ -332,7 +332,7 @@ void Probabilistic::run(uint32_t k, double delta, double err, uint32_t union_sam
     last_output = get_time_sec();
     start_time = get_time_sec();
     this->top_k = new Ranking_list(union_sample);
-    srand( SEED );
+    srand( m_seed );
     uint32_t *random_seed = (uint32_t *) malloc( omp_get_max_threads()*sizeof(uint32_t) );
     for( int i=0; i < omp_get_max_threads(); i++ ){
         random_seed[i] = rand();

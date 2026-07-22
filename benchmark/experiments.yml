@@ -90,6 +90,15 @@ variants:
       - name: 'directed'
         extra_args: ['-d']
 
+  - axis: 'seed'
+    items:
+      - name: 'seed0'
+        extra_args: ['-s', '0']
+      - name: 'seed1'
+        extra_args: ['-s', '1']
+      - name: 'seed2'
+        extra_args: ['-s', '2']
+
 # 3. Define Experiments
 experiments:
   - name: kadabra-cpp
@@ -176,11 +185,11 @@ matrix:
 
     - experiments: [kadabra-cpp, kadabra-julia]
       instsets: [TestInstances_Undirected,ABCDE_Undirected]
-      variants: [undirected, k0, k10, k100, err1]
+      variants: [undirected, k0, k10, k100, err1, seed0, seed1, seed2]
 
     - experiments: [kadabra-cpp, kadabra-julia]
       instsets: [TestInstances_Directed]
-      variants: [undirected, k0, k10, k100, err1]
+      variants: [undirected, k0, k10, k100, err1, seed0, seed1, seed2]
 
     # Run undirected graphs for brava
     # - experiments: [brava-julia]
@@ -190,7 +199,7 @@ matrix:
     # Run undirected graphs for brandes
     - experiments: [brandes-julia]
       instsets: [TestInstances_Undirected]
-      variants: [undirected, t1, k0, err1] # brandes doesn't use threads/k/err, but we use defaults to satisfy simexpal axes
+      variants: [undirected, t1, k0, err1, seed0] # brandes doesn't use threads/k/err/seed, but we use defaults to satisfy simexpal axes
 
     # # Run directed graphs
     # - experiments: [kadabra-cpp, kadabra-julia, brava-julia]
