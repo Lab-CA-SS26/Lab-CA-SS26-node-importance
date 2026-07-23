@@ -335,7 +335,8 @@ function brava_centrality(
     k::Int,
     err::Float64,
     delta::Float64;
-    m_hops::Int = 5,
+    m_hops::Int = 6,
+    weight_path::Union{String,Nothing} = nothing,
 )
     N = nv(g)
 
@@ -349,7 +350,10 @@ function brava_centrality(
     X_in = compute_degree_masses(A_t, pr_feat, m_hops)
 
     # 2. Initialize Model 
-    weight_path = joinpath(@__DIR__, "..", "benchmark", "cache", "bravagnn_weights.jld2")
+    if weight_path === nothing
+        weight_path = joinpath(@__DIR__, "..", "benchmark", "cache", "bravagnn_weights.jld2")
+    end
+    
     if isfile(weight_path)
         # Load the pre-trained model from the server cache
         @load weight_path model
