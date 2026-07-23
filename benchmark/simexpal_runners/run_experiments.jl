@@ -98,9 +98,8 @@ function main()
         # ---------------------------------------------------------
         # JIT WARMUP
         # ---------------------------------------------------------
-        if parsed_args["warmup"]
-            println("Performing JIT Warmup...")
-            dummy_g_raw = Main.Graphs.SimpleGraph(100, 500)
+        println("Performing JIT Warmup...")
+        dummy_g_raw = Main.Graphs.SimpleGraph(100, 500)
             dummy_g =
                 USE_STATIC_GRAPHS ?
                 (is_directed ? StaticDiGraph(dummy_g_raw) : StaticGraph(dummy_g_raw)) :
@@ -133,7 +132,6 @@ function main()
                 )
             end
             println("Warmup done")
-        end
 
         # Load graph
         io_start_time = time_ns()
