@@ -1,6 +1,7 @@
 using ArgParse
 using JSON
 using Graphs
+import JLD2
 
 const USE_STATIC_GRAPHS = true
 if USE_STATIC_GRAPHS
