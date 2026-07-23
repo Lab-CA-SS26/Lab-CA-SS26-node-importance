@@ -88,3 +88,22 @@ julia --project compare_topk.jl
 - [ ] **Scale Benchmarking**: Add a wider array of `Instances/` networks and optionally test memory limitations across scale up to $1M+$ nodes.
 - [ ] **Heuristic Pruning Integration**: Consider integrating heuristic graph pruning to speed up exact Brandes calculation used for ground truth labels.
 - [ ] **Continuous Integration**: Setup GitHub actions to automate tests and benchmarks against C++ reference on pushes.
+
+---
+
+## 🚀 Running Benchmarks on Server
+
+To run the `run_experiments.jl` script on a server for the Amazon graph using 8 threads, use the following command:
+
+```bash
+julia -t 8 --project=. benchmark/simexpal_runners/run_experiments.jl \
+    -i Instances/ABCDE/amazon.txt \
+    -o output.json \
+    -t 8 \
+    -k 10 \
+    --epsilon 0.01 \
+    --delta 0.1 \
+    -a kadabra
+```
+
+*Note: For directed graphs, append `--directed` to the end of the command.*
