@@ -170,7 +170,7 @@ open(out_csv, "w") do f
              "Overlap100_Mean,Overlap100_Std,Tau100_Mean,Tau100_Std,MaxRank100_Mean,MaxRank100_Std," *
              "CandidateSize_Mean,CandidateSize_Std\n")
     
-    for (key, metrics_list) in sort(collect(grouped_metrics))
+    for (key, metrics_list) in sort(collect(grouped_metrics), by = x -> x[1])
         inst, impl, gtype, k_val, threads = key
         n = length(metrics_list)
         

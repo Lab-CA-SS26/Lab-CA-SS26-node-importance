@@ -337,6 +337,8 @@ function brava_centrality(
     delta::Float64;
     m_hops::Int = 6,
     weight_path::Union{String,Nothing} = nothing,
+    model = nothing,
+    use_gpu::Bool = false,
 )
     N = nv(g)
 
@@ -350,20 +352,49 @@ function brava_centrality(
     X_in = compute_degree_masses(A_t, pr_feat, m_hops)
 
     # 2. Initialize Model 
-    if weight_path === nothing
-        weight_path = joinpath(@__DIR__, "..", "benchmark", "cache", "bravagnn_weights.jld2")
-    end
-    
-    if isfile(weight_path)
-        # Load the pre-trained model from the server cache
-        @load weight_path model
-    else
-        # Fallback to untrained model for local runtime tests if missing
-        model = BRAVAModel(; m_hops = m_hops, hidden_dim = 12, num_layers = 2)
+    if model === nothing
+        if weight_path === nothing
+            weight_path = joinpath(@__DIR__, "..", "benchmark", "cache", "bravagnn_weights.jld2")
+        end
+        
+        if isfile(weight_path)
+            # Load the pre-trained model from the server cache
+            @load weight_path model
+        else
+            # Fallback to untrained model for local runtime tests if missing
+            model = BRAVAModel(; m_hops = m_hops, hidden_dim = 12, num_layers = 2)
+        end
     end
 
-    # 3. Inference
-    scores = model(A, A_t, X_in, X_out)
+    # 3. Handle GPU transfer if requested
+    if use_gpu
+        try
+            @eval Main import CUDA
+            if Main.CUDA.functional()
+                device = Flux.gpu
+            else
+                println("Warning: GPU requested but CUDA is not functional. Falling back to CPU.")
+                device = Flux.cpu
+            end
+        catch e
+            println("Warning: Could not load CUDA.jl (is it installed?). Falling back to CPU.")
+            device = Flux.cpu
+        end
+    else
+        device = Flux.cpu
+    end
+
+    A_dev = device(A)
+    A_t_dev = device(A_t)
+    X_in_dev = device(X_in)
+    X_out_dev = device(X_out)
+    model = model |> device
+
+    # 4. Inference
+    scores_dev = model(A_dev, A_t_dev, X_in_dev, X_out_dev)
+    
+    # 5. Bring scores back to CPU
+    scores = scores_dev |> Flux.cpu
 
     return scores, 1
 end
