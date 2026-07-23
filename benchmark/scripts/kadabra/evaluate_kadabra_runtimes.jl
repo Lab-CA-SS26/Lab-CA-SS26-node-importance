@@ -77,7 +77,7 @@ out_csv = joinpath(results_dir, "kadabra_runtimes_summary.csv")
 open(out_csv, "w") do f
     write(f, "Instance,Implementation,GraphType,k,Threads,NumSeeds,Runtime_Mean,Runtime_Median,Runtime_Std\n")
     
-    for (key, runtimes) in sort(collect(grouped_runtimes))
+    for (key, runtimes) in sort(collect(grouped_runtimes), by = x -> x[1])
         inst, impl, gtype, k_val, threads = key
         n = length(runtimes)
         mu = mean(runtimes)

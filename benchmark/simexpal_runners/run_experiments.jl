@@ -55,6 +55,9 @@ function parse_cmdline()
         help = "Random seed (0 means no seed / random)"
         arg_type = Int
         default = 0
+        "--gpu"
+        help = "Use GPU for BRAVA inference if available"
+        action = :store_true
     end
 
     return parse_args(s)
@@ -78,6 +81,58 @@ function main()
         algo = parsed_args["algorithm"]
         version = parsed_args["version"]
         is_directed = parsed_args["directed"]
+
+        # ---------------------------------------------------------
+        # Pre-load BRAVA model if needed
+        # ---------------------------------------------------------
+        brava_model = nothing
+        if algo == "brava"
+            weight_path = joinpath(@__DIR__, "..", "cache", "bravagnn_weights.jld2")
+            if isfile(weight_path)
+                Main.JLD2.@load weight_path model
+                brava_model = model
+            end
+        end
+
+        # ---------------------------------------------------------
+        # JIT WARMUP
+        # ---------------------------------------------------------
+        if parsed_args["warmup"]
+            println("Performing JIT Warmup...")
+            dummy_g_raw = Main.Graphs.SimpleGraph(100, 500)
+            dummy_g =
+                USE_STATIC_GRAPHS ?
+                (is_directed ? StaticDiGraph(dummy_g_raw) : StaticGraph(dummy_g_raw)) :
+                dummy_g_raw
+
+            if algo == "kadabra"
+                Main.kadabra_centrality(
+                    dummy_g,
+                    k,
+                    epsilon,
+                    delta;
+                    start_factor = 10,
+                    endpoints = false,
+                    rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
+                )
+            elseif algo == "brava"
+                Main.BRAVAGNN.brava_centrality(
+                    dummy_g, 
+                    k, 
+                    epsilon, 
+                    delta;
+                    model = brava_model,
+                    use_gpu = parsed_args["gpu"]
+                )
+            elseif algo == "brandes"
+                Main.Graphs.betweenness_centrality(
+                    dummy_g;
+                    normalize = false,
+                    endpoints = false,
+                )
+            end
+            println("Warmup done")
+        end
 
         # Load graph
         io_start_time = time_ns()
@@ -109,7 +164,13 @@ function main()
                 rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
             )
         elseif algo == "brava"
-            Main.BRAVAGNN.brava_centrality(dummy_g, k, epsilon, delta)
+            Main.BRAVAGNN.brava_centrality(
+                dummy_g, 
+                k, 
+                epsilon, 
+                delta;
+                model = brava_model
+            )
         elseif algo == "brandes"
             Main.Graphs.betweenness_centrality(
                 dummy_g;
@@ -149,7 +210,14 @@ function main()
             # For brava
             start_time = time_ns()
 
-            centralities, n_samples = Main.BRAVAGNN.brava_centrality(g, k, epsilon, delta)
+            centralities, n_samples = Main.BRAVAGNN.brava_centrality(
+                g, 
+                k, 
+                epsilon, 
+                delta;
+                model = brava_model,
+                use_gpu = parsed_args["gpu"]
+            )
 
             end_time = time_ns()
             execution_time = (end_time - start_time) / 1e9
