@@ -1,0 +1,1 @@
+Instance,Implementation,GraphType,k,Threads,NumSeeds,Tau0_Mean,Tau0_Std,Overlap10_Mean,Overlap10_Std,Tau10_Mean,Tau10_Std,MaxRank10_Mean,MaxRank10_Std,Overlap100_Mean,Overlap100_Std,Tau100_Mean,Tau100_Std,MaxRank100_Mean,MaxRank100_Std,CandidateSize_Mean,CandidateSize_Std
