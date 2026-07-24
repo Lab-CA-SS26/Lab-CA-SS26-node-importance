@@ -388,14 +388,16 @@ function brava_centrality(
     if use_gpu
         try
             @eval Main import CUDA
-            if Main.CUDA.functional()
+            # Use Core.eval to evaluate in the latest world age and avoid world age errors in Julia 1.12
+            cuda_functional = Core.eval(Main, :(CUDA.functional()))
+            if cuda_functional
                 device = Flux.gpu
             else
                 println("Warning: GPU requested but CUDA is not functional. Falling back to CPU.")
                 device = Flux.cpu
             end
         catch e
-            println("Warning: Could not load CUDA.jl (is it installed?). Falling back to CPU.")
+            println("Warning: Could not load CUDA.jl (is it installed?). Falling back to CPU. Error: ", e)
             device = Flux.cpu
         end
     else
