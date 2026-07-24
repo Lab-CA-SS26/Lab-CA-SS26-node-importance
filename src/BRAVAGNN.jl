@@ -342,8 +342,15 @@ function brava_centrality(
 )
     N = nv(g)
 
-    # Extract sparse adjacency matrix
-    A = SparseMatrixCSC{Float32,Int}(adjacency_matrix(g))
+    # Extract sparse adjacency matrix safely (handling StaticGraphs with UInt8/UInt16 index types)
+    A_raw = adjacency_matrix(g)
+    A = SparseMatrixCSC{Float32,Int}(
+        size(A_raw, 1), 
+        size(A_raw, 2),
+        Vector{Int}(A_raw.colptr),
+        Vector{Int}(A_raw.rowval),
+        Vector{Float32}(A_raw.nzval)
+    )
     A_t = SparseMatrixCSC{Float32,Int}(A')
 
     # 1. Feature Extraction
