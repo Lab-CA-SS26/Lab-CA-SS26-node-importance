@@ -13,7 +13,7 @@ out_dir = "benchmark/results/kadabra_accuracy"
 mkpath(out_dir)
 
 gt_dir = "Instances/ground_truth/test_instances"
-gt_cache = Dict{String, Tuple{Vector{Float64}, Int}}() # name -> (bt_exact, max_node)
+gt_cache = Dict{String, Tuple{Vector{Float64}, Int, Int}}() # name -> (bt_exact, max_node, shift)
 
 function load_gt(inst)
     if haskey(gt_cache, inst)
@@ -42,15 +42,15 @@ function load_gt(inst)
         bt_exact[u + shift] = parse(Float64, parts[2])
     end
     
-    gt_cache[inst] = (bt_exact, max_node)
+    gt_cache[inst] = (bt_exact, max_node, shift)
     return gt_cache[inst]
 end
 
-function evaluate_run(cents, bt_exact, max_node, k_param)
+function evaluate_run(cents, bt_exact, max_node, k_param, shift)
     bt_approx = zeros(Float64, max_node)
     for (k_str, v) in cents
-        idx = parse(Int, k_str)
-        if idx <= max_node
+        idx = parse(Int, k_str) + shift
+        if 1 <= idx <= max_node
             bt_approx[idx] = v
         end
     end
@@ -116,7 +116,7 @@ for out_d in readdir("benchmark/output", join=true)
             # Push NaN if no ground truth
             push!(df, (algo, inst, k_val, epsilon, delta, NaN, NaN))
         else
-            overlap, tau = evaluate_run(cents, gt[1], gt[2], k_val)
+            overlap, tau = evaluate_run(cents, gt[1], gt[2], k_val, gt[3])
             push!(df, (algo, inst, k_val, epsilon, delta, overlap, tau))
         end
     end
