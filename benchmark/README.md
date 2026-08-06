@@ -13,17 +13,43 @@ The `simexpal` pipeline (`experiments.yml`) currently evaluates:
 
 ## Execution Metrics
 Each execution yields a standardized `stats.json` file inside the `output/` directory containing:
-- `centralities`: Dictionary mapping `node_id -> betweenness_score`
 - `execution_time_seconds`: Pure algorithmic computation time (fair comparison)
 - `io_time_seconds`: Graph parsing and memory loading time
 - `num_samples`: Algorithm sample counts (e.g., pairs used for Kadabra)
+- `tau_overall`: Kendall Tau correlation across all nodes compared to exact Brandes
+- `tau_topk`: Kendall Tau restricted strictly to the top-k nodes
+- `overlap_topk`: Cardinality of intersection between approx and exact top-k nodes
+- `max_ae`: Maximum Absolute Error vs exact Brandes
+- `mae`: Mean Absolute Error vs exact Brandes
+- `ndcg_topk`: Normalized Discounted Cumulative Gain for ranking quality
 - `parameters`: Metadata (threads, graph parameters, epsilon, etc.)
+
+*Note: Centrality arrays themselves are intentionally omitted to maintain tiny artifact sizes and prevent disk I/O bottlenecks.*
+
+---
+
+## The Master Pipeline Script (`run_pipeline.sh`)
+
+We provide a single root script `run_pipeline.sh` that automates the entire end-to-end evaluation. It:
+1. Activates the python `venv`.
+2. Executes `simexpal launch` (can be skipped).
+3. Evaluates and aggregates all JSON results into a CSV via `evaluate_all_runs.jl`.
+4. Plots the final benchmark results using `plot_results.py`.
+
+**Usage:**
+```bash
+# Run the complete pipeline (launch + evaluate + plot)
+bash run_pipeline.sh
+
+# Skip simexpal launch (if runs are managed on a cluster/server)
+bash run_pipeline.sh --no-run
+```
 
 ---
 
 ## Managing Experiments with `simexpal`
 
-All benchmarks are orchestrated through `experiments.yml` and launched via the Python wrapper `simex`. It is recommended to use the binary located in your `venv/`.
+All benchmarks are orchestrated through `experiments.yml` and launched natively via `simexpal`.
 
 ### 1. Launching
 Build necessary programs and launch all pending experiments:
@@ -72,11 +98,7 @@ If you need to delete and re-run experiments, use the `purge` command with `-f` 
 ../venv/bin/simex e purge --run "brandes-julia~err1,k0,t1,undirected/p2p-Gnutella31[0]" -f
 ```
 
----
-
-## Legacy Scripts
-Earlier iterations of local benchmarking can still be found in the root directory:
-- `run_benchmarks.jl`
-- `compare_topk.jl`
-- `benchmark_error_bounds.jl`
-- `generate_benchmarks.jl`
+**Purge an exact run string:**
+```bash
+../venv/bin/simex e purge --run "brandes-julia~err1,k0,t1,undirected/p2p-Gnutella31[0]" -f
+```

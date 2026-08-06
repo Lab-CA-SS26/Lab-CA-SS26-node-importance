@@ -81,8 +81,10 @@ variants:
 
   - axis: err
     items:
-      - name: 'err1'
+      - name: 'err01'
         extra_args: ['--epsilon', '0.01', '--delta', '0.1']
+      - name: 'err0001'
+        extra_args: ['--epsilon', '0.0001', '--delta', '0.1']
   - axis: 'graph-type'
     items:
       - name: 'undirected'
@@ -185,11 +187,11 @@ matrix:
 
     - experiments: [kadabra-cpp, kadabra-julia]
       instsets: [TestInstances_Undirected,ABCDE_Undirected]
-      variants: [undirected, k0, k10, k100, err1, seed0, seed1, seed2]
+      variants: [undirected, k0, k10, k100, err01, err0001, seed0, seed1, seed2]
 
     - experiments: [kadabra-cpp, kadabra-julia]
       instsets: [TestInstances_Directed]
-      variants: [undirected, k0, k10, k100, err1, seed0, seed1, seed2]
+      variants: [directed, k0, k10, k100, err01, err0001, seed0, seed1, seed2]
 
     # Run undirected graphs for brava
     # - experiments: [brava-julia]
@@ -197,11 +199,16 @@ matrix:
     #   variants: [undirected, t1, k0, err1] # brava doesn't use threads/k/err, but we use defaults to satisfy simexpal axes
 
     # Run undirected graphs for brandes
-    - experiments: [brandes-julia]
-      instsets: [TestInstances_Undirected]
-      variants: [undirected, t1, k0, err1, seed0] # brandes doesn't use threads/k/err/seed, but we use defaults to satisfy simexpal axes
+    # - experiments: [brandes-julia]
+    #   instsets: [TestInstances_Undirected]
+    #   variants: [undirected, t1, k0, err1, err0001, seed0] # brandes doesn't use threads/k/err/seed, but we use defaults to satisfy simexpal axes
 
     # # Run directed graphs
     # - experiments: [kadabra-cpp, kadabra-julia, brava-julia]
     #   instsets: [TestInstances_Directed]
     #   variants: [directed, t1, t4, k0, k10, err1]
+
+    # NEW EXPERIMENT: Strong Scaling for Kadabra-Julia
+    - experiments: [kadabra-julia]
+      instsets: [ABCDE_Undirected]
+      variants: [undirected, k0, err0001, seed0, t1, t4, t8, t16, t24, t32, t48]
