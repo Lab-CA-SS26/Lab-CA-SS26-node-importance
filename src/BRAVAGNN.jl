@@ -343,25 +343,25 @@ function brava_centrality(
     N = nv(g)
     
     # Extract sparse adjacency matrix safely (bypassing StaticGraphs.jl UInt mismatch bugs)
-    # We build the I, J vectors directly from the edges.
-    n_edges = is_directed(g) ? ne(g) : 2 * ne(g)
-    I_idx = Vector{Int}(undef, n_edges)
-    J_idx = Vector{Int}(undef, n_edges)
-    V_val = ones(Float32, n_edges)
+    I_idx = Int[]
+    J_idx = Int[]
+    sizehint!(I_idx, 2 * ne(g))
+    sizehint!(J_idx, 2 * ne(g))
     
-    count = 1
-    for e in edges(g)
-        I_idx[count] = src(e)
-        J_idx[count] = dst(e)
-        count += 1
-        if !is_directed(g)
-            I_idx[count] = dst(e)
-            J_idx[count] = src(e)
-            count += 1
+    for v in 1:N
+        for u in outneighbors(g, v)
+            push!(I_idx, v)
+            push!(J_idx, u)
         end
     end
     
+    V_val = ones(Float32, length(I_idx))
     A = sparse(I_idx, J_idx, V_val, N, N)
+    
+    # Apply BRAVA clique preprocessing mask (must be done at inference too)
+    mask = brava_clique_mask(g)
+    A = spdiagm(mask) * A
+    
     A_t = SparseMatrixCSC{Float32,Int}(A')
 
     # 1. Feature Extraction
