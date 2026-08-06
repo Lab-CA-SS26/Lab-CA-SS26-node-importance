@@ -1,6 +1,7 @@
 using ArgParse
 using JSON
 using Graphs
+using StatsBase
 import JLD2
 
 const USE_STATIC_GRAPHS = true
@@ -236,6 +237,90 @@ function main()
             error("Unknown algorithm: $algo")
         end
 
+        # Read Ground truth
+        graph_name = replace(basename(input_file), ".txt" => "")
+        gt_path = joinpath(@__DIR__, "..", "..", "Instances", "ground_truth", "test_instances", "$(graph_name)_bet.csv")
+        
+        tau_overall = NaN
+        tau_topk = NaN
+        overlap = 0
+        max_ae = NaN
+        mae = NaN
+        ndcg_topk = NaN
+        
+        if isfile(gt_path)
+            lines = readlines(gt_path)
+            if length(lines) >= 2
+                shift = parse(Int, split(lines[2], ",")[1]) == 0 ? 1 : 0
+                max_node = 0
+                for line in lines[2:end]
+                    parts = split(line, ",")
+                    u = parse(Int, parts[1])
+                    max_node = max(max_node, u + shift)
+                end
+                
+                bt_exact = zeros(Float64, max_node)
+                for line in lines[2:end]
+                    parts = split(line, ",")
+                    u = parse(Int, parts[1])
+                    bt_exact[u + shift] = parse(Float64, parts[2])
+                end
+                
+                bt_approx = zeros(Float64, max_node)
+                for (v, cent) in enumerate(centralities)
+                    if v <= max_node
+                        bt_approx[v] = cent
+                    end
+                end
+                
+                try
+                    tau_overall = corkendall(bt_exact, bt_approx)
+                catch
+                    tau_overall = NaN
+                end
+                
+                max_ae = 0.0
+                sum_ae = 0.0
+                for v in 1:max_node
+                    ae = abs(bt_exact[v] - bt_approx[v])
+                    if ae > max_ae
+                        max_ae = ae
+                    end
+                    sum_ae += ae
+                end
+                mae = max_node > 0 ? sum_ae / max_node : 0.0
+                
+                eval_k = k == 0 ? 100 : k
+                eval_k = min(eval_k, max_node)
+                
+                p_exact = sortperm(bt_exact, rev=true)
+                p_approx = sortperm(bt_approx, rev=true)
+                
+                topk_exact = p_exact[1:eval_k]
+                topk_approx = p_approx[1:eval_k]
+                
+                try
+                    tau_topk = corkendall(bt_exact[topk_exact], bt_approx[topk_exact])
+                    overlap = length(intersect(topk_exact, topk_approx))
+                catch
+                    tau_topk = NaN
+                end
+                
+                dcg = 0.0
+                idcg = 0.0
+                for i in 1:eval_k
+                    u_approx = topk_approx[i]
+                    u_exact = topk_exact[i]
+                    
+                    dcg += bt_exact[u_approx] / log2(i + 1)
+                    idcg += bt_exact[u_exact] / log2(i + 1)
+                end
+                ndcg_topk = idcg > 0.0 ? dcg / idcg : 1.0
+            end
+        else
+            println("Ground truth not found at $gt_path")
+        end
+
         # Format JSON
         results = Dict(
             "parameters" => Dict(
@@ -251,26 +336,13 @@ function main()
             "execution_time_seconds" => execution_time,
             "io_time_seconds" => io_time,
             "num_samples" => n_samples,
-            "centralities" => Dict{String,Float64}(),
+            "tau_overall" => isnan(tau_overall) ? nothing : tau_overall,
+            "tau_topk" => isnan(tau_topk) ? nothing : tau_topk,
+            "overlap_topk" => overlap,
+            "max_ae" => isnan(max_ae) ? nothing : max_ae,
+            "mae" => isnan(mae) ? nothing : mae,
+            "ndcg_topk" => isnan(ndcg_topk) ? nothing : ndcg_topk,
         )
-
-        if lower_bounds !== nothing
-            results["lower_bounds"] = Dict{String,Float64}()
-            results["upper_bounds"] = Dict{String,Float64}()
-        end
-
-        # Convert centralities array/dict to the expected schema
-        for (v, cent) in enumerate(centralities)
-            if cent > 0.0
-                # Assuming 1-based indexing for vertices in Julia, converting to 0-based for JSON?
-                # Or just use the 1-based vertex ID as string.
-                results["centralities"][string(v)] = cent
-                if lower_bounds !== nothing
-                    results["lower_bounds"][string(v)] = lower_bounds[v]
-                    results["upper_bounds"][string(v)] = upper_bounds[v]
-                end
-            end
-        end
 
         # Write out
         open(output_file, "w") do f
