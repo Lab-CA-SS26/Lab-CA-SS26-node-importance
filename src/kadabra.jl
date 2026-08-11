@@ -191,7 +191,7 @@ function kadabra_centrality(
 
     diam_est = max(estimate_diameter(g), 2.0)
 
-    omega = 0.5 / (err^2) * (log2(diam_est - 1.0) + 1.0 + log2(1.0 / delta))
+    omega = 0.5 / (err^2) * (log2(diam_est - 1.0) + 1.0 + log(0.5 / delta))
     tau = max(round(Int, omega / start_factor), 1)
 
     global_approx = zeros(Int, n)
@@ -381,7 +381,14 @@ function kadabra_centrality(
         upper_bounds .*= scale
     end
 
-    return (centralities = res, lower_bounds = lower_bounds, upper_bounds = upper_bounds, n_samples = final_n_pairs)
+    return (
+        centralities = res,
+        lower_bounds = lower_bounds,
+        upper_bounds = upper_bounds,
+        n_samples = final_n_pairs,
+        omega = omega,
+        tau = tau,
+    )
 end
 
 function kadabra_centrality(
