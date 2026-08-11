@@ -185,8 +185,9 @@ function kadabra_centrality(
     err > 0 || throw(ArgumentError("err must be positive (got $err)"))
     0 < delta < 1 || throw(ArgumentError("delta must be in (0, 1) (got $delta)"))
 
-    n = nv(g)
+    n = Int(nv(g))
     absolute = (k == 0)
+    original_k = k
     k = Int(k == 0 ? n : min(k, n))
 
     diam_est = max(estimate_diameter(g), 2.0)
@@ -194,12 +195,17 @@ function kadabra_centrality(
     omega = 0.5 / (err^2) * (log2(diam_est - 1.0) + 1.0 + log(0.5 / delta))
     tau = max(round(Int, omega / start_factor), 1)
 
-    global_approx = zeros(Int, n)
-    union_sample = Int(absolute ? k : min(n, k + 20))
+    # Matches the C++ reference's union_sample sizing (Probabilistic.cpp:326-328):
+    # a small "hardest vertices" tracking set, not all n vertices.
+    nthreads_for_sizing = Threads.nthreads()
+    union_target = max(2.0 * sqrt(ne(g)) / nthreads_for_sizing, Float64(original_k) + 20.0)
+    union_sample = min(n, Int(floor(union_target)))
 
-    check_interval = max(10, tau ÷ 100)
-    delta_l_guess = fill(delta / (4 * n), n)
-    delta_u_guess = fill(delta / (4 * n), n)
+    global_approx = zeros(Int, n)
+
+    # Filled in by compute_delta_guess! after the Phase 1 burn-in; uninitialized until then.
+    delta_l_guess = zeros(Float64, n)
+    delta_u_guess = zeros(Float64, n)
 
     bet_buf = zeros(Float64, union_sample)
     err_l_buf = zeros(Float64, union_sample)
@@ -211,36 +217,23 @@ function kadabra_centrality(
 
     if parallel
         nthreads = Threads.nthreads()
-        # println("[MAIN] Starting parallel KADABRA with $nthreads tasks.")
-        
-        approx_local = [zeros(Int, n) for _ = 1:nthreads]
-        n_pairs = Threads.Atomic{Int}(0)
-        
-        tau_per_thread = cld(tau, nthreads)
-        # println("[MAIN] Target omega = $omega, tau = $tau. Each task will do $tau_per_thread pairs in Phase 1.")
 
-        stop_flag = Threads.Atomic{Bool}(false)
-        check_lock = Threads.SpinLock()
-        check_interval = max(1000, tau ÷ 10)
+        approx_local = [zeros(Int, n) for _ = 1:nthreads]
+        tau_per_thread = cld(tau, nthreads)
+        actual_tau = tau_per_thread * nthreads
 
         # Generate seeds beforehand to avoid base_rng thread-safety issues
         thread_seeds = [rand(base_rng, UInt64) for _ in 1:nthreads]
-        tasks = Vector{Task}(undef, nthreads)
-        
+
+        # --- PHASE 1: burn-in. No stopping check, samples are discarded after calibration. ---
+        phase1_tasks = Vector{Task}(undef, nthreads)
         for i = 1:nthreads
-            # $ interpolation freezes $i and $(thread_seeds[i]) immediately 
-            # into the spawned task closure, preventing the closure bug.
-            tasks[i] = let tid = i, seed = thread_seeds[i]
+            phase1_tasks[i] = let tid = i, seed = thread_seeds[i]
                 Threads.@spawn begin
                     local ws = KadabraWorkspace(g)
-            
                     local counts = approx_local[tid]
-            
                     local t_rng = Random.Xoshiro(seed)
 
-                    # println("[TASK $tid] Workspace-ID: $(objectid(ws)), Ball-ID: $(objectid(ws.ball_indicator))")
-
-                    # --- PHASE 1 ---
                     for _ = 1:tau_per_thread
                         s = rand(t_rng, 1:n)
                         t = rand(t_rng, 1:n)
@@ -249,12 +242,46 @@ function kadabra_centrality(
                         end
                         sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints = endpoints)
                     end
-                    
-                    Threads.atomic_add!(n_pairs, tau_per_thread)
+                end
+            end
+        end
+        wait.(phase1_tasks)
 
-                    # --- PHASE 2 ---
+        fill!(global_approx, 0)
+        for t_approx in approx_local
+            global_approx .+= t_approx
+        end
+
+        # --- CALIBRATION: derive per-vertex delta_l_guess/delta_u_guess from Phase 1 estimates ---
+        copyto!(top_k_nodes, 1:n)
+        partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev = true)
+        compute_delta_guess!(
+            delta_l_guess, delta_u_guess, view(top_k_nodes, 1:union_sample),
+            global_approx, actual_tau, n, k, absolute, err, delta, start_factor,
+        )
+
+        # --- RESET: Phase 1 samples are thrown away; Phase 2 starts from scratch ---
+        fill!(global_approx, 0)
+        for t_approx in approx_local
+            fill!(t_approx, 0)
+        end
+
+        n_pairs2 = Threads.Atomic{Int}(0)
+        stop_flag = Threads.Atomic{Bool}(false)
+        check_lock = Threads.SpinLock()
+        check_interval = max(1000, tau ÷ 10)
+
+        # --- PHASE 2: fresh sampling round, checked against the calibrated deltas ---
+        phase2_tasks = Vector{Task}(undef, nthreads)
+        for i = 1:nthreads
+            phase2_tasks[i] = let tid = i, seed = thread_seeds[i]
+                Threads.@spawn begin
+                    local ws = KadabraWorkspace(g)
+                    local counts = approx_local[tid]
+                    local t_rng = Random.Xoshiro(seed)
+
                     local_pairs = 0
-                    while !stop_flag[] && n_pairs[] < omega
+                    while !stop_flag[] && n_pairs2[] < omega
                         for _ = 1:check_interval
                             s = rand(t_rng, 1:n)
                             t = rand(t_rng, 1:n)
@@ -265,7 +292,7 @@ function kadabra_centrality(
                             local_pairs += 1
                         end
 
-                        Threads.atomic_add!(n_pairs, local_pairs)
+                        Threads.atomic_add!(n_pairs2, local_pairs)
                         local_pairs = 0
 
                         if trylock(check_lock)
@@ -281,16 +308,12 @@ function kadabra_centrality(
                                     end
                                 end
 
-                                if absolute
-                                    for j = 1:union_sample; top_k_nodes[j] = j; end
-                                else
-                                    copyto!(top_k_nodes, 1:n)
-                                    partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev = true)
-                                end
+                                copyto!(top_k_nodes, 1:n)
+                                partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev = true)
 
                                 if check_finished(
                                     global_approx, view(top_k_nodes, 1:union_sample),
-                                    n_pairs[], k, err, delta_l_guess, delta_u_guess,
+                                    n_pairs2[], k, err, delta_l_guess, delta_u_guess,
                                     omega, absolute, bet_buf, err_l_buf, err_u_buf
                                 )
                                     Threads.atomic_xchg!(stop_flag, true)
@@ -305,20 +328,20 @@ function kadabra_centrality(
         end
 
         # Wait for all worker tasks to finish safely
-        wait.(tasks)
+        wait.(phase2_tasks)
 
         # Final accurate aggregation of all counts
         fill!(global_approx, 0)
         for t_approx in approx_local
             global_approx .+= t_approx
         end
-        final_n_pairs = n_pairs[]
+        final_n_pairs = n_pairs2[] + tau
     else
-        # Sequential block remains mostly the same, ensuring one RNG stream is used
-        counts = global_approx
         ws = KadabraWorkspace(g)
         s_rng = rng === nothing ? Random.default_rng() : rng
+        counts = global_approx
 
+        # --- PHASE 1: burn-in. No stopping check, samples are discarded after calibration. ---
         for _ = 1:tau
             s = rand(s_rng, 1:n)
             t = rand(s_rng, 1:n)
@@ -327,12 +350,24 @@ function kadabra_centrality(
             end
             sample_shortest_path!(counts, ws, g, s_rng, T(s), T(t); endpoints = endpoints)
         end
-        final_n_pairs = tau
-        
+
+        # --- CALIBRATION: derive per-vertex delta_l_guess/delta_u_guess from Phase 1 estimates ---
+        copyto!(top_k_nodes, 1:n)
+        partialsort!(top_k_nodes, 1:union_sample, by = x -> counts[x], rev = true)
+        compute_delta_guess!(
+            delta_l_guess, delta_u_guess, view(top_k_nodes, 1:union_sample),
+            counts, tau, n, k, absolute, err, delta, start_factor,
+        )
+
+        # --- RESET: Phase 1 samples are thrown away; Phase 2 starts from scratch ---
+        fill!(counts, 0)
+
+        phase2_pairs = 0
         stop_flag_seq = false
         check_interval = max(1000, tau ÷ 10)
 
-        while !stop_flag_seq && final_n_pairs < omega
+        # --- PHASE 2: fresh sampling round, checked against the calibrated deltas ---
+        while !stop_flag_seq && phase2_pairs < omega
             for _ = 1:check_interval
                 s = rand(s_rng, 1:n)
                 t = rand(s_rng, 1:n)
@@ -340,24 +375,21 @@ function kadabra_centrality(
                     t = rand(s_rng, 1:n)
                 end
                 sample_shortest_path!(counts, ws, g, s_rng, T(s), T(t); endpoints = endpoints)
-                final_n_pairs += 1
+                phase2_pairs += 1
             end
 
-            if absolute
-                for i = 1:union_sample; top_k_nodes[i] = i; end
-            else
-                copyto!(top_k_nodes, 1:n)
-                partialsort!(top_k_nodes, 1:union_sample, by = x -> counts[x], rev = true)
-            end
+            copyto!(top_k_nodes, 1:n)
+            partialsort!(top_k_nodes, 1:union_sample, by = x -> counts[x], rev = true)
 
             if check_finished(
-                counts, view(top_k_nodes, 1:union_sample), final_n_pairs,
+                counts, view(top_k_nodes, 1:union_sample), phase2_pairs,
                 k, err, delta_l_guess, delta_u_guess, omega, absolute,
                 bet_buf, err_l_buf, err_u_buf
             )
                 stop_flag_seq = true
             end
         end
+        final_n_pairs = phase2_pairs + tau
     end
 
     res = [global_approx[v] / final_n_pairs for v = 1:n]
@@ -482,6 +514,134 @@ function compute_g(btilde::Float64, iter_num::Int, delta_u::Float64, omega::Floa
 end
 
 """
+    compute_bet_err!(bet, err_l, err_u, n_pairs, k_target, absolute, err, start_factor)
+
+Port of the C++ reference's `compute_bet_err` (Probabilistic.cpp:216-257). Given the
+current (Phase-1) betweenness estimates `bet` for the tracked top `union_sample` vertices
+(sorted descending, already filled in by the caller), fills in `err_l`/`err_u`: the
+per-vertex error budgets used to derive calibrated confidence-interval widths in
+[`compute_delta_guess!`](@ref). In absolute-error mode every vertex gets the same
+budget `err`; in top-k mode the budget depends on how close each vertex's estimate is
+to its rank-neighbors.
+"""
+function compute_bet_err!(
+    bet::Vector{Float64},
+    err_l::Vector{Float64},
+    err_u::Vector{Float64},
+    n_pairs::Int,
+    k_target::Int,
+    absolute::Bool,
+    err::Float64,
+    start_factor::Int,
+)
+    union_sample = length(bet)
+    if absolute
+        fill!(err_l, err)
+        fill!(err_u, err)
+    else
+        max_err = sqrt(start_factor) * err / 4
+        err_u[1] = max(err, (bet[1] - bet[2]) / 2)
+        err_l[1] = 10.0
+        for i = 2:k_target
+            err_l[i] = max(err, (bet[i-1] - bet[i]) / 2)
+            err_u[i] = max(err, (bet[i] - bet[i+1]) / 2)
+        end
+        for i = (k_target+1):union_sample
+            err_l[i] = 10.0
+            err_u[i] = max(err, bet[k_target] + (bet[k_target] - bet[k_target+1]) / 2 - bet[i])
+        end
+        for i = 1:(k_target-1)
+            if bet[i] - bet[i+1] < max_err
+                err_l[i] = err
+                err_u[i] = err
+                err_l[i+1] = err
+                err_u[i+1] = err
+            end
+        end
+        for i = (k_target+2):union_sample
+            if bet[k_target+1] - bet[i] < max_err
+                err_l[k_target+1] = err
+                err_u[k_target+1] = err
+                err_l[i] = err
+                err_u[i] = err
+            end
+        end
+    end
+    return nothing
+end
+
+"""
+    compute_delta_guess!(delta_l_guess, delta_u_guess, top_k_nodes, global_approx, n_pairs,
+                          n, k_target, absolute, err, delta, start_factor)
+
+Port of the C++ reference's `compute_delta_guess` (Probabilistic.cpp:261-309): the
+adaptive calibration step run once between the burn-in (Phase 1) and the main sampling
+round (Phase 2). Uses Phase 1's observed betweenness estimates for the `union_sample`
+currently-highest-ranked vertices (`top_k_nodes`, already sorted descending by
+`global_approx`) to bisection-search a per-vertex confidence budget that is tighter than
+the uniform `delta/(4n)` a naive allocation would give every vertex, while still
+respecting the overall `delta` guarantee across all `n` vertices (via a union bound over
+the untracked tail). Fills `delta_l_guess`/`delta_u_guess` (length `n`) in place.
+"""
+function compute_delta_guess!(
+    delta_l_guess::Vector{Float64},
+    delta_u_guess::Vector{Float64},
+    top_k_nodes::AbstractVector{Int},
+    global_approx::AbstractVector{<:Real},
+    n_pairs::Int,
+    n::Int,
+    k_target::Int,
+    absolute::Bool,
+    err::Float64,
+    delta::Float64,
+    start_factor::Int,
+)
+    union_sample = length(top_k_nodes)
+    balancing_factor = 0.001
+
+    bet = Vector{Float64}(undef, union_sample)
+    err_l = Vector{Float64}(undef, union_sample)
+    err_u = Vector{Float64}(undef, union_sample)
+
+    for i = 1:union_sample
+        bet[i] = global_approx[top_k_nodes[i]] / n_pairs
+    end
+    compute_bet_err!(bet, err_l, err_u, n_pairs, k_target, absolute, err, start_factor)
+
+    a = 0.0
+    b = 1.0 / err^2 * log(n * 4.0 * (1.0 - balancing_factor) / delta)
+
+    while b - a > err / 10
+        c = (a + b) / 2
+        s = 0.0
+        for i = 1:union_sample
+            s += exp(-c * err_l[i]^2 / bet[i])
+            s += exp(-c * err_u[i]^2 / bet[i])
+        end
+        s += (n - union_sample) * exp(-c * err_l[union_sample]^2 / bet[union_sample])
+        s += (n - union_sample) * exp(-c * err_u[union_sample]^2 / bet[union_sample])
+        if s >= delta / 2 * (1.0 - balancing_factor)
+            a = c
+        else
+            b = c
+        end
+    end
+
+    delta_l_min = exp(-b * err_l[union_sample]^2 / bet[union_sample]) + delta * balancing_factor / 4.0 / n
+    delta_u_min = exp(-b * err_u[union_sample]^2 / bet[union_sample]) + delta * balancing_factor / 4.0 / n
+
+    fill!(delta_l_guess, delta_l_min)
+    fill!(delta_u_guess, delta_u_min)
+
+    for i = 1:union_sample
+        v = top_k_nodes[i]
+        delta_l_guess[v] = exp(-b * err_l[i]^2 / bet[i]) + delta * balancing_factor / 4.0 / n
+        delta_u_guess[v] = exp(-b * err_u[i]^2 / bet[i]) + delta * balancing_factor / 4.0 / n
+    end
+    return nothing
+end
+
+"""
     check_finished(approx_counts, top_k_nodes, n_pairs, k, err, delta_l_guess, delta_u_guess, omega, absolute)
 
 Evaluates whether the KADABRA algorithm has met the stopping criteria based on the current samples.
@@ -519,7 +679,7 @@ function check_finished(
     all_finished = true
 
     if absolute
-        for i = 1:k
+        for i = 1:n_tracked
             finished = (err_l[i] < err) && (err_u[i] < err)
             all_finished = all_finished && finished
         end
