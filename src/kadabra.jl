@@ -150,25 +150,43 @@ function zero_alloc_top_k!(
 end
 
 """
-    kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; start_factor::Int=100)
+    kadabra_centrality(g::AbstractGraph, k::Int, err::Float64, delta::Float64; kwargs...)
 
-Estimates the betweenness centrality of vertices in graph `g` using the KADABRA algorithm 
-(Borassi & Natale, 2016). KADABRA is an adaptive sampling algorithm that guarantees the 
+Estimates the betweenness centrality of vertices in graph `g` using the KADABRA algorithm
+(Borassi & Natale, 2019). KADABRA is an adaptive sampling algorithm that guarantees the
 estimated betweenness is within an additive error bound with high probability.
+
+Weighted graphs are not supported; passing a `distmx` argument throws an `ArgumentError`.
 
 # Arguments
 - `g::AbstractGraph`: The input graph (directed or undirected).
-- `k::Int`: If `k = 0`, guarantees absolute error `err` for all vertices. If `k > 0`, 
+- `k::Int`: If `k = 0`, guarantees absolute error `err` for all vertices. If `k > 0`,
   guarantees the relative ranking of the top `k` vertices is correct within the error bound.
-- `err::Float64`: The maximum additive error tolerance (e.g., 0.01).
-- `delta::Float64`: The confidence parameter. Results are guaranteed with probability `1 - delta`.
-- `start_factor::Int`: Keyword argument to scale the initial burn-in phase duration (default: 100).
+- `err::Float64`: The maximum additive error tolerance (e.g., 0.01). Must be positive.
+- `delta::Float64`: The confidence parameter. Results are guaranteed with probability `1 - delta`. Must lie in `(0, 1)`.
+
+# Keyword arguments
+- `start_factor::Int`: Scales the initial burn-in phase duration, which draws `omega / start_factor` samples (default: 100).
 - `endpoints::Bool`: If true, include the endpoints of the sampled shortest paths in the centrality counts (default: false).
 - `normalize::Symbol`: How to normalize the output. `:graphs` matches Graphs.jl, `:kadabra` matches the raw KADABRA paper output, `:none` returns unnormalized counts (default: `:graphs`).
+- `parallel::Bool`: If true, sample with `Threads.nthreads()` tasks; if false, use a single sampling stream (default: true).
+- `rng::Union{AbstractRNG,Nothing}`: Seed source for reproducible runs (default: `nothing`, i.e. the global RNG). With `parallel=false` the output is bit-identical across runs with the same seed. With `parallel=true` each worker's sampling stream is seeded deterministically, but how many samples each worker contributes before the shared stopping condition fires depends on thread scheduling, so estimates vary slightly between runs (within the `err` guarantee). Use `parallel=false` when exact reproducibility is required.
 
 # Returns
-- `NamedTuple`: A named tuple containing three `Vector{Float64}`: `centralities`, `lower_bounds`, 
-  and `upper_bounds` for each vertex.
+A `NamedTuple` with fields:
+- `centralities::Vector{Float64}`: the betweenness estimate per vertex.
+- `lower_bounds::Vector{Float64}`, `upper_bounds::Vector{Float64}`: per-vertex confidence-interval endpoints, scaled by the same `normalize` convention.
+- `n_samples::Int`: total shortest-path pairs sampled, including the burn-in phase.
+- `omega::Float64`: the worst-case sample budget implied by `err`, `delta`, and the estimated diameter.
+- `tau::Int`: the burn-in sample count.
+
+# Examples
+```julia
+res = kadabra_centrality(g, 0, 0.01, 0.1)            # absolute error 0.01 for every vertex
+res = kadabra_centrality(g, 10, 0.01, 0.1)           # rank the top 10 vertices
+res = kadabra_centrality(g, 0, 0.01, 0.1; rng=Xoshiro(42), parallel=false)  # reproducible
+res.centralities, res.lower_bounds, res.n_samples
+```
 """
 function kadabra_centrality(
     g::AbstractGraph{T},

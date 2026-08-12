@@ -1,13 +1,23 @@
 # Benchmark Scripts
 
-This directory contains all the Julia scripts required to run performance evaluations, calculate exact ground truths, compare Top-K rankings, and measure parallel thread scaling.
+- `BenchmarkUtils.jl`: reusable graph-loading and instance-parsing helpers. Imported by
+  `../simexpal_runners/run_experiments.jl`; not meant to be run directly.
 
-## Available Scripts
+To reproduce the measurements in the report, use `../reproduce_report.sh` (see
+`../README.md`). It drives `../simexpal_runners/run_experiments.jl` directly and
+post-processes the results with `../summarize_reproduce.py`.
 
-- `run_benchmarks.jl`: The primary evaluation script. It runs KADABRA, BRAVA-GNN, and baselines against the Exact Brandes algorithm and saves metrics to `../results/benchmark_results.csv`.
-- `benchmark_error_bounds.jl`: Benchmarks the error bounds of Kadabra specifically.
-- `compare_topk.jl`: Tests the rank accuracy of the Top-K nodes (e.g. top 100 highest betweenness nodes) and saves to `../results/topk_results.csv`.
-- `generate_benchmarks.jl`: Automates the precomputation of Exact Brandes scores. Output is stored in `../cache/`.
-- `run_thread_scaling.jl`: Main entrypoint for the Thread Scaling experiments. It scales from 1 to N threads.
-- `worker_thread_scaling.jl`: The worker script spawned by `run_thread_scaling.jl` to isolate Julia threading runs.
-- `BenchmarkUtils.jl`: Reusable utilities and data loading functions for the benchmark scripts.
+## Removed scripts
+
+An earlier generation of ad-hoc benchmark scripts lived here
+(`run_benchmarks.jl`, `generate_benchmarks.jl`, `benchmark_error_bounds.jl`,
+`compare_topk.jl`, `run_thread_scaling.jl`, `worker_thread_scaling.jl`, and the
+`kadabra/` evaluation suite). They produced the thread-scaling, top-$k$ and
+error-bound analyses that are no longer part of the report, and they predate the
+sampling fix in `src/kadabra.jl`, so their numbers are not comparable with
+current runs. They were removed rather than left to rot; recover any of them with:
+
+```
+git log --diff-filter=D --oneline -- benchmark/scripts
+git checkout <commit>^ -- benchmark/scripts/<file>
+```

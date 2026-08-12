@@ -4,6 +4,16 @@ using Graphs
 using StatsBase
 import JLD2
 
+# Must load CUDA/cuDNN before Flux/BRAVAGNN are used, so the Lux/MLDataDevices
+# GPU-backend extension registers correctly. A late, in-function `import CUDA`
+# (as brava_centrality's --gpu fallback does) is too late for this to trigger.
+# Only paid for runs that actually pass --gpu, so kadabra/brandes/CPU brava
+# runs are unaffected.
+if "--gpu" in ARGS
+    import CUDA
+    import cuDNN
+end
+
 const USE_STATIC_GRAPHS = true
 if USE_STATIC_GRAPHS
     using StaticGraphs
@@ -92,7 +102,21 @@ function main()
             weight_path = joinpath(@__DIR__, "..", "cache", "bravagnn_weights.jld2")
             if isfile(weight_path)
                 Main.JLD2.@load weight_path model
+                if !(model isa Main.BRAVAGNN.BRAVAModel)
+                    error(
+                        "run_experiments: loaded object from $weight_path is a $(typeof(model)), " *
+                        "not a BRAVAModel. The checkpoint was likely saved against a stale/incompatible " *
+                        "struct definition (JLD2 reconstruction failure). Retrain from a cold Julia " *
+                        "process (`julia --project=. src/train_bravagnn.jl`) and verify " *
+                        "`typeof(model) === BRAVAGNN.BRAVAModel` after loading.",
+                    )
+                end
                 brava_model = model
+            else
+                println(
+                    "WARNING: no BRAVA weight file found at $weight_path — falling back to an " *
+                    "UNTRAINED model. Scores from this run carry no learned signal.",
+                )
             end
         end
 
@@ -100,7 +124,8 @@ function main()
         # JIT WARMUP
         # ---------------------------------------------------------
         println("Performing JIT Warmup...")
-        dummy_g_raw = Main.Graphs.SimpleGraph(100, 500)
+        dummy_g_raw =
+            is_directed ? Main.Graphs.SimpleDiGraph(100, 500) : Main.Graphs.SimpleGraph(100, 500)
             dummy_g =
                 USE_STATIC_GRAPHS ?
                 (is_directed ? StaticDiGraph(dummy_g_raw) : StaticGraph(dummy_g_raw)) :
@@ -183,6 +208,8 @@ function main()
 
         local lower_bounds = nothing
         local upper_bounds = nothing
+        local kadabra_omega = nothing
+        local kadabra_tau = nothing
 
         if algo == "kadabra"
             # Start timing
@@ -202,6 +229,8 @@ function main()
             lower_bounds = res.lower_bounds
             upper_bounds = res.upper_bounds
             n_samples = res.n_samples
+            kadabra_omega = res.omega
+            kadabra_tau = res.tau
 
             end_time = time_ns()
             execution_time = (end_time - start_time) / 1e9
@@ -240,7 +269,31 @@ function main()
         # Read Ground truth
         graph_name = replace(basename(input_file), ".txt" => "")
         gt_path = joinpath(@__DIR__, "..", "..", "Instances", "ground_truth", "test_instances", "$(graph_name)_bet.csv")
-        
+
+        # If this is a full-ranking (k=0) KADABRA run and no ground truth exists yet,
+        # write the freshly-computed centralities out as the ground truth for this
+        # graph, so subsequent runs (e.g. k>0 on the same graph) can evaluate against
+        # it. Accuracy metrics are left unset for this bootstrapping run itself.
+        if algo == "kadabra" && k == 0 && !isfile(gt_path)
+            min_node = typemax(Int)
+            for line in eachline(input_file)
+                line = strip(line)
+                (isempty(line) || startswith(line, "#")) && continue
+                parts = split(line)
+                length(parts) >= 2 || continue
+                min_node = min(min_node, parse(Int, parts[1]), parse(Int, parts[2]))
+            end
+            gt_shift = min_node == 0 ? 1 : 0
+            mkpath(dirname(gt_path))
+            open(gt_path, "w") do io
+                println(io, "node,betweenness")
+                for (v, cent) in enumerate(centralities)
+                    println(io, "$(v - gt_shift),$(cent)")
+                end
+            end
+            println("No ground truth found; wrote KADABRA k=0 result as new ground truth: $gt_path")
+        end
+
         tau_overall = NaN
         tau_topk = NaN
         overlap = 0
@@ -336,6 +389,11 @@ function main()
             "execution_time_seconds" => execution_time,
             "io_time_seconds" => io_time,
             "num_samples" => n_samples,
+            "kadabra_omega" => kadabra_omega,
+            "kadabra_tau" => kadabra_tau,
+            "samples_over_omega" =>
+                (kadabra_omega === nothing || kadabra_omega == 0) ? nothing :
+                n_samples / kadabra_omega,
             "tau_overall" => isnan(tau_overall) ? nothing : tau_overall,
             "tau_topk" => isnan(tau_topk) ? nothing : tau_topk,
             "overlap_topk" => overlap,

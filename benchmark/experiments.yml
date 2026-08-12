@@ -23,6 +23,8 @@ instances:
       - com-lj.txt
       - dblp.txt
 
+  # Only the directed graphs with a currently-correct ground-truth file
+  # (see Report appendix "Ground-Truth Correction and Recomputation Time").
   - repo: local
     set:
       - TestInstances_Directed
@@ -31,11 +33,37 @@ instances:
       - soc-Epinions1.txt
       - soc-Slashdot0902.txt
       - email-EuAll.txt
+
+  # Directed graphs that currently have NO correct ground-truth file: the
+  # originally-supplied files were shuffled (moved to
+  # Instances/ground_truth/CORRUPT_test_instances/) and have not yet been
+  # regenerated, or (soc-LiveJournal1) never had one. Not referenced by any
+  # active matrix row below until ground truth is available -- see the
+  # TopKTiming_Directed set/matrix entry, whose k=0 runs regenerate ground
+  # truth for four of these five graphs.
+  - repo: local
+    set:
+      - TestInstances_Directed_NoGroundTruth
+    subdir: TestInstances
+    items:
       - web-Google.txt
       - soc-Pokec.txt
       - wiki-topcats.txt
       - wiki-Talk.txt
       - soc-LiveJournal1.txt
+
+  # Subset used for the top-k early-stopping timing experiment (see
+  # Report appendix "Top-k Early-Stopping Hypothesis"): the graphs whose
+  # ground truth needed regenerating and were too large for exact Brandes.
+  - repo: local
+    set:
+      - TopKTiming_Directed
+    subdir: TestInstances
+    items:
+      - web-Google.txt
+      - soc-Pokec.txt
+      - wiki-topcats.txt
+      - wiki-Talk.txt
 
 # 2. Parameter Variants & Environments
 variants:
@@ -189,6 +217,8 @@ matrix:
       instsets: [TestInstances_Undirected,ABCDE_Undirected]
       variants: [undirected, k0, k10, k100, err01, err0001, seed0, seed1, seed2]
 
+    # Only covers the 3 directed graphs with valid ground truth right now;
+    # see TestInstances_Directed_NoGroundTruth above.
     - experiments: [kadabra-cpp, kadabra-julia]
       instsets: [TestInstances_Directed]
       variants: [directed, k0, k10, k100, err01, err0001, seed0, seed1, seed2]
@@ -212,3 +242,11 @@ matrix:
     - experiments: [kadabra-julia]
       instsets: [ABCDE_Undirected]
       variants: [undirected, k0, err0001, seed0, t1, t4, t8, t16, t24, t32, t48]
+
+    # NEW EXPERIMENT: Top-k early-stopping timing at tight epsilon.
+    # Single seed only (these graphs are large; see Report appendix).
+    # Executed manually (not via `simexpal launch`) to avoid sweeping in
+    # the much larger pending TestInstances_Directed matrix row above.
+    - experiments: [kadabra-julia]
+      instsets: [TopKTiming_Directed]
+      variants: [directed, k0, k10, k100, err0001, seed0, t16]
