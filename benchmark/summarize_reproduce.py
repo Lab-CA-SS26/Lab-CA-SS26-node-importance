@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Turn reproduce_report.sh's raw JSON output into the report's LaTeX tables.
 
-Usage:  summarize_reproduce.py {tight|bvk} <result-dir>
+Usage:  summarize_reproduce.py {tight|bvk|k} <result-dir>
 
 Emits, for the requested stage, the LaTeX table body that belongs in
 Report/tables/ plus the summary statistics quoted in the report prose.
@@ -119,8 +119,42 @@ def bvk(d):
     print(f"  KADABRA higher top-100 overlap on {ok_wins}/{len(rows)} graphs")
 
 
+def k_sweep(d):
+    """Effect of the top-k restriction on runtime and sample count."""
+    ks = [0, 10, 100]
+    rows, missing = [], []
+    for g in TIGHT_GRAPHS:
+        runs = {k: load(f"{d}/k_julia_{g}_k{k}.json") for k in ks}
+        if not all(runs.values()):
+            missing.append(f"{g}({','.join(str(k) for k in ks if not runs[k])})")
+            continue
+        rows.append((g,
+                     [runs[k]["execution_time_seconds"] for k in ks],
+                     [runs[k]["num_samples"] for k in ks]))
+    if missing:
+        print(f"!! missing runs: {', '.join(missing)}", file=sys.stderr)
+    if not rows:
+        return
+
+    print("% ---- Report/tables/k_sweep_table.tex (body) ----")
+    for g, times, samples in rows:
+        rel = " & ".join(f"${t/times[0]:.2f}\\times$" for t in times[1:])
+        print(f"            {g:17s} & {sec(times[0])} & {sec(times[1])} & {sec(times[2])} "
+              f"& {rel} & ${num(samples[0])}$ \\\\")
+
+    print("\n% ---- figures quoted in the k-sweep section ----")
+    for idx, k in ((1, 10), (2, 100)):
+        r = [times[idx] / times[0] for _, times, _ in rows]
+        srel = [s[idx] / s[0] for _, _, s in rows]
+        print(stats(f"runtime k={k} / k=0", r))
+        print(stats(f"samples k={k} / k=0", srel))
+    unchanged = [g for g, _, s in rows if abs(s[1] - s[0]) / s[0] < 0.01
+                 and abs(s[2] - s[0]) / s[0] < 0.01]
+    print(f"  sample count essentially unchanged (<1%) on: {', '.join(unchanged) or 'none'}")
+
+
 if __name__ == "__main__":
-    if len(sys.argv) != 3 or sys.argv[1] not in ("tight", "bvk"):
+    if len(sys.argv) != 3 or sys.argv[1] not in ("tight", "bvk", "k"):
         print(__doc__, file=sys.stderr)
         sys.exit(2)
-    (tight if sys.argv[1] == "tight" else bvk)(sys.argv[2].rstrip("/"))
+    {"tight": tight, "bvk": bvk, "k": k_sweep}[sys.argv[1]](sys.argv[2].rstrip("/"))

@@ -553,7 +553,12 @@ function compute_bet_err!(
     start_factor::Int,
 )
     union_sample = length(bet)
-    if absolute
+    # The top-k budgets reference rank neighbours at positions up to `k_target + 1`, so they
+    # are only defined when the tracking set extends past rank k. That holds for any graph
+    # large enough to make top-k meaningful, but not for tiny ones (e.g. a JIT-warmup graph
+    # with fewer vertices than k), where we fall back to the uniform budget. The C++
+    # reference indexes past the end of its array here instead of guarding.
+    if absolute || union_sample <= k_target
         fill!(err_l, err)
         fill!(err_u, err)
     else
