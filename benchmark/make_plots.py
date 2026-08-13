@@ -56,7 +56,7 @@ def load(path):
 
 def plot_threads(d, outdir):
     graphs = ["soc-Slashdot0902", "amazon", "cit-Patents", "com-lj"]
-    fig, axes = plt.subplots(2, 2, figsize=(7.0, 5.0))
+    fig, axes = plt.subplots(2, 2, figsize=(7.0, 3.7))
     any_data = False
 
     for ax, g in zip(axes.flat, graphs):
