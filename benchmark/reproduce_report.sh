@@ -14,7 +14,8 @@
 #
 #   --stage tight   only the eps=1e-4 C++ vs Julia comparison  (~6h, dominated by amazon/dblp)
 #   --stage bvk     only the eps=1e-2 BRAVA vs KADABRA comparison (~20 min)
-#   --stage all     both (default)
+#   --stage k       only the top-k runtime sweep, Julia at eps=1e-4 (hours; reuses tight's k=0)
+#   --stage all     all three (default)
 #
 # Notes:
 #   * Run this from the `benchmark/` directory of a checkout that has the
@@ -135,11 +136,44 @@ run_bvk() {
     python3 summarize_reproduce.py bvk "$OUTDIR"
 }
 
+# ---------------------------------------------------------------------------
+# Stage 3: effect of k on runtime  (report Section 6.4)
+# ---------------------------------------------------------------------------
+# Same instances and epsilon as stage 'tight', Julia only. k=0 is not re-run:
+# stage 'tight' already produced it under the same parameters.
+run_k() {
+    echo "=== Stage 'k': effect of top-k on runtime, eps=1e-4, Julia ==="
+    local specs=(
+        "email-EuAll      $INST/TestInstances/email-EuAll.txt      --directed"
+        "soc-Epinions1    $INST/TestInstances/soc-Epinions1.txt    --directed"
+        "p2p-Gnutella31   $INST/TestInstances/p2p-Gnutella31.txt   "
+        "soc-Slashdot0902 $INST/TestInstances/soc-Slashdot0902.txt --directed"
+        "amazon           $INST/ABCDE/amazon.txt                   "
+        "dblp             $INST/ABCDE/dblp.txt                     "
+    )
+    for spec in "${specs[@]}"; do
+        read -r name path dflag <<<"$spec"
+        # k=0 comes from stage 'tight'; link it in so the summary sees all three
+        [[ -f "$OUTDIR/tight_julia_$name.json" && ! -f "$OUTDIR/k_julia_${name}_k0.json" ]] && \
+            cp "$OUTDIR/tight_julia_$name.json" "$OUTDIR/k_julia_${name}_k0.json"
+        for k in 10 100; do
+            local out="$OUTDIR/k_julia_${name}_k${k}.json"
+            [[ -f "$out" ]] && { echo "  skip (exists): $(basename "$out")"; continue; }
+            echo "[$(date +%H:%M:%S)] $name k=$k"
+            julia --project=.. "$JL_RUNNER" ${dflag:-} -i "$path" -o "$out" \
+                -a kadabra -v julia --epsilon 0.0001 --delta 0.1 -k "$k" -s 0 -t "$THREADS" >/dev/null
+        done
+    done
+    echo
+    python3 summarize_reproduce.py k "$OUTDIR"
+}
+
 case "$STAGE" in
     tight) run_tight ;;
     bvk)   run_bvk ;;
-    all)   run_tight; echo; run_bvk ;;
-    *) echo "unknown stage: $STAGE (expected tight|bvk|all)" >&2; exit 2 ;;
+    k)     run_k ;;
+    all)   run_tight; echo; run_bvk; echo; run_k ;;
+    *) echo "unknown stage: $STAGE (expected tight|bvk|k|all)" >&2; exit 2 ;;
 esac
 
 echo
