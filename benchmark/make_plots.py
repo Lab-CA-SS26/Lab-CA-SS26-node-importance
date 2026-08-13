@@ -4,6 +4,7 @@
 Usage:
     make_plots.py threads <ts-result-dir>  <outdir>   # Figure: thread scaling
     make_plots.py bvk     <bvk-result-dir> <outdir>   # Figure: BRAVA-GNN vs KADABRA
+    make_plots.py k       <k-result-dir>   <outdir>   # Figure: effect of top-k on runtime
 
 Writes PDF (vector, for LaTeX) and PNG (for quick inspection).
 """
@@ -56,7 +57,7 @@ def load(path):
 
 def plot_threads(d, outdir):
     graphs = ["soc-Slashdot0902", "amazon", "cit-Patents", "com-lj"]
-    fig, axes = plt.subplots(2, 2, figsize=(7.0, 3.7))
+    fig, axes = plt.subplots(2, 2, figsize=(7.0, 3.2))
     any_data = False
 
     for ax, g in zip(axes.flat, graphs):
@@ -159,6 +160,42 @@ def plot_bvk(d, outdir):
     save(fig, outdir, "brava_vs_kadabra")
 
 
+def plot_k(d, outdir):
+    """Runtime and sample count under top-k, relative to the k=0 baseline."""
+    graphs = ["p2p-Gnutella31", "soc-Epinions1", "soc-Slashdot0902",
+              "email-EuAll", "amazon", "dblp"]
+    rows = []
+    for g in graphs:
+        runs = {k: load(f"{d}/k_julia_{g}_k{k}.json") for k in (0, 10, 100)}
+        if not all(runs.values()):
+            continue
+        rows.append((g,
+                     [runs[k]["execution_time_seconds"] for k in (0, 10, 100)],
+                     [runs[k]["num_samples"] for k in (0, 10, 100)]))
+    if not rows:
+        print("no k-sweep data found", file=sys.stderr)
+        return
+
+    import numpy as np
+    x = np.arange(len(rows))
+    w = 0.36
+    # Runtime only: sample counts track it almost exactly, so a second panel would
+    # restate the same shape. The correspondence is quoted in the text instead.
+    fig, ax = plt.subplots(figsize=(4.6, 2.9))
+    for off, kk, colour in ((-w / 2, 1, C_JULIA), (w / 2, 2, C_CPP)):
+        vals = [r[1][kk] / r[1][0] for r in rows]
+        ax.bar(x + off, vals, w * 0.92, color=colour,
+               label=f"$k={10 if kk == 1 else 100}$", zorder=3)
+    ax.axhline(1.0, color=INK, linewidth=1.0, zorder=4)
+    ax.set_xticks(x)
+    ax.set_xticklabels([r[0] for r in rows], rotation=35, ha="right", fontsize=7.5)
+    ax.set_ylabel("runtime rel.\ to $k=0$", fontsize=8.5, color=MUTED)
+    ax.legend(frameon=False, fontsize=8, loc="upper left")
+    style(ax)
+    fig.tight_layout()
+    save(fig, outdir, "k_sweep")
+
+
 def save(fig, outdir, stem):
     os.makedirs(outdir, exist_ok=True)
     for ext in ("pdf", "png"):
@@ -169,8 +206,8 @@ def save(fig, outdir, stem):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4 or sys.argv[1] not in ("threads", "bvk"):
+    if len(sys.argv) != 4 or sys.argv[1] not in ("threads", "bvk", "k"):
         print(__doc__, file=sys.stderr)
         sys.exit(2)
-    (plot_threads if sys.argv[1] == "threads" else plot_bvk)(
+    {"threads": plot_threads, "bvk": plot_bvk, "k": plot_k}[sys.argv[1]](
         sys.argv[2].rstrip("/"), sys.argv[3])

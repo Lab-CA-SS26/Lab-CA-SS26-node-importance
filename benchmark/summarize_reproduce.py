@@ -136,7 +136,7 @@ def k_sweep(d):
     if not rows:
         return
 
-    print("% ---- Report/tables/k_sweep_table.tex (body) ----")
+    print("% ---- k-sweep: runtime (s) and samples at k = 0, 10, 100 ----")
     for g, times, samples in rows:
         rel = " & ".join(f"${t/times[0]:.2f}\\times$" for t in times[1:])
         print(f"            {g:17s} & {sec(times[0])} & {sec(times[1])} & {sec(times[2])} "
