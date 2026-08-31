@@ -105,7 +105,39 @@ def plot_threads(d, outdir):
     save(fig, outdir, "thread_scaling")
 
 
+def _repeat_means(d):
+    """Accuracy averaged over repeat runs, when `d` carries them.
+
+    Panel (b)'s point is that the two methods separate on every graph, and on
+    `soc-Slashdot0902` they are close enough that a single draw of each puts them the
+    wrong way round -- top-100 overlap varies by up to +/-13 across runs. Plotting the
+    same means the table quotes keeps the figure from asserting a crossing that is
+    noise. Falls back to the single-run values when the repeats are absent.
+
+    Returns {graph: (tau_brava, tau_kadabra, ovl_brava, ovl_kadabra)}.
+    """
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from summarize_seeds import brava_seeds, kadabra_seeds
+    except ImportError:
+        return {}
+    kad_dir, log = os.path.join(d, "kadabra_seeds"), os.path.join(d, "logs", "eval_seeds.log")
+    if not (os.path.isdir(kad_dir) and os.path.isfile(log)):
+        return {}
+    kad, bra = kadabra_seeds(kad_dir), brava_seeds(log)
+    out = {}
+    for g in set(kad) & set(bra):
+        out[g] = (sum(bra[g]["tau"]) / len(bra[g]["tau"]),
+                  sum(kad[g]["tau"]) / len(kad[g]["tau"]),
+                  sum(bra[g]["ovl"]) / len(bra[g]["ovl"]),
+                  sum(kad[g]["ovl"]) / len(kad[g]["ovl"]))
+    if out:
+        print(f"panel (b): accuracy averaged over repeat runs for {len(out)} graph(s)")
+    return out
+
+
 def plot_bvk(d, outdir):
+    means = _repeat_means(d)
     rows = []
     for g in BVK_GRAPHS:
         k = load(f"{d}/bvk_kadabra_{g}.json") or load(f"{d}/kadabra_{g}.stats.json")
@@ -113,10 +145,13 @@ def plot_bvk(d, outdir):
         bg = load(f"{d}/bvk_brava_gpu_{g}.json") or load(f"{d}/brava_gpu_{g}.stats.json")
         if not (k and bc and bg):
             continue
+        # Wall-clock always comes from the single exclusive-access pass; only accuracy
+        # is averaged, since the repeats did not have the machine to themselves.
+        bt, kt, bo, ko = means.get(g, (bc.get("tau_overall"), k.get("tau_overall"),
+                                       bc.get("overlap_topk"), k.get("overlap_topk")))
         rows.append((g, sum(SIZES[g]), bc["execution_time_seconds"],
                      bg["execution_time_seconds"], k["execution_time_seconds"],
-                     bc.get("tau_overall"), k.get("tau_overall"),
-                     bc.get("overlap_topk"), k.get("overlap_topk")))
+                     bt, kt, bo, ko))
     if not rows:
         print("no BRAVA/KADABRA data found", file=sys.stderr)
         return

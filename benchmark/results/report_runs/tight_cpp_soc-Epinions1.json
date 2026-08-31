@@ -1,0 +1,16 @@
+{
+    "execution_time_seconds": 95.191213066,
+    "io_time_seconds": 0.367763561,
+    "num_samples": 82899916,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": true,
+        "epsilon": 0.0001,
+        "input_file": "../Instances/TestInstances/soc-Epinions1.txt",
+        "k": 0,
+        "seed": 0,
+        "threads": 8,
+        "version": "cpp"
+    }
+}

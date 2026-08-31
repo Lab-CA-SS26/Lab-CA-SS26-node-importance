@@ -1,0 +1,24 @@
+{
+    "execution_time_seconds": 12.790124953,
+    "io_time_seconds": 9.76163857,
+    "kadabra_omega": null,
+    "kadabra_tau": null,
+    "mae": 5.34194927502756,
+    "max_ae": 34.25138312576012,
+    "ndcg_topk": 0.7304982374662333,
+    "num_samples": 1,
+    "overlap_topk": 56,
+    "parameters": {
+        "algorithm": "brava",
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.01,
+        "input_file": "../Instances/ABCDE/dblp.txt",
+        "k": 0,
+        "threads": 8,
+        "version": "julia"
+    },
+    "samples_over_omega": null,
+    "tau_overall": 0.7902079967709322,
+    "tau_topk": 0.43676767676767675
+}

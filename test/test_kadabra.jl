@@ -67,12 +67,12 @@ include("../src/kadabra.jl")
         ws_path = KadabraWorkspace(path_g)
         counts_path = zeros(Int, 5)
 
-        sample_shortest_path!(counts_path, ws_path, path_g, 1, 5; endpoints = true)
+        sample_shortest_path!(counts_path, ws_path, path_g, Random.Xoshiro(1), 1, 5; endpoints = true)
         # 1-5 shortest path includes all 5 nodes, so counts_path should be 1 for all of them
         @test all(counts_path .== 1)
 
         # Test Same Source and Target
-        sample_shortest_path!(counts_path, ws_path, path_g, 3, 3; endpoints = true)
+        sample_shortest_path!(counts_path, ws_path, path_g, Random.Xoshiro(1), 3, 3; endpoints = true)
         # Should do nothing, return directly
         @test counts_path[3] == 1 # still 1 from previous call
 
@@ -85,7 +85,7 @@ include("../src/kadabra.jl")
         ws_disc = KadabraWorkspace(disc_g)
         counts_disc = zeros(Int, 5)
 
-        sample_shortest_path!(counts_disc, ws_disc, disc_g, 1, 5; endpoints = true)
+        sample_shortest_path!(counts_disc, ws_disc, disc_g, Random.Xoshiro(1), 1, 5; endpoints = true)
         @test all(counts_disc .== 0)
 
         # Ensure workspace cleans up correctly (ball indicators reset to 0)
@@ -151,5 +151,32 @@ include("../src/kadabra.jl")
         # Test that they are sorted by centrality in descending order
         cents = [x.centrality for x in top_k_res]
         @test issorted(cents, rev = true)
+    end
+    @testset "7. Top-k budget-allocation variants" begin
+        # The paper and the C++ reference pair the rank gaps with opposite sides of each
+        # vertex's confidence interval (see kadabra_centrality's `topk_variant`). All three
+        # readings must run and must agree on who the most central vertex is; only the
+        # sample count is allowed to differ.
+        g = star_graph(50)
+        for variant in (:code, :paper, :cpp)
+            res = kadabra_centrality(g, 3, 0.1, 0.1; start_factor = 10, parallel = false,
+                                     rng = Random.Xoshiro(1), topk_variant = variant)
+            @test argmax(res.centralities) == 1
+            @test res.n_samples > 0
+        end
+        @test_throws ArgumentError kadabra_centrality(g, 3, 0.1, 0.1; topk_variant = :nope)
+
+        # On well-separated ranks the two allocations really are transposed.
+        bet = [0.30, 0.20, 0.18, 0.05, 0.04, 0.01, 0.005]
+        el_c, eu_c = zeros(7), zeros(7)
+        el_p, eu_p = zeros(7), zeros(7)
+        compute_bet_err!(copy(bet), el_c, eu_c, 10_000, 3, false, 0.001, 100; variant = :code)
+        compute_bet_err!(copy(bet), el_p, eu_p, 10_000, 3, false, 0.001, 100; variant = :paper)
+        # v_1's lower budget is what the stopping test needs; only :paper sizes it.
+        @test el_p[1] < 1.0
+        @test el_c[1] > 1.0
+        # v_2: the two budgets are each other's mirror image.
+        @test el_p[2] ≈ eu_c[2]
+        @test eu_p[2] ≈ el_c[2]
     end
 end

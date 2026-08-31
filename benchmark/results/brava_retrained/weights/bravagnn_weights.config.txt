@@ -1,0 +1,10 @@
+trained      : 2026-08-15 13:13:30
+init_type    : degree_mix_mass_6
+nhid         : 12
+num_layers   : 2
+dropout      : 0.3
+epochs       : 10
+optimizer    : Adam(lr=0.005)
+loss         : authors
+seed         : 1
+training_set : 30 graphs from /home/stud/schlaierm0/Lab-CA-SS26-node-importance/Instances/Training

@@ -1,0 +1,24 @@
+{
+    "execution_time_seconds": 1.727594733,
+    "io_time_seconds": 0.390722688,
+    "kadabra_omega": 38693.604646895335,
+    "kadabra_tau": 387,
+    "mae": 8.076161660146326e-6,
+    "max_ae": 0.001305855324546138,
+    "ndcg_topk": 0.9937669975140356,
+    "num_samples": 28387,
+    "overlap_topk": 91,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": true,
+        "epsilon": 0.01,
+        "input_file": "/home/stud/schlaierm0/Lab-CA-SS26-node-importance/Instances/TestInstances/soc-Epinions1.txt",
+        "k": 0,
+        "threads": 8,
+        "version": "julia"
+    },
+    "samples_over_omega": 0.733635448520501,
+    "tau_overall": 0.5979657039143393,
+    "tau_topk": 0.8380345729205708
+}

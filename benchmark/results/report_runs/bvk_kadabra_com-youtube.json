@@ -1,0 +1,24 @@
+{
+    "execution_time_seconds": 3.899893831,
+    "io_time_seconds": 2.959854048,
+    "kadabra_omega": 35664.999342455565,
+    "kadabra_tau": 357,
+    "mae": 2.3356095038117917e-06,
+    "max_ae": 0.003924418642598071,
+    "ndcg_topk": 0.9992769112760761,
+    "num_samples": 37357,
+    "overlap_topk": 95,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.01,
+        "input_file": "../Instances/ABCDE/com-youtube.txt",
+        "k": 0,
+        "threads": 8,
+        "version": "julia"
+    },
+    "samples_over_omega": 1.0474414885388847,
+    "tau_overall": 0.34935689957945654,
+    "tau_topk": 0.8642053010949713
+}

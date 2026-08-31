@@ -70,6 +70,10 @@ function parse_cmdline()
         "--gpu"
         help = "Use GPU for BRAVA inference if available"
         action = :store_true
+        "--topk-variant"
+        help = "Top-k confidence-budget allocation: code (C++ reference), paper, or cpp (C++ verbatim). Ignored when k=0."
+        arg_type = String
+        default = "code"
     end
 
     return parse_args(s)
@@ -87,7 +91,25 @@ function main()
         output_file = parsed_args["output_file"]
         threads = Threads.nthreads()
         println("Aktive Threads: ", Threads.nthreads())
+        # `-t` is recorded nowhere: the thread count is whatever Julia was started with,
+        # i.e. JULIA_NUM_THREADS (reproduce_report.sh exports it). Invoking this runner
+        # directly and passing only `-t N` silently gives a single-threaded run, which
+        # is not merely slower --- fewer workers overshoot the shared stopping condition
+        # by less, so KADABRA draws fewer samples and lands at a lower tau_b. Loud,
+        # because the resulting JSON is perfectly valid and the discrepancy is only
+        # visible in `parameters.threads`.
+        # Only the "asked for more than we got" direction: `-t` defaults to 1, so an
+        # equality check would fire on every run that simply omits it.
+        if parsed_args["threads"] > threads
+            @warn "requested -t $(parsed_args["threads"]) but Julia is running with " *
+                  "$threads thread(s); results are NOT comparable to runs made at the " *
+                  "requested count. Set JULIA_NUM_THREADS=$(parsed_args["threads"]) " *
+                  "(or julia -t $(parsed_args["threads"])) instead."
+        end
         k = parsed_args["k"]
+        topk_variant = Symbol(parsed_args["topk-variant"])
+        topk_variant in (:code, :paper, :cpp, :paper_bd, :paper_ex) ||
+            error("--topk-variant must be code, paper, cpp, paper_bd or paper_ex (got $(parsed_args["topk-variant"]))")
         delta = parsed_args["delta"]
         epsilon = parsed_args["epsilon"]
         algo = parsed_args["algorithm"]
@@ -139,6 +161,7 @@ function main()
                     delta;
                     start_factor = 10,
                     endpoints = false,
+                    topk_variant = topk_variant,
                     rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
                 )
             elseif algo == "brava"
@@ -186,6 +209,7 @@ function main()
                 delta;
                 start_factor = 10,
                 endpoints = false,
+                topk_variant = topk_variant,
                 rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
             )
         elseif algo == "brava"
@@ -223,6 +247,7 @@ function main()
                 delta;
                 start_factor = 100,
                 endpoints = false,
+                topk_variant = topk_variant,
                 rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
             )
             centralities = res.centralities
@@ -382,6 +407,8 @@ function main()
                 "version" => version,
                 "threads" => threads,
                 "k" => k,
+                "topk_variant" => String(topk_variant),
+                "seed" => parsed_args["seed"],
                 "delta" => delta,
                 "epsilon" => epsilon,
                 "directed" => is_directed,

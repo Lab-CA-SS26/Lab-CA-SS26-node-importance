@@ -1,0 +1,263 @@
+graph          email-EuAll.txt  (n=265214, m=420045, directed=true)
+eps=0.0001 delta=0.1 seed=3 threads=8
+omega=338968146  burn-in tau=3389681
+tie-collapse threshold sqrt(start_factor)*eps/4 = 2.500e-04
+
+drawing the burn-in phase ... 9.8 s
+
+############################## k = 0  (tracking set 162) ##############################
+
+=== predicted stopping point (burn-in estimates held fixed) ===
+  code        50257808 samples  (1.000x code)
+  paper       50257808 samples  (1.000x code)
+  cpp         50257808 samples  (1.000x code)
+
+=== still-unresolved vertices at 48750074 samples (3% short of the cheapest stop) ===
+  rank = position in the descending-centrality tracking set; rank 1 is the most central vertex.
+  code    47 unresolved   ranks: 3, 4, 5, 6, 7, 8, 9, 11, ...
+           rank 3     bet=5.530e-03  f=9.940e-05 (delta_L=1.71e-03)  g=1.012e-04 (delta_U=1.71e-03)
+           rank 4     bet=5.392e-03  f=9.937e-05 (delta_L=1.45e-03)  g=1.012e-04 (delta_U=1.45e-03)
+           rank 5     bet=4.825e-03  f=9.927e-05 (delta_L=6.73e-04)  g=1.014e-04 (delta_U=6.73e-04)
+           rank 6     bet=4.798e-03  f=9.927e-05 (delta_L=6.47e-04)  g=1.014e-04 (delta_U=6.47e-04)
+           rank 7     bet=4.683e-03  f=9.924e-05 (delta_L=5.40e-04)  g=1.014e-04 (delta_U=5.40e-04)
+  paper   47 unresolved   ranks: 3, 4, 5, 6, 7, 8, 9, 11, ...
+           rank 3     bet=5.530e-03  f=9.940e-05 (delta_L=1.71e-03)  g=1.012e-04 (delta_U=1.71e-03)
+           rank 4     bet=5.392e-03  f=9.937e-05 (delta_L=1.45e-03)  g=1.012e-04 (delta_U=1.45e-03)
+           rank 5     bet=4.825e-03  f=9.927e-05 (delta_L=6.73e-04)  g=1.014e-04 (delta_U=6.73e-04)
+           rank 6     bet=4.798e-03  f=9.927e-05 (delta_L=6.47e-04)  g=1.014e-04 (delta_U=6.47e-04)
+           rank 7     bet=4.683e-03  f=9.924e-05 (delta_L=5.40e-04)  g=1.014e-04 (delta_U=5.40e-04)
+  cpp     47 unresolved   ranks: 3, 4, 5, 6, 7, 8, 9, 11, ...
+           rank 3     bet=5.530e-03  f=9.940e-05 (delta_L=1.71e-03)  g=1.012e-04 (delta_U=1.71e-03)
+           rank 4     bet=5.392e-03  f=9.937e-05 (delta_L=1.45e-03)  g=1.012e-04 (delta_U=1.45e-03)
+           rank 5     bet=4.825e-03  f=9.927e-05 (delta_L=6.73e-04)  g=1.014e-04 (delta_U=6.73e-04)
+           rank 6     bet=4.798e-03  f=9.927e-05 (delta_L=6.47e-04)  g=1.014e-04 (delta_U=6.47e-04)
+           rank 7     bet=4.683e-03  f=9.924e-05 (delta_L=5.40e-04)  g=1.014e-04 (delta_U=5.40e-04)
+
+
+############################## k = 1  (tracking set 162) ##############################
+
+=== predicted stopping point (burn-in estimates held fixed) ===
+  code        53176505 samples  (1.000x code)
+  paper       21267978 samples  (0.400x code)
+  cpp         53176505 samples  (1.000x code)
+
+=== still-unresolved vertices at 20629939 samples (3% short of the cheapest stop) ===
+  rank = position in the descending-centrality tracking set; rank 1 is the most central vertex.
+  code    2 unresolved   ranks: 1, 2
+           rank 1     bet=7.735e-03  f=5.156e-04 (delta_L=9.43e-11)  g=1.946e-04 (delta_U=5.00e-02)
+           rank 2     bet=7.327e-03  f=5.014e-04 (delta_L=9.43e-11)  g=5.381e-04 (delta_U=9.47e-11)
+  paper   2 unresolved   ranks: 1, 2
+           rank 1     bet=7.735e-03  f=2.077e-04 (delta_L=2.75e-02)  g=5.524e-04 (delta_U=9.43e-11)
+           rank 2     bet=7.327e-03  f=5.014e-04 (delta_L=9.43e-11)  g=2.136e-04 (delta_U=2.25e-02)
+  cpp     2 unresolved   ranks: 1, 2
+           rank 1     bet=7.735e-03  f=5.156e-04 (delta_L=9.43e-11)  g=1.946e-04 (delta_U=5.00e-02)
+           rank 2     bet=7.327e-03  f=5.014e-04 (delta_L=9.43e-11)  g=5.381e-04 (delta_U=9.47e-11)
+
+=== budget targets from the burn-in ===
+  rank      bet        gap-above    gap-below | code: err_l   err_u | paper: err_l   err_u
+  1         7.735e-03  NaN  4.086e-04 | 1.000e+01  2.043e-04 | 2.043e-04  1.000e+01
+  2         7.327e-03  4.086e-04  1.797e-03 | 1.000e+01  6.129e-04 | 1.000e+01  2.043e-04
+  3         5.530e-03  1.797e-03  1.381e-04 | 1.000e+01  2.410e-03 | 1.000e+01  2.001e-03
+  4         5.392e-03  1.381e-04  5.673e-04 | 1.000e+01  2.548e-03 | 1.000e+01  2.139e-03
+
+############################## k = 2  (tracking set 162) ##############################
+
+=== predicted stopping point (burn-in estimates held fixed) ===
+  code        53181626 samples  (1.000x code)
+  paper       40326557 samples  (0.758x code)
+  cpp         53181626 samples  (1.000x code)
+
+=== still-unresolved vertices at 39116760 samples (3% short of the cheapest stop) ===
+  rank = position in the descending-centrality tracking set; rank 1 is the most central vertex.
+  code    2 unresolved   ranks: 1, 2
+           rank 1     bet=7.735e-03  f=2.764e-04 (delta_L=9.43e-11)  g=2.134e-04 (delta_U=2.45e-06)
+           rank 2     bet=7.327e-03  f=2.075e-04 (delta_L=1.19e-06)  g=2.791e-04 (delta_U=9.43e-11)
+  paper   2 unresolved   ranks: 1, 2
+           rank 1     bet=7.735e-03  f=2.077e-04 (delta_L=2.45e-06)  g=2.866e-04 (delta_U=9.43e-11)
+           rank 2     bet=7.327e-03  f=2.689e-04 (delta_L=9.43e-11)  g=2.136e-04 (delta_U=1.19e-06)
+  cpp     2 unresolved   ranks: 1, 2
+           rank 1     bet=7.735e-03  f=2.764e-04 (delta_L=9.43e-11)  g=2.134e-04 (delta_U=2.45e-06)
+           rank 2     bet=7.327e-03  f=2.075e-04 (delta_L=1.19e-06)  g=2.791e-04 (delta_U=9.43e-11)
+
+=== budget targets from the burn-in ===
+  rank      bet        gap-above    gap-below | code: err_l   err_u | paper: err_l   err_u
+  1         7.735e-03  NaN  4.086e-04 | 1.000e+01  2.043e-04 | 2.043e-04  1.000e+01
+  2         7.327e-03  4.086e-04  1.797e-03 | 2.043e-04  8.983e-04 | 8.983e-04  2.043e-04
+  3         5.530e-03  1.797e-03  1.381e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  4         5.392e-03  1.381e-04  5.673e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  5         4.825e-03  5.673e-04  2.626e-05 | 1.000e+01  3.400e-03 | 1.000e+01  1.604e-03
+
+############################## k = 3  (tracking set 162) ##############################
+
+=== predicted stopping point (burn-in estimates held fixed) ===
+  code        92266562 samples  (1.000x code)
+  paper       53575906 samples  (0.581x code)
+  cpp         92266562 samples  (1.000x code)
+
+=== still-unresolved vertices at 51968629 samples (3% short of the cheapest stop) ===
+  rank = position in the descending-centrality tracking set; rank 1 is the most central vertex.
+  code    4 unresolved   ranks: 1, 2, 3, 4
+           rank 1     bet=7.735e-03  f=2.090e-04 (delta_L=9.43e-11)  g=1.330e-04 (delta_U=1.29e-04)
+           rank 2     bet=7.327e-03  f=1.307e-04 (delta_L=7.84e-05)  g=2.091e-04 (delta_U=9.43e-11)
+           rank 3     bet=5.530e-03  f=1.763e-04 (delta_L=9.43e-11)  g=6.494e-05 (delta_U=4.97e-02)
+           rank 4     bet=5.392e-03  f=1.740e-04 (delta_L=9.43e-11)  g=1.354e-04 (delta_U=1.85e-06)
+  paper   2 unresolved   ranks: 3, 4
+           rank 3     bet=5.530e-03  f=7.070e-05 (delta_L=2.61e-02)  g=1.821e-04 (delta_U=9.43e-11)
+           rank 4     bet=5.392e-03  f=1.740e-04 (delta_L=9.43e-11)  g=7.163e-05 (delta_U=2.38e-02)
+  cpp     4 unresolved   ranks: 1, 2, 3, 4
+           rank 1     bet=7.735e-03  f=2.090e-04 (delta_L=9.43e-11)  g=1.330e-04 (delta_U=1.29e-04)
+           rank 2     bet=7.327e-03  f=1.307e-04 (delta_L=7.84e-05)  g=2.091e-04 (delta_U=9.43e-11)
+           rank 3     bet=5.530e-03  f=1.763e-04 (delta_L=9.43e-11)  g=6.494e-05 (delta_U=4.97e-02)
+           rank 4     bet=5.392e-03  f=1.740e-04 (delta_L=9.43e-11)  g=1.354e-04 (delta_U=1.85e-06)
+
+=== budget targets from the burn-in ===
+  rank      bet        gap-above    gap-below | code: err_l   err_u | paper: err_l   err_u
+  1         7.735e-03  NaN  4.086e-04 | 1.000e+01  2.043e-04 | 2.043e-04  1.000e+01
+  2         7.327e-03  4.086e-04  1.797e-03 | 2.043e-04  8.983e-04 | 8.983e-04  2.043e-04
+  3         5.530e-03  1.797e-03  1.381e-04 | 8.983e-04  1.000e-04 | 1.000e-04  8.983e-04
+  4         5.392e-03  1.381e-04  5.673e-04 | 1.000e+01  2.071e-04 | 1.000e+01  1.000e-04
+  5         4.825e-03  5.673e-04  2.626e-05 | 1.000e+01  7.744e-04 | 1.000e+01  6.363e-04
+  6         4.798e-03  2.626e-05  1.151e-04 | 1.000e+01  8.007e-04 | 1.000e+01  6.626e-04
+
+############################## k = 5  (tracking set 162) ##############################
+
+=== predicted stopping point (burn-in estimates held fixed) ===
+  code        86070732 samples  (1.000x code)
+  paper       87868035 samples  (1.021x code)
+  cpp         86070732 samples  (1.000x code)
+
+=== still-unresolved vertices at 83488610 samples (3% short of the cheapest stop) ===
+  rank = position in the descending-centrality tracking set; rank 1 is the most central vertex.
+  code    1 unresolved   ranks: 5
+           rank 5     bet=4.825e-03  f=1.031e-04 (delta_L=9.43e-11)  g=5.110e-05 (delta_U=4.08e-03)
+  paper   1 unresolved   ranks: 5
+           rank 5     bet=4.825e-03  f=5.056e-05 (delta_L=4.08e-03)  g=1.053e-04 (delta_U=9.43e-11)
+  cpp     1 unresolved   ranks: 5
+           rank 5     bet=4.825e-03  f=1.031e-04 (delta_L=9.43e-11)  g=5.110e-05 (delta_U=4.08e-03)
+
+=== budget targets from the burn-in ===
+  rank      bet        gap-above    gap-below | code: err_l   err_u | paper: err_l   err_u
+  1         7.735e-03  NaN  4.086e-04 | 1.000e+01  2.043e-04 | 2.043e-04  1.000e+01
+  2         7.327e-03  4.086e-04  1.797e-03 | 2.043e-04  8.983e-04 | 8.983e-04  2.043e-04
+  3         5.530e-03  1.797e-03  1.381e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  4         5.392e-03  1.381e-04  5.673e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  5         4.825e-03  5.673e-04  2.626e-05 | 2.837e-04  1.000e-04 | 1.000e-04  2.837e-04
+  6         4.798e-03  2.626e-05  1.151e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  7         4.683e-03  1.151e-04  1.443e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  8         4.539e-03  1.443e-04  4.337e-05 | 1.000e+01  2.987e-04 | 1.000e+01  2.724e-04
+
+############################## k = 8  (tracking set 162) ##############################
+
+=== predicted stopping point (burn-in estimates held fixed) ===
+  code        83018901 samples  (1.000x code)
+  paper       83018901 samples  (1.000x code)
+  cpp         83018901 samples  (1.000x code)
+
+=== still-unresolved vertices at 80528334 samples (3% short of the cheapest stop) ===
+  rank = position in the descending-centrality tracking set; rank 1 is the most central vertex.
+  code    1 unresolved   ranks: 9
+           rank 9     bet=4.496e-03  f=1.031e-04 (delta_L=9.43e-11)  g=5.414e-05 (delta_U=2.12e-03)
+  paper   1 unresolved   ranks: 9
+           rank 9     bet=4.496e-03  f=1.031e-04 (delta_L=9.43e-11)  g=5.414e-05 (delta_U=2.12e-03)
+  cpp     1 unresolved   ranks: 9
+           rank 9     bet=4.496e-03  f=1.031e-04 (delta_L=9.43e-11)  g=5.414e-05 (delta_U=2.12e-03)
+
+=== budget targets from the burn-in ===
+  rank      bet        gap-above    gap-below | code: err_l   err_u | paper: err_l   err_u
+  1         7.735e-03  NaN  4.086e-04 | 1.000e+01  2.043e-04 | 2.043e-04  1.000e+01
+  2         7.327e-03  4.086e-04  1.797e-03 | 2.043e-04  8.983e-04 | 8.983e-04  2.043e-04
+  3         5.530e-03  1.797e-03  1.381e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  4         5.392e-03  1.381e-04  5.673e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  5         4.825e-03  5.673e-04  2.626e-05 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  6         4.798e-03  2.626e-05  1.151e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  7         4.683e-03  1.151e-04  1.443e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  8         4.539e-03  1.443e-04  4.337e-05 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  9         4.496e-03  4.337e-05  3.871e-04 | 1.000e+01  1.000e-04 | 1.000e+01  1.000e-04
+  10        4.109e-03  3.871e-04  4.856e-04 | 1.000e+01  4.521e-04 | 1.000e+01  4.087e-04
+  11        3.623e-03  4.856e-04  4.720e-06 | 1.000e+01  9.377e-04 | 1.000e+01  8.943e-04
+
+############################## k = 10  (tracking set 162) ##############################
+
+=== predicted stopping point (burn-in estimates held fixed) ===
+  code        53181626 samples  (1.000x code)
+  paper       44236075 samples  (0.832x code)
+  cpp         53181626 samples  (1.000x code)
+
+=== still-unresolved vertices at 42908993 samples (3% short of the cheapest stop) ===
+  rank = position in the descending-centrality tracking set; rank 1 is the most central vertex.
+  code    9 unresolved   ranks: 1, 2, 3, 4, 5, 6, 7, 8, ...
+           rank 1     bet=7.735e-03  f=2.524e-04 (delta_L=9.43e-11)  g=2.111e-04 (delta_U=2.46e-07)
+           rank 2     bet=7.327e-03  f=2.054e-04 (delta_L=1.05e-07)  g=2.540e-04 (delta_U=9.43e-11)
+           rank 3     bet=5.530e-03  f=1.010e-04 (delta_L=6.09e-03)  g=1.029e-04 (delta_U=6.09e-03)
+           rank 4     bet=5.392e-03  f=1.010e-04 (delta_L=5.35e-03)  g=1.029e-04 (delta_U=5.35e-03)
+           rank 5     bet=4.825e-03  f=1.009e-04 (delta_L=2.89e-03)  g=1.030e-04 (delta_U=2.89e-03)
+  paper   9 unresolved   ranks: 1, 2, 3, 4, 5, 6, 7, 8, ...
+           rank 1     bet=7.735e-03  f=2.055e-04 (delta_L=2.46e-07)  g=2.609e-04 (delta_U=9.43e-11)
+           rank 2     bet=7.327e-03  f=2.455e-04 (delta_L=9.43e-11)  g=2.113e-04 (delta_U=1.05e-07)
+           rank 3     bet=5.530e-03  f=1.010e-04 (delta_L=6.09e-03)  g=1.029e-04 (delta_U=6.09e-03)
+           rank 4     bet=5.392e-03  f=1.010e-04 (delta_L=5.35e-03)  g=1.029e-04 (delta_U=5.35e-03)
+           rank 5     bet=4.825e-03  f=1.009e-04 (delta_L=2.89e-03)  g=1.030e-04 (delta_U=2.89e-03)
+  cpp     9 unresolved   ranks: 1, 2, 3, 4, 5, 6, 7, 8, ...
+           rank 1     bet=7.735e-03  f=2.524e-04 (delta_L=9.43e-11)  g=2.111e-04 (delta_U=2.46e-07)
+           rank 2     bet=7.327e-03  f=2.054e-04 (delta_L=1.05e-07)  g=2.540e-04 (delta_U=9.43e-11)
+           rank 3     bet=5.530e-03  f=1.010e-04 (delta_L=6.09e-03)  g=1.029e-04 (delta_U=6.09e-03)
+           rank 4     bet=5.392e-03  f=1.010e-04 (delta_L=5.35e-03)  g=1.029e-04 (delta_U=5.35e-03)
+           rank 5     bet=4.825e-03  f=1.009e-04 (delta_L=2.89e-03)  g=1.030e-04 (delta_U=2.89e-03)
+
+=== budget targets from the burn-in ===
+  rank      bet        gap-above    gap-below | code: err_l   err_u | paper: err_l   err_u
+  1         7.735e-03  NaN  4.086e-04 | 1.000e+01  2.043e-04 | 2.043e-04  1.000e+01
+  2         7.327e-03  4.086e-04  1.797e-03 | 2.043e-04  8.983e-04 | 8.983e-04  2.043e-04
+  3         5.530e-03  1.797e-03  1.381e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  4         5.392e-03  1.381e-04  5.673e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  5         4.825e-03  5.673e-04  2.626e-05 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  6         4.798e-03  2.626e-05  1.151e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  7         4.683e-03  1.151e-04  1.443e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  8         4.539e-03  1.443e-04  4.337e-05 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  9         4.496e-03  4.337e-05  3.871e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  10        4.109e-03  3.871e-04  4.856e-04 | 1.935e-04  2.428e-04 | 2.428e-04  1.935e-04
+  11        3.623e-03  4.856e-04  4.720e-06 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  12        3.618e-03  4.720e-06  4.661e-05 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+
+############################## k = 100  (tracking set 162) ##############################
+
+=== predicted stopping point (burn-in estimates held fixed) ===
+  code        53181626 samples  (1.000x code)
+  paper       45375392 samples  (0.853x code)
+  cpp         53181626 samples  (1.000x code)
+
+=== still-unresolved vertices at 44014130 samples (3% short of the cheapest stop) ===
+  rank = position in the descending-centrality tracking set; rank 1 is the most central vertex.
+  code    81 unresolved   ranks: 1, 2, 3, 4, 5, 6, 7, 8, ...
+           rank 1     bet=7.735e-03  f=2.461e-04 (delta_L=9.43e-11)  g=2.062e-04 (delta_U=2.29e-07)
+           rank 2     bet=7.327e-03  f=2.007e-04 (delta_L=9.78e-08)  g=2.475e-04 (delta_U=9.43e-11)
+           rank 3     bet=5.530e-03  f=9.873e-05 (delta_L=5.95e-03)  g=1.005e-04 (delta_U=5.95e-03)
+           rank 4     bet=5.392e-03  f=9.870e-05 (delta_L=5.22e-03)  g=1.005e-04 (delta_U=5.22e-03)
+           rank 5     bet=4.825e-03  f=9.860e-05 (delta_L=2.81e-03)  g=1.007e-04 (delta_U=2.81e-03)
+  paper   79 unresolved   ranks: 3, 4, 5, 6, 7, 8, 9, 11, ...
+           rank 3     bet=5.530e-03  f=9.873e-05 (delta_L=5.95e-03)  g=1.005e-04 (delta_U=5.95e-03)
+           rank 4     bet=5.392e-03  f=9.870e-05 (delta_L=5.22e-03)  g=1.005e-04 (delta_U=5.22e-03)
+           rank 5     bet=4.825e-03  f=9.860e-05 (delta_L=2.81e-03)  g=1.007e-04 (delta_U=2.81e-03)
+           rank 6     bet=4.798e-03  f=9.860e-05 (delta_L=2.73e-03)  g=1.007e-04 (delta_U=2.73e-03)
+           rank 7     bet=4.683e-03  f=9.857e-05 (delta_L=2.36e-03)  g=1.007e-04 (delta_U=2.36e-03)
+  cpp     81 unresolved   ranks: 1, 2, 3, 4, 5, 6, 7, 8, ...
+           rank 1     bet=7.735e-03  f=2.461e-04 (delta_L=9.43e-11)  g=2.062e-04 (delta_U=2.29e-07)
+           rank 2     bet=7.327e-03  f=2.007e-04 (delta_L=9.78e-08)  g=2.475e-04 (delta_U=9.43e-11)
+           rank 3     bet=5.530e-03  f=9.873e-05 (delta_L=5.95e-03)  g=1.005e-04 (delta_U=5.95e-03)
+           rank 4     bet=5.392e-03  f=9.870e-05 (delta_L=5.22e-03)  g=1.005e-04 (delta_U=5.22e-03)
+           rank 5     bet=4.825e-03  f=9.860e-05 (delta_L=2.81e-03)  g=1.007e-04 (delta_U=2.81e-03)
+
+=== budget targets from the burn-in ===
+  rank      bet        gap-above    gap-below | code: err_l   err_u | paper: err_l   err_u
+  1         7.735e-03  NaN  4.086e-04 | 1.000e+01  2.043e-04 | 2.043e-04  1.000e+01
+  2         7.327e-03  4.086e-04  1.797e-03 | 2.043e-04  8.983e-04 | 8.983e-04  2.043e-04
+  3         5.530e-03  1.797e-03  1.381e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  4         5.392e-03  1.381e-04  5.673e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  5         4.825e-03  5.673e-04  2.626e-05 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  6         4.798e-03  2.626e-05  1.151e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  7         4.683e-03  1.151e-04  1.443e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  8         4.539e-03  1.443e-04  4.337e-05 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  9         4.496e-03  4.337e-05  3.871e-04 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  10        4.109e-03  3.871e-04  4.856e-04 | 1.935e-04  2.428e-04 | 2.428e-04  1.935e-04
+  11        3.623e-03  4.856e-04  4.720e-06 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04
+  12        3.618e-03  4.720e-06  4.661e-05 | 1.000e-04  1.000e-04 | 1.000e-04  1.000e-04

@@ -1,0 +1,16 @@
+weights: /home/stud/schlaierm0/Lab-CA-SS26-node-importance/benchmark/cache/bravagnn_weights_no_pr.jld2  (use_pr = false)
+
+graph               masked%   tau noPR tau noPR+fix   distinct scores among pruned
+--------------------------------------------------------------------------------------------
+p2p-Gnutella31        46.1%      0.839      0.926      1 distinct / 28829 pruned
+soc-Epinions1         63.5%      0.730      0.921      1 distinct / 48154 pruned
+soc-Slashdot0902      41.2%      0.793      0.896      1 distinct / 33814 pruned
+email-EuAll           96.1%      0.460      0.991      1 distinct / 254838 pruned
+com-youtube           57.3%      0.728      0.916      1 distinct / 650530 pruned
+amazon                32.7%      0.760      0.835      1 distinct / 701532 pruned
+dblp                  42.0%      0.795      0.873      1 distinct / 1678358 pruned
+cit-Patents           18.8%      0.739      0.753      1 distinct / 709062 pruned
+com-lj                28.8%      0.736      0.791      1 distinct / 1150616 pruned
+  Activating project at `~/Lab-CA-SS26-node-importance`
+
+DIAGNOSE DONE

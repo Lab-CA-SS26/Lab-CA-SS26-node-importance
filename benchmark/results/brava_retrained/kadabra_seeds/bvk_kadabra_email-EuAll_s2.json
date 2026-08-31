@@ -1,0 +1,24 @@
+{
+    "execution_time_seconds": 12.688402646,
+    "io_time_seconds": 0.357687745,
+    "kadabra_omega": 33896.81456938206,
+    "kadabra_tau": 339,
+    "mae": 4.030873990157201e-7,
+    "max_ae": 0.0007032454479684166,
+    "ndcg_topk": 0.9879034431009801,
+    "num_samples": 25339,
+    "overlap_topk": 90,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": true,
+        "epsilon": 0.01,
+        "input_file": "/home/stud/schlaierm0/Lab-CA-SS26-node-importance/Instances/TestInstances/email-EuAll.txt",
+        "k": 0,
+        "threads": 8,
+        "version": "julia"
+    },
+    "samples_over_omega": 0.747533369194164,
+    "tau_overall": 0.3478509407240407,
+    "tau_topk": 0.7465372665467894
+}

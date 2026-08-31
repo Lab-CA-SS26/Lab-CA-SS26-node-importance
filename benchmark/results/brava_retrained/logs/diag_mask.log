@@ -1,0 +1,16 @@
+weights: /home/stud/schlaierm0/Lab-CA-SS26-node-importance/benchmark/cache/bravagnn_weights.jld2
+
+graph                  dir  masked%  tau NOW  tau FIX    delta   in-feat of masked v
+--------------------------------------------------------------------------------------------
+p2p-Gnutella31           U    46.1%    0.826    0.810   -0.015    99.9% still nonzero
+soc-Epinions1            D    63.5%    0.728    0.757   +0.030    47.9% still nonzero
+soc-Slashdot0902         D    41.2%    0.804    0.823   +0.020   100.0% still nonzero
+email-EuAll              D    96.1%    0.459    0.460   +0.001    16.4% still nonzero
+com-youtube              U    57.3%    0.736    0.857   +0.121   100.0% still nonzero
+amazon                   U    32.7%    0.781    0.815   +0.033   100.0% still nonzero
+dblp                     U    42.0%    0.790    0.786   -0.004   100.0% still nonzero
+cit-Patents              U    18.8%    0.738    0.742   +0.004   100.0% still nonzero
+com-lj                   U    28.8%    0.749    0.773   +0.024   100.0% still nonzero
+  Activating project at `~/Lab-CA-SS26-node-importance`
+
+DIAGNOSE DONE

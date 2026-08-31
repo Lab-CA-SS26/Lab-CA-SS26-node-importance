@@ -1,0 +1,24 @@
+{
+    "execution_time_seconds": 12.91938925,
+    "io_time_seconds": 0.36475343,
+    "kadabra_omega": 33896.81456938206,
+    "kadabra_tau": 339,
+    "mae": 4.015595646772212e-7,
+    "max_ae": 0.0010260298395766963,
+    "ndcg_topk": 0.9830553571334593,
+    "num_samples": 24339,
+    "overlap_topk": 89,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": true,
+        "epsilon": 0.01,
+        "input_file": "../Instances/TestInstances/email-EuAll.txt",
+        "k": 0,
+        "threads": 8,
+        "version": "julia"
+    },
+    "samples_over_omega": 0.7180320720161316,
+    "tau_overall": 0.3429659984107525,
+    "tau_topk": 0.7409078374942952
+}

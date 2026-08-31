@@ -98,28 +98,43 @@ function compute_pagerank_feature(
 end
 
 """
-    compute_degree_masses(A, pr_feat::AbstractVector{Float32}, m::Int=5)
+    compute_degree_masses(A, pr_feat::AbstractVector{Float32}, m::Int=5; use_pr::Bool=false)
 
 Computes the degree mass features up to order `m` for a sparse adjacency matrix `A`,
-applies log1p, and appends the precomputed PageRank feature to perfectly match `degree_mix_mass_5_pr`.
-"""
-function compute_degree_masses(A, pr_feat::AbstractVector{Float32}, m::Int = 5)
-    N = size(A, 1)
-    F = zeros(Float32, m + 1, N)
+applies log1p, and (when `use_pr`) appends the precomputed PageRank feature to match
+`degree_mix_mass_m_pr`. With `use_pr=false` (the configuration the BRAVA-GNN paper
+reports) this returns just the `m` degree-mass rows, matching `degree_mix_mass_m`.
 
-    v = A * ones(Float32, N)
-    F[1, :] .= v
+The `m`-th feature is the cumulative mass \$d_1 + \\dots + d_m\$, not the bare \$m\$-hop
+degree \$d_m\$ --- the upstream `degree_mix_mass_k` accumulates (`layer.py`), whereas
+the bare hops are its `degree_mix_independent_k` variant.
+"""
+function compute_degree_masses(
+    A,
+    pr_feat::AbstractVector{Float32},
+    m::Int = 5;
+    use_pr::Bool = false,
+)
+    N = size(A, 1)
+    F = zeros(Float32, use_pr ? m + 1 : m, N)
+
+    d = A * ones(Float32, N)
+    mass = copy(d)
+    F[1, :] .= mass
 
     for k = 2:m
-        v = A * v
-        F[k, :] .= v
+        d = A * d
+        mass = mass .+ d
+        F[k, :] .= mass
     end
 
     # Apply log1p exactly like PyTorch (but ONLY to degree features)
     F[1:m, :] .= log1p.(F[1:m, :])
 
-    # Append PageRank as the final feature (already normalized and scaled)
-    F[m+1, :] .= pr_feat
+    if use_pr
+        # Append PageRank as the final feature (already normalized and scaled)
+        F[m+1, :] .= pr_feat
+    end
     return F
 end
 
@@ -186,11 +201,12 @@ Flux.@layer BRAVAModel
 function BRAVAModel(;
     m_hops::Int = 5,
     hidden_dim::Int = 12,
-    num_layers::Int = 4,
+    num_layers::Int = 2,
     p_drop::Float32 = 0.3f0,
+    use_pr::Bool = false,
 )
-    # 1. DegreeMassEmbedding + PageRank
-    embedding = Dense(m_hops + 1 => hidden_dim, bias = true)
+    # 1. DegreeMassEmbedding + (optional) PageRank
+    embedding = Dense((use_pr ? m_hops + 1 : m_hops) => hidden_dim, bias = true)
 
     # 2. PyTorch uses independent GNN_Layers (not shared)
     layers = Tuple([
@@ -339,6 +355,7 @@ function brava_centrality(
     weight_path::Union{String,Nothing} = nothing,
     model = nothing,
     use_gpu::Bool = false,
+    use_pr::Bool = false,
 )
     N = nv(g)
     
@@ -358,16 +375,23 @@ function brava_centrality(
     V_val = ones(Float32, length(I_idx))
     A = sparse(I_idx, J_idx, V_val, N, N)
     
-    # Apply BRAVA clique preprocessing mask (must be done at inference too)
+    # Apply BRAVA clique preprocessing mask (must be done at inference too).
+    # The mask zeroes the ROWS of both A and A', so A' has to be taken from the
+    # UNMASKED adjacency: (D*A)' = A'*D scales A''s columns instead and leaves pruned
+    # vertices with live in-features. train_bravagnn.jl and upstream's
+    # utils.graph_to_adj_bet both zero the rows; scoring the other way costs up to
+    # 0.12 tau_b, and on graphs that are mostly pruned it is the difference between
+    # the pruned block sharing one score (as their zero betweenness demands) and
+    # being spread over an arbitrary order.
     mask = brava_clique_mask(g)
-    A = spdiagm(mask) * A
-    
-    A_t = SparseMatrixCSC{Float32,Int}(A')
+    D = spdiagm(mask)
+    A_t = SparseMatrixCSC{Float32,Int}(D * SparseMatrixCSC{Float32,Int}(A'))
+    A = D * A
 
     # 1. Feature Extraction
     pr_feat = compute_pagerank_feature(A)
-    X_out = compute_degree_masses(A, pr_feat, m_hops)
-    X_in = compute_degree_masses(A_t, pr_feat, m_hops)
+    X_out = compute_degree_masses(A, pr_feat, m_hops; use_pr = use_pr)
+    X_in = compute_degree_masses(A_t, pr_feat, m_hops; use_pr = use_pr)
 
     # 2. Initialize Model 
     if model === nothing
@@ -378,9 +402,20 @@ function brava_centrality(
         if isfile(weight_path)
             # Load the pre-trained model from the server cache
             @load weight_path model
+            if !(model isa BRAVAModel)
+                error(
+                    "brava_centrality: loaded object from $weight_path is a $(typeof(model)), " *
+                    "not a BRAVAModel. The checkpoint was likely saved against a stale/incompatible " *
+                    "struct definition (JLD2 reconstruction failure). Retrain from a cold Julia " *
+                    "process (`julia --project=. src/train_bravagnn.jl`) and verify " *
+                    "`typeof(model) === BRAVAGNN.BRAVAModel` after loading.",
+                )
+            end
         else
+            @warn "brava_centrality: no weight file found at $weight_path — using an UNTRAINED, " *
+                  "randomly-initialized BRAVAModel. Scores from this run carry no learned signal."
             # Fallback to untrained model for local runtime tests if missing
-            model = BRAVAModel(; m_hops = m_hops, hidden_dim = 12, num_layers = 2)
+            model = BRAVAModel(; m_hops = m_hops, hidden_dim = 12, num_layers = 2, use_pr = use_pr)
         end
     end
 

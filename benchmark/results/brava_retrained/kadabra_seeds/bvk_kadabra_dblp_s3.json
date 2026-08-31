@@ -1,0 +1,24 @@
+{
+    "execution_time_seconds": 11.816900866,
+    "io_time_seconds": 9.391089771,
+    "kadabra_omega": 34286.82712938843,
+    "kadabra_tau": 343,
+    "mae": 2.119465966113332e-6,
+    "max_ae": 0.0006127772974945573,
+    "ndcg_topk": 0.9706378485383541,
+    "num_samples": 25343,
+    "overlap_topk": 84,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.01,
+        "input_file": "/home/stud/schlaierm0/Lab-CA-SS26-node-importance/Instances/ABCDE/dblp.txt",
+        "k": 0,
+        "threads": 8,
+        "version": "julia"
+    },
+    "samples_over_omega": 0.7391468421491131,
+    "tau_overall": 0.21714714275273492,
+    "tau_topk": 0.6086843301405191
+}
