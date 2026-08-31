@@ -231,6 +231,68 @@ def plot_k(d, outdir):
     save(fig, outdir, "k_sweep")
 
 
+def plot_topk(indir, outdir):
+    """Samples under the reference and the repaired allocation, relative to k=0.
+
+    One panel per graph; within a panel, one pair of bars per k. Every ratio is
+    formed against the *same seed's* own k=0 run before averaging, so the shared
+    sampling noise in the denominator cancels. Whiskers are one standard deviation
+    over the seeds. Graphs with no data are skipped, so this renders correctly
+    while stage kxl is still filling in amazon and dblp.
+    """
+    import re
+    pat = re.compile(r"kx_(?P<g>.+)_k(?P<k>\d+)_(?P<v>code|paper_bd|paper_ex|paper|cpp)"
+                     r"_s(?P<s>\d+)\.json$")
+    runs = {}
+    for name in sorted(os.listdir(indir)):
+        m = pat.search(name)
+        if not m:
+            continue
+        with open(os.path.join(indir, name)) as fh:
+            runs[(m["g"], int(m["k"]), m["v"], int(m["s"]))] = json.load(fh)["num_samples"]
+
+    ks = [3, 5, 10, 100]
+    arms = [("cpp", "reference (C++/NetworKit)", C_CPP), ("paper_bd", "repaired", C_JULIA)]
+    graphs = [g for g in SIZES if any((g, k, v, s) in runs
+                                      for k in ks for v, _, _ in arms for s in (1, 2, 3))]
+    if not graphs:
+        print("no kx_*.json runs found in " + indir, file=sys.stderr)
+        sys.exit(1)
+
+    ncol = 2
+    nrow = -(-len(graphs) // ncol)
+    fig, axes = plt.subplots(nrow, ncol, figsize=(7.4, 2.35 * nrow), squeeze=False)
+    for idx, g in enumerate(graphs):
+        ax = axes[idx // ncol][idx % ncol]
+        present = [k for k in ks
+                   if any((g, k, v, s) in runs for v, _, _ in arms for s in (1, 2, 3))]
+        x = list(range(len(present)))
+        for j, (v, label, colour) in enumerate(arms):
+            means, errs = [], []
+            for k in present:
+                r = [runs[(g, k, v, s)] / runs[(g, 0, "code", s)]
+                     for s in (1, 2, 3)
+                     if (g, k, v, s) in runs and (g, 0, "code", s) in runs]
+                means.append(statistics.mean(r) if r else float("nan"))
+                errs.append(statistics.stdev(r) if len(r) > 1 else 0.0)
+            ax.bar([xi + (j - 0.5) * 0.36 for xi in x], means, 0.34, yerr=errs,
+                   capsize=2.5, color=colour, label=label if idx == 0 else None,
+                   error_kw={"elinewidth": 0.9, "ecolor": INK}, zorder=3)
+        ax.axhline(1.0, color=INK, linewidth=0.9, zorder=4)
+        ax.set_xticks(x)
+        ax.set_xticklabels([f"$k={k}$" for k in present], fontsize=8)
+        ax.set_title(g, fontsize=8.5, color=INK)
+        if idx % ncol == 0:
+            ax.set_ylabel("samples rel. to $k=0$", fontsize=8.5, color=MUTED)
+        style(ax)
+    for idx in range(len(graphs), nrow * ncol):
+        axes[idx // ncol][idx % ncol].axis("off")
+    fig.legend(frameon=False, fontsize=8.5, loc="lower center", ncol=2,
+               bbox_to_anchor=(0.5, -0.02))
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    save(fig, outdir, "topk_allocation")
+
+
 def save(fig, outdir, stem):
     os.makedirs(outdir, exist_ok=True)
     for ext in ("pdf", "png"):
@@ -241,8 +303,9 @@ def save(fig, outdir, stem):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4 or sys.argv[1] not in ("threads", "bvk", "k"):
+    if len(sys.argv) != 4 or sys.argv[1] not in ("threads", "bvk", "k", "topk"):
         print(__doc__, file=sys.stderr)
         sys.exit(2)
-    {"threads": plot_threads, "bvk": plot_bvk, "k": plot_k}[sys.argv[1]](
+    {"threads": plot_threads, "bvk": plot_bvk, "k": plot_k,
+     "topk": plot_topk}[sys.argv[1]](
         sys.argv[2].rstrip("/"), sys.argv[3])

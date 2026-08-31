@@ -269,14 +269,14 @@ run_kxl() {
         for spec in "${specs[@]}"; do
             read -r name path dflag <<<"$spec"
             # k=0 is variant-independent (absolute branch), so it is run once and
-            # serves as the denominator for both. `code` reproduces the reference
-            # allocation that Figure 2's single-seed sweep used; `paper_bd` is the
-            # repaired version we ship, and extends the Section 6.3 claim from the
-            # four small graphs to all six.
+            # serves as the denominator for both. The two arms are the two versions
+            # anyone actually runs: `cpp` is the C++ reference verbatim, which is also
+            # what NetworKit ships, and `paper_bd` is the repaired version we ship.
+            # (The `code` hybrid is deliberately not measured here -- it is neither.)
             kx_run "$OUTDIR/kx_${name}_k0_code_s${seed}.json" \
                    "$path" "${dflag:-}" 0 code "$seed"
             for k in 10 100; do
-                for variant in code paper_bd; do
+                for variant in cpp paper_bd; do
                     kx_run "$OUTDIR/kx_${name}_k${k}_${variant}_s${seed}.json" \
                            "$path" "${dflag:-}" "$k" "$variant" "$seed"
                 done
