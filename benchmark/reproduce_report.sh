@@ -20,7 +20,7 @@
 #   --stage k       only the top-k runtime sweep, Julia at eps=1e-4 (hours; reuses tight's k=0)
 #   --stage kx      multi-seed top-k sweep x budget-allocation variant, 4 small graphs (~3h)
 #   --stage kxs     the same variants at k=3 and k=5, where they actually differ (~3h)
-#   --stage kxl     the top-k sweep on amazon/dblp, 'code' variant only (~40h)
+#   --stage kxl     the top-k sweep on amazon/dblp, reference vs repaired (~70h)
 #   --stage all     all of the above except kxl (default)
 #
 # Notes:
@@ -254,10 +254,11 @@ run_kx() {
 # ---------------------------------------------------------------------------
 # Stage 4b: the same multi-seed top-k sweep on the two large 'tight' graphs
 # ---------------------------------------------------------------------------
-# Only the 'code' variant, and only so that Section 6.3's figure carries error bars
-# on all six instances.  These two graphs take 2-3 h per run, so the stage is a
-# separate (multi-day) one and is written seed-outermost: a full extra seed for all
-# six graphs lands before the second one starts.
+# Gives Section 6.3's figure error bars on all six instances, and checks that the
+# boundary-pair repair still removes the anomaly on the two large graphs -- `dblp` is
+# where the original single-seed sweep put it at 1.06x. These two graphs take 2-3 h
+# per run, so the stage is a multi-day one, written seed-outermost: a complete extra
+# seed lands before the next one starts.
 run_kxl() {
     echo "=== Stage 'kxl': multi-seed top-k sweep on amazon/dblp, eps=1e-4 ==="
     local specs=(
@@ -267,9 +268,18 @@ run_kxl() {
     for seed in 1 2 3; do
         for spec in "${specs[@]}"; do
             read -r name path dflag <<<"$spec"
-            for k in 0 10 100; do
-                kx_run "$OUTDIR/kx_${name}_k${k}_code_s${seed}.json" \
-                       "$path" "${dflag:-}" "$k" code "$seed"
+            # k=0 is variant-independent (absolute branch), so it is run once and
+            # serves as the denominator for both. `code` reproduces the reference
+            # allocation that Figure 2's single-seed sweep used; `paper_bd` is the
+            # repaired version we ship, and extends the Section 6.3 claim from the
+            # four small graphs to all six.
+            kx_run "$OUTDIR/kx_${name}_k0_code_s${seed}.json" \
+                   "$path" "${dflag:-}" 0 code "$seed"
+            for k in 10 100; do
+                for variant in code paper_bd; do
+                    kx_run "$OUTDIR/kx_${name}_k${k}_${variant}_s${seed}.json" \
+                           "$path" "${dflag:-}" "$k" "$variant" "$seed"
+                done
             done
         done
     done
