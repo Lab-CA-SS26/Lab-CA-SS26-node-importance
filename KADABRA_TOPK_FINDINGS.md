@@ -109,7 +109,7 @@ Concretely, on `soc-Epinions1` at k = 5: gap = 1.43λ, exclusion misses by 8e-6,
 Samples relative to the same seed's `k = 0` run — values above 1.00 mean the top-*k* query was
 *dearer* than computing every centrality:
 
-| graph | *k* | reference | paper (§5.2) | paper + boundary pair |
+| graph | *k* | reference | + gap pairing | + boundary pair |
 | --- | --- | --- | --- | --- |
 | `email-EuAll` | 3 | 1.72 ± 0.01 | 1.24 ± 0.10 | **0.86 ± 0.06** |
 | `email-EuAll` | 5 | 1.62 ± 0.01 | 1.65 ± 0.01 | **0.92 ± 0.03** |
@@ -117,8 +117,11 @@ Samples relative to the same seed's `k = 0` run — values above 1.00 mean the t
 | `soc-Epinions1` | 10 | 1.28 ± 0.31 | 1.00 ± 0.09 | 1.00 ± 0.09 |
 | `soc-Epinions1` | 100 | 1.30 ± 0.31 | 1.01 ± 0.09 | 1.01 ± 0.09 |
 
-Over all 16 (graph, *k*) configurations: **three sit above `k = 0` beyond one standard
-deviation under either published allocation; none do once the boundary pair is collapsed.**
+The columns are cumulative, and both corrections are the paper's own. Over all 16 (graph, *k*)
+configurations: **three sit above `k = 0` beyond one standard deviation under the reference,
+the same three still do once only the gap pairing is corrected, and none do once the boundary
+pair is collapsed as well.** Finding 1 on its own makes top-*k* uniformly cheaper but does not
+remove the effect — it takes both.
 The mean falls from 0.79 to 0.69, and the top-*k* answer is unchanged in 15 of the 16
 (identical overlap and τ over the top *k*; the exception differs by 0.001 in the latter).
 
