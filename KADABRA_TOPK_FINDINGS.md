@@ -124,6 +124,35 @@ The mean falls from 0.79 to 0.69, and the top-*k* answer is unchanged in 15 of t
 
 ---
 
+## Why this would not have shown up in the original evaluation
+
+We looked at whether the paper's own experiments could have caught either of these, and we
+think not — for a structural reason rather than an oversight.
+
+Section 9 evaluates top-*k*: the IMDB actor-collaboration snapshots from 1940 to 2014 and the
+DBPedia 3.7 Wikipedia citation network, at λ = 0.0002 and δ = 0.1, with wall-clock reported
+("all the graphs were processed in less than 1 hour, apart from the Wikipedia graph"). But
+those are *standalone* timings. The comparison against RK and ABRA — the experiment with a
+baseline to measure against — is run in absolute-error mode, over
+λ ∈ {0.03, …, 0.005} with every algorithm required to approximate bc(v) for **every** v.
+
+So the two halves of the evaluation never meet: top-*k* is timed without a reference point,
+and the reference point is only ever measured at k = 0. Both effects here are **ratios** —
+"top-*k* costs 1.7× what k = 0 costs on the same graph at the same λ" — and that ratio is
+never formed. An absolute runtime of "under an hour" on IMDB looks entirely reasonable
+whether or not the run drew twice the samples it needed to.
+
+There is a second reason the top-*k* runs might not have shown it even if a baseline had
+existed. The deadlock needs `b̃(v_k) − b̃(v_{k+1})` to fall below 2λ, which depends on where
+the centrality distribution happens to sit at the cut. At λ = 0.0002 on two graph families it
+may simply not have arisen; in our grid it appears on two of four graphs, and only at some *k*.
+
+This is also, we suspect, why it survived into NetworKit: the port is faithful to the source,
+and nothing in the usual way of benchmarking betweenness approximation — absolute error
+against a competitor — exercises the top-*k* branch at all.
+
+---
+
 ## How the repaired version performs
 
 Both fixes together, against the reference implementation's behaviour:
