@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Turn reproduce_report.sh's raw JSON output into the report's LaTeX tables.
 
-Usage:  summarize_reproduce.py {tight|bvk|k} <result-dir>
+Usage:  summarize_reproduce.py {tight|bvk|tightx|k} <result-dir>
 
 Emits, for the requested stage, the LaTeX table body that belongs in
 Report/tables/ plus the summary statistics quoted in the report prose.
@@ -12,10 +12,19 @@ import os
 import statistics
 import sys
 
+# The six graphs of the C++ vs Julia comparison (Section 6.1).
 TIGHT_GRAPHS = ["p2p-Gnutella31", "soc-Epinions1", "soc-Slashdot0902",
                 "email-EuAll", "amazon", "dblp"]
+# The three further graphs that carry an eps=1e-4 Julia run but no C++ counterpart;
+# they exist only to complete the tight-epsilon column of Section 6.4.
+TIGHT_EXTRA_GRAPHS = ["com-youtube", "cit-Patents", "com-lj"]
 BVK_GRAPHS = ["p2p-Gnutella31", "soc-Epinions1", "soc-Slashdot0902", "email-EuAll",
               "com-youtube", "amazon", "dblp", "cit-Patents", "com-lj"]
+
+
+def _secs(x):
+    """Seconds as LaTeX, thousands separated by a thin space to match the other tables."""
+    return f"{x:,.1f}".replace(",", "\\,") + "\\,s"
 
 
 def load(path):
@@ -119,6 +128,92 @@ def bvk(d):
     print(f"  KADABRA higher top-100 overlap on {ok_wins}/{len(rows)} graphs")
 
 
+def tightx(d):
+    """Section 6.4's tight-epsilon claim: KADABRA at eps=1e-4 against BRAVA-GNN.
+
+    Cross-references the eps=1e-4 Julia runs with the eps=1e-2 BRAVA-GNN runs of
+    stage 'bvk'. The comparison is deliberately against BRAVA on *CPU*: that is
+    its slower device, so it is the conservative choice for the runtime ratio.
+    Accuracy is device-independent.
+
+    The per-graph verdict is what the report's "on every instance" wording rests
+    on, so it is computed here rather than read off a table by hand.
+    """
+    rows, missing = [], []
+    for g in BVK_GRAPHS:
+        k = load(f"{d}/tight_julia_{g}.json")
+        b = load(f"{d}/bvk_brava_cpu_{g}.json")
+        if not (k and b):
+            missing.append(f"{g}({'tight' if not k else 'brava'})")
+            continue
+        rows.append((g, k["execution_time_seconds"], b["execution_time_seconds"],
+                     k.get("tau_overall"), b.get("tau_overall"),
+                     k.get("overlap_topk"), b.get("overlap_topk")))
+    if missing:
+        print(f"!! missing runs: {', '.join(missing)}", file=sys.stderr)
+    if not rows:
+        return
+
+    print("% ---- Section 6.4: KADABRA eps=1e-4 vs BRAVA-GNN eps=1e-2 ----")
+    print(f"{'graph':17s} {'K tau_b':>9s} {'B tau_b':>9s} {'K ovl':>6s} {'B ovl':>6s} "
+          f"{'K time':>11s} {'B cpu':>9s} {'ratio':>9s}  verdict")
+    both, tau_losses, ovl_losses = 0, [], []
+    for g, kt, bt, ktau, btau, kov, bov in rows:
+        wins_tau = ktau > btau
+        wins_ovl = kov > bov
+        if wins_tau and wins_ovl:
+            both += 1
+            verdict = "KADABRA both"
+        else:
+            verdict = "!! " + ", ".join(
+                x for x, w in (("tau_b", wins_tau), ("overlap", wins_ovl)) if not w
+            ) + " NOT won"
+        if not wins_tau:
+            tau_losses.append(g)
+        if not wins_ovl:
+            ovl_losses.append(g)
+        print(f"{g:17s} {ktau:9.3f} {btau:9.3f} {kov:6d} {bov:6d} "
+              f"{kt:10.1f}s {bt:8.2f}s {kt/bt:8.1f}x  {verdict}")
+
+    ktaus = [r[3] for r in rows]
+    btaus = [r[4] for r in rows]
+    kovs = [r[5] for r in rows]
+    bovs = [r[6] for r in rows]
+    ratios = [(r[0], r[1] / r[2]) for r in rows]
+    slowest = max(ratios, key=lambda t: t[1])
+
+    # Section 6.4 and Appendix A.2 quote only ranges; the per-graph values live here so
+    # the claim can be checked instance by instance. BRAVA-GNN's accuracy is deliberately
+    # NOT repeated: Table `tab:brava_vs_kadabra` carries it as a mean over three seeds,
+    # and a single-run value beside it would contradict that table. Wall-clock is the
+    # same single timed pass in both, so the ratio is safe to give here.
+    print("\n% ---- Report/tables/tight_accuracy_table.tex (body) ----")
+    for g, kt, bt, ktau, btau, kov, bov in rows:
+        r = load(f"{d}/tight_julia_{g}.json")
+        sow = r.get("samples_over_omega") if r else None
+        print(f"            {g:<17} & ${ktau:.3f}$ & ${kov}$ & "
+              f"${sow:.2f}$ & {_secs(kt)} & ${kt/bt:.0f}\\times$ \\\\"
+              + ("  % KADABRA loses tau_b to BRAVA-GNN here" if ktau <= btau else ""))
+
+    print("\n% ---- figures quoted in Section 6.4 and the Conclusion ----")
+    print(f"  instances compared: {len(rows)} of {len(BVK_GRAPHS)}")
+    print(f"  KADABRA tau_b:  {min(ktaus):.3f}--{max(ktaus):.3f}")
+    print(f"  BRAVA   tau_b:  {min(btaus):.3f}--{max(btaus):.3f}")
+    print(f"  KADABRA overlap: {min(kovs)}--{max(kovs)} out of 100")
+    print(f"  BRAVA   overlap: {min(bovs)}--{max(bovs)} out of 100")
+    print(f"  runtime ratio (KADABRA 1e-4 / BRAVA CPU): "
+          f"{min(r for _, r in ratios):.0f}--{max(r for _, r in ratios):.0f}x")
+    print(f"  slowest-case anchor: {slowest[0]} at {slowest[1]:.0f}x")
+    print(f"  KADABRA wins BOTH metrics on {both}/{len(rows)} graphs")
+    if tau_losses or ovl_losses:
+        print(f"  !! CLAIM DOES NOT HOLD --- tau_b lost on: {', '.join(tau_losses) or 'none'}"
+              f"; overlap lost on: {', '.join(ovl_losses) or 'none'}")
+    elif len(rows) == len(BVK_GRAPHS):
+        print("  => 'on every instance tested' holds across all 9 graphs")
+    else:
+        print(f"  => holds on the {len(rows)} graphs measured so far (INCOMPLETE)")
+
+
 def k_sweep(d):
     """Effect of the top-k restriction on runtime and sample count."""
     ks = [0, 10, 100]
@@ -154,7 +249,8 @@ def k_sweep(d):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3 or sys.argv[1] not in ("tight", "bvk", "k"):
+    if len(sys.argv) != 3 or sys.argv[1] not in ("tight", "bvk", "tightx", "k"):
         print(__doc__, file=sys.stderr)
         sys.exit(2)
-    {"tight": tight, "bvk": bvk, "k": k_sweep}[sys.argv[1]](sys.argv[2].rstrip("/"))
+    {"tight": tight, "bvk": bvk, "tightx": tightx,
+     "k": k_sweep}[sys.argv[1]](sys.argv[2].rstrip("/"))

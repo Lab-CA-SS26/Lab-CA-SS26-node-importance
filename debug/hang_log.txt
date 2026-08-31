@@ -1,0 +1,26 @@
+Starting...
+Calling kadabra_centrality...
+Starting Phase 1...
+Thread 2 starting Phase 1...
+Thread 1 starting Phase 1...
+Thread 3 starting Phase 1...
+Thread 2 phase 1 iter 100 / 541
+Thread 2 phase 1 iter 200 / 541
+Thread 2 phase 1 iter 300 / 541
+Thread 2 phase 1 iter 400 / 541
+Thread 2 phase 1 iter 500 / 541
+Thread 2 finished Phase 1!
+Thread 4 starting Phase 1...
+Thread 4 phase 1 iter 100 / 541
+Thread 1 phase 1 iter 100 / 541
+Thread 4 phase 1 iter 200 / 541
+Thread 1 phase 1 iter 200 / 541
+Thread 4 phase 1 iter 300 / 541
+Thread 1 phase 1 iter 300 / 541
+Thread 4 phase 1 iter 400 / 541
+Thread 1 phase 1 iter 400 / 541
+Thread 4 phase 1 iter 500 / 541
+Thread 4 finished Phase 1!
+Thread 1 phase 1 iter 500 / 541
+Thread 1 finished Phase 1!
+INFINITE LOOP IN BACKTRACK! curr=1 target=3 count=0 offset=1

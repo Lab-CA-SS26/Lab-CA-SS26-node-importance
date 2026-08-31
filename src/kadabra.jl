@@ -171,6 +171,29 @@ Weighted graphs are not supported; passing a `distmx` argument throws an `Argume
 - `normalize::Symbol`: How to normalize the output. `:graphs` matches Graphs.jl, `:kadabra` matches the raw KADABRA paper output, `:none` returns unnormalized counts (default: `:graphs`).
 - `parallel::Bool`: If true, sample with `Threads.nthreads()` tasks; if false, use a single sampling stream (default: true).
 - `rng::Union{AbstractRNG,Nothing}`: Seed source for reproducible runs (default: `nothing`, i.e. the global RNG). With `parallel=false` the output is bit-identical across runs with the same seed. With `parallel=true` each worker's sampling stream is seeded deterministically, but how many samples each worker contributes before the shared stopping condition fires depends on thread scheduling, so estimates vary slightly between runs (within the `err` guarantee). Use `parallel=false` when exact reproducibility is required.
+- `topk_variant::Symbol`: which reading of the top-`k` confidence-budget allocation to
+  use; ignored when `k = 0`. Borassi & Natale's Section 5.2 and the authors' C++ reference
+  disagree in three places, and the reference's choices are inconsistent with its own
+  stopping test: it sizes a vertex's *lower* budget by the rank gap above it (the test
+  needs the gap below), leaves the top vertex's lower budget unconstrained (the test needs
+  exactly that one), and adds `lambda_L(v_k)` where the paper subtracts it when budgeting
+  vertices outside the top k. `:paper` follows the paper's lambda definitions but keeps the
+  reference's collapse loops. `:paper_bd` (default) additionally applies the paper's
+  collapse rule to the one adjacent pair those loops skip; `:paper_ex` is an alternative
+  repair that re-anchors them instead: KADABRA collapses both budgets to
+  `err` for any adjacent pair closer than `sqrt(start_factor)*err/4`, but never applies
+  that to the boundary pair `(v_k, v_{k+1})`, which is the one gap external exclusion
+  depends on; `:paper_bd` applies it there too, and `:paper_ex` instead re-anchors the
+  guard's second arm from `v_{k+1}` onto `v_k`, the vertex exclusion actually compares
+  against, which subsumes that pair. The remaining two exist only to reproduce
+  this report's Section 6.3 comparison and are not a behaviour we ship: `:cpp` reproduces the reference verbatim, including its use of `g(v_k)` where
+  the paper uses `f(v_k)`, and `:code` is the hybrid our port carried before that
+  comparison was run --- the reference's allocation with the paper's external test.
+  All three remain valid `(err, delta)`-approximations --- the allocation is a heuristic
+  for *where* to spend the confidence budget, not part of the guarantee --- and all three
+  measured identical top-`k` accuracy; they differ only in how many samples they need,
+  where `:paper` needed 0.80 +- 0.17 times as many as the reference's allocation over
+  4 graphs x 4 values of k x 3 seeds at `err = 1e-4`.
 
 # Returns
 A `NamedTuple` with fields:
@@ -198,10 +221,17 @@ function kadabra_centrality(
     normalize::Symbol = :graphs,
     parallel::Bool = true,
     rng::Union{AbstractRNG,Nothing} = nothing,
+    topk_variant::Symbol = :paper_bd,
 ) where {T}
     nv(g) >= 2 || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
     err > 0 || throw(ArgumentError("err must be positive (got $err)"))
     0 < delta < 1 || throw(ArgumentError("delta must be in (0, 1) (got $delta)"))
+    topk_variant in (:code, :paper, :cpp, :paper_bd, :paper_ex) || throw(
+        ArgumentError(
+            "topk_variant must be :code, :paper, :cpp, :paper_bd or :paper_ex " *
+            "(got $topk_variant)",
+        ),
+    )
 
     n = Int(nv(g))
     absolute = (k == 0)
@@ -275,7 +305,8 @@ function kadabra_centrality(
         partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev = true)
         compute_delta_guess!(
             delta_l_guess, delta_u_guess, view(top_k_nodes, 1:union_sample),
-            global_approx, actual_tau, n, k, absolute, err, delta, start_factor,
+            global_approx, actual_tau, n, k, absolute, err, delta, start_factor;
+            variant = topk_variant,
         )
 
         # --- RESET: Phase 1 samples are thrown away; Phase 2 starts from scratch ---
@@ -332,7 +363,8 @@ function kadabra_centrality(
                                 if check_finished(
                                     global_approx, view(top_k_nodes, 1:union_sample),
                                     n_pairs2[], k, err, delta_l_guess, delta_u_guess,
-                                    omega, absolute, bet_buf, err_l_buf, err_u_buf
+                                    omega, absolute, bet_buf, err_l_buf, err_u_buf;
+                                    variant = topk_variant
                                 )
                                     Threads.atomic_xchg!(stop_flag, true)
                                 end
@@ -374,7 +406,8 @@ function kadabra_centrality(
         partialsort!(top_k_nodes, 1:union_sample, by = x -> counts[x], rev = true)
         compute_delta_guess!(
             delta_l_guess, delta_u_guess, view(top_k_nodes, 1:union_sample),
-            counts, tau, n, k, absolute, err, delta, start_factor,
+            counts, tau, n, k, absolute, err, delta, start_factor;
+            variant = topk_variant,
         )
 
         # --- RESET: Phase 1 samples are thrown away; Phase 2 starts from scratch ---
@@ -402,7 +435,7 @@ function kadabra_centrality(
             if check_finished(
                 counts, view(top_k_nodes, 1:union_sample), phase2_pairs,
                 k, err, delta_l_guess, delta_u_guess, omega, absolute,
-                bet_buf, err_l_buf, err_u_buf
+                bet_buf, err_l_buf, err_u_buf; variant = topk_variant
             )
                 stop_flag_seq = true
             end
@@ -550,7 +583,8 @@ function compute_bet_err!(
     k_target::Int,
     absolute::Bool,
     err::Float64,
-    start_factor::Int,
+    start_factor::Int;
+    variant::Symbol = :paper,
 )
     union_sample = length(bet)
     # The top-k budgets reference rank neighbours at positions up to `k_target + 1`, so they
@@ -563,15 +597,37 @@ function compute_bet_err!(
         fill!(err_u, err)
     else
         max_err = sqrt(start_factor) * err / 4
-        err_u[1] = max(err, (bet[1] - bet[2]) / 2)
-        err_l[1] = 10.0
-        for i = 2:k_target
-            err_l[i] = max(err, (bet[i-1] - bet[i]) / 2)
-            err_u[i] = max(err, (bet[i] - bet[i+1]) / 2)
+        paperish = variant === :paper || variant === :paper_bd || variant === :paper_ex
+        if paperish
+            # Borassi & Natale (2019), Section 5.2: v_i's *lower* bound is what must clear
+            # v_{i+1}'s upper bound, so it is sized by the gap below v_i; its *upper* bound
+            # only has to be cleared by v_{i-1}, so it is sized by the gap above. The top
+            # vertex has nothing above it, so its upper budget is left unconstrained.
+            err_l[1] = max(err, (bet[1] - bet[2]) / 2)
+            err_u[1] = 10.0
+            for i = 2:k_target
+                err_l[i] = max(err, (bet[i] - bet[i+1]) / 2)
+                err_u[i] = max(err, (bet[i-1] - bet[i]) / 2)
+            end
+        else
+            # The C++ reference assigns the two gaps the other way round (see the
+            # `variant` docstring). :code and :cpp both reproduce it verbatim.
+            err_u[1] = max(err, (bet[1] - bet[2]) / 2)
+            err_l[1] = 10.0
+            for i = 2:k_target
+                err_l[i] = max(err, (bet[i-1] - bet[i]) / 2)
+                err_u[i] = max(err, (bet[i] - bet[i+1]) / 2)
+            end
         end
+        # Vertices outside the top k only need an upper bound tight enough to fall below
+        # v_k. The paper sets lambda_U(v_i) = b(v_k) - lambda_L(v_k) - b(v_i), i.e. it
+        # subtracts the budget v_k itself is allowed to slip by; the reference *adds* it,
+        # which makes the target looser than its own exclusion test can use.
+        gap_k = (bet[k_target] - bet[k_target+1]) / 2
+        signed_gap = paperish ? -gap_k : gap_k
         for i = (k_target+1):union_sample
             err_l[i] = 10.0
-            err_u[i] = max(err, bet[k_target] + (bet[k_target] - bet[k_target+1]) / 2 - bet[i])
+            err_u[i] = max(err, bet[k_target] + signed_gap - bet[i])
         end
         for i = 1:(k_target-1)
             if bet[i] - bet[i+1] < max_err
@@ -581,10 +637,33 @@ function compute_bet_err!(
                 err_u[i+1] = err
             end
         end
-        for i = (k_target+2):union_sample
-            if bet[k_target+1] - bet[i] < max_err
-                err_l[k_target+1] = err
-                err_u[k_target+1] = err
+        # The tie-collapse safeguard below runs over the pairs inside the top k and the
+        # pairs beneath it, but never over the boundary pair (v_k, v_{k+1}) --- the one gap
+        # the external-exclusion test actually depends on. Vertices past rank k have their
+        # lower budget written off (`err_l = 10`), so when exclusion fails narrowly because
+        # that gap is close to `err`, v_{k+1} must fall back on `f, g <= err` with a
+        # delta_L pinned at its floor, and the run oversamples badly. `:paper_bd` closes
+        # that hole; the reference, NetworKit and every other variant here leave it open.
+        if variant === :paper_bd &&
+           k_target + 1 <= union_sample &&
+           bet[k_target] - bet[k_target+1] < max_err
+            err_l[k_target] = err
+            err_u[k_target] = err
+            err_l[k_target+1] = err
+            err_u[k_target+1] = err
+        end
+        # This second arm of the guard is anchored on v_{k+1}, but the exclusion test
+        # compares every v_i against v_k, so the anchor looks off by one too. `:paper_ex`
+        # re-anchors it on v_k, which subsumes the single pair `:paper_bd` adds. The two
+        # are alternatives rather than cumulative: running both anchors together measured
+        # no better than `:paper_bd` alone, because the extra collapses force tail vertices
+        # to carry a delta_L they would not otherwise need.
+        anchor, lo =
+            variant === :paper_ex ? (k_target, k_target + 1) : (k_target + 1, k_target + 2)
+        for i = lo:union_sample
+            if bet[anchor] - bet[i] < max_err
+                err_l[anchor] = err
+                err_u[anchor] = err
                 err_l[i] = err
                 err_u[i] = err
             end
@@ -617,7 +696,8 @@ function compute_delta_guess!(
     absolute::Bool,
     err::Float64,
     delta::Float64,
-    start_factor::Int,
+    start_factor::Int;
+    variant::Symbol = :paper,
 )
     union_sample = length(top_k_nodes)
     balancing_factor = 0.001
@@ -629,7 +709,7 @@ function compute_delta_guess!(
     for i = 1:union_sample
         bet[i] = global_approx[top_k_nodes[i]] / n_pairs
     end
-    compute_bet_err!(bet, err_l, err_u, n_pairs, k_target, absolute, err, start_factor)
+    compute_bet_err!(bet, err_l, err_u, n_pairs, k_target, absolute, err, start_factor; variant = variant)
 
     a = 0.0
     b = 1.0 / err^2 * log(n * 4.0 * (1.0 - balancing_factor) / delta)
@@ -683,7 +763,8 @@ function check_finished(
     absolute::Bool,
     bet::Vector{Float64},
     err_l::Vector{Float64},
-    err_u::Vector{Float64},
+    err_u::Vector{Float64};
+    variant::Symbol = :paper,
 )
     n_tracked = length(top_k_nodes)
 
@@ -727,7 +808,15 @@ function check_finished(
                     finished = (bet[k-1] - err_l[k-1]) > (bet[k] + err_u[k])
                 end
             else
-                finished = (bet[k] - err_l[k]) > (bet[i] + err_u[i])
+                # External exclusion. The paper certifies v_i below v_k with v_k's *lower*
+                # deviation f(v_k); the C++ reference substitutes its upper deviation
+                # g(v_k) (Probabilistic.cpp:85). Since g >= f the C++ form is the stricter
+                # of the two, so it is conservative --- but it costs samples.
+                finished = if variant === :cpp
+                    (bet[k] - err_u[k]) > (bet[i] + err_u[i])
+                else
+                    (bet[k] - err_l[k]) > (bet[i] + err_u[i])
+                end
             end
 
             finished = finished || ((err_l[i] < err) && (err_u[i] < err))

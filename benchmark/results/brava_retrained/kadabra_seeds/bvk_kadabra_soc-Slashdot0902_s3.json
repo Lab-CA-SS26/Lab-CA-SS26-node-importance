@@ -1,0 +1,24 @@
+{
+    "execution_time_seconds": 1.45253869,
+    "io_time_seconds": 0.759451446,
+    "kadabra_omega": 34286.82712938843,
+    "kadabra_tau": 343,
+    "mae": 1.0377560028398464e-5,
+    "max_ae": 0.001133152200344996,
+    "ndcg_topk": 0.9970444117416388,
+    "num_samples": 30343,
+    "overlap_topk": 91,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": true,
+        "epsilon": 0.01,
+        "input_file": "/home/stud/schlaierm0/Lab-CA-SS26-node-importance/Instances/TestInstances/soc-Slashdot0902.txt",
+        "k": 0,
+        "threads": 8,
+        "version": "julia"
+    },
+    "samples_over_omega": 0.8849754421864239,
+    "tau_overall": 0.5752833765244707,
+    "tau_topk": 0.8354842244163192
+}

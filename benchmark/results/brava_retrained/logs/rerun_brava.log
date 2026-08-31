@@ -1,0 +1,70 @@
+### [1/4] retrain seed 1 (canonical, now reproducible) 12:57:02
+  config     : degree_mix_mass_6, nhid=12, L=2, dropout=0.3, epochs=10, Adam lr=0.005
+  use_pr     : false
+  loss       : authors
+  seed       : 1
+  cuda       : true
+Found 30 training graphs.
+    HY_10_Dir: 10
+    SF_10_Dir: 10
+    SF_10_Sym: 10
+Epoch 1 / 10 - Avg Loss: 0.601
+Epoch 2 / 10 - Avg Loss: 0.5701
+Epoch 3 / 10 - Avg Loss: 0.5673
+Epoch 4 / 10 - Avg Loss: 0.5689
+Epoch 5 / 10 - Avg Loss: 0.5752
+Epoch 6 / 10 - Avg Loss: 0.5656
+Epoch 7 / 10 - Avg Loss: 0.5628
+Epoch 8 / 10 - Avg Loss: 0.5635
+Epoch 9 / 10 - Avg Loss: 0.559
+Epoch 10 / 10 - Avg Loss: 0.5606
+Training complete. Model saved to /home/stud/schlaierm0/Lab-CA-SS26-node-importance/benchmark/cache/bravagnn_weights.jld2
+### [2/4] bvk stage -- TIMED, nothing else may run now 13:13:32
+reproduce_report.sh: threads=8 outdir=/home/stud/schlaierm0/bvk_results_new stage=bvk
+
+=== Stage 'bvk': BRAVA-GNN vs KADABRA, eps=1e-2 ===
+[13:13:32] p2p-Gnutella31
+[13:14:50] soc-Epinions1
+[13:16:07] soc-Slashdot0902
+[13:17:27] email-EuAll
+[13:18:57] com-youtube
+[13:20:37] amazon
+[13:22:46] dblp
+[13:25:35] cit-Patents
+[13:29:37] com-lj
+
+% ---- Report/tables/brava_vs_kadabra_table.tex (body) ----
+            p2p-Gnutella31    & 0.58\,s & 0.29\,s & 1.44\,s & 0.920 & 0.766 & 43/100 & 77/100 \\
+            soc-Epinions1     & 0.59\,s & 0.58\,s & 1.95\,s & 0.916 & 0.602 & 73/100 & 93/100 \\
+            soc-Slashdot0902  & 0.74\,s & 0.57\,s & 1.73\,s & 0.887 & 0.561 & 92/100 & 88/100 \\
+            email-EuAll       & 1.19\,s & 0.66\,s & 12.92\,s & 0.991 & 0.343 & 70/100 & 89/100 \\
+            com-youtube       & 5.89\,s & 3.17\,s & 3.81\,s & 0.901 & 0.350 & 58/100 & 93/100 \\
+            amazon            & 14.06\,s & 9.14\,s & 6.19\,s & 0.836 & 0.223 & 54/100 & 87/100 \\
+            dblp              & 24.32\,s & 14.75\,s & 11.49\,s & 0.875 & 0.210 & 54/100 & 83/100 \\
+            cit-Patents       & 44.66\,s & 31.81\,s & 19.35\,s & 0.750 & 0.209 & 35/100 & 65/100 \\
+            com-lj            & 52.27\,s & 38.40\,s & 17.89\,s & 0.780 & 0.192 & 53/100 & 89/100 \\
+
+% ---- figures quoted in Section 6.2 ----
+  BRAVA GPU speedup over CPU: mean 1.548x, median 1.538x, range 1.005--1.998x
+  BRAVA-CPU faster than KADABRA on: p2p-Gnutella31, soc-Epinions1, soc-Slashdot0902, email-EuAll
+  KADABRA faster than BRAVA-GPU on: amazon, dblp, cit-Patents, com-lj
+  BRAVA higher overall tau_b on 9/9 graphs
+  KADABRA higher top-100 overlap on 8/9 graphs
+
+Done. Raw per-run JSON is in /home/stud/schlaierm0/bvk_results_new
+Re-running is incremental: existing .json files are skipped, so delete a
+file (or the whole directory) to force that measurement to be recomputed.
+### bvk exit=0
+### [3/4] seed 2 13:34:39
+Epoch 7 / 10 - Avg Loss: 0.5707
+Epoch 8 / 10 - Avg Loss: 0.5718
+Epoch 9 / 10 - Avg Loss: 0.5712
+Epoch 10 / 10 - Avg Loss: 0.5725
+Training complete. Model saved to /home/stud/schlaierm0/Lab-CA-SS26-node-importance/benchmark/cache/bravagnn_weights_S2.jld2
+### [4/4] seed 3 13:51:18
+Epoch 7 / 10 - Avg Loss: 0.5561
+Epoch 8 / 10 - Avg Loss: 0.5507
+Epoch 9 / 10 - Avg Loss: 0.5477
+Epoch 10 / 10 - Avg Loss: 0.5479
+Training complete. Model saved to /home/stud/schlaierm0/Lab-CA-SS26-node-importance/benchmark/cache/bravagnn_weights_S3.jld2
+### ALL STAGES DONE 14:07:45

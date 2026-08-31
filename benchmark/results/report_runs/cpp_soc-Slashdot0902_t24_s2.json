@@ -1,0 +1,16 @@
+{
+    "execution_time_seconds": 0.252082845,
+    "io_time_seconds": 0.744595416,
+    "num_samples": 19933,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": true,
+        "epsilon": 0.01,
+        "input_file": "../Instances/TestInstances/soc-Slashdot0902.txt",
+        "k": 0,
+        "seed": 2,
+        "threads": 24,
+        "version": "cpp"
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "execution_time_seconds": 29.403951094,
+    "io_time_seconds": 35.153781935,
+    "kadabra_omega": 35664.999342455565,
+    "kadabra_tau": 357,
+    "mae": 1.4496792206834561e-06,
+    "max_ae": 0.00139987874277921,
+    "ndcg_topk": 0.9963464656973874,
+    "num_samples": 24357,
+    "overlap_topk": 86,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.01,
+        "input_file": "../Instances/ABCDE/com-lj.txt",
+        "k": 0,
+        "threads": 2,
+        "version": "julia"
+    },
+    "samples_over_omega": 0.6829384676591165,
+    "tau_overall": 0.17983720337249906,
+    "tau_topk": 0.8457777428226259
+}

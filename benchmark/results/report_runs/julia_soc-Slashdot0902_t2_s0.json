@@ -1,0 +1,24 @@
+{
+    "execution_time_seconds": 1.45543263,
+    "io_time_seconds": 0.642534875,
+    "kadabra_omega": 34286.82712938843,
+    "kadabra_tau": 343,
+    "mae": 1.247960737421716e-05,
+    "max_ae": 0.0032139047951122227,
+    "ndcg_topk": 0.9916565816439366,
+    "num_samples": 20343,
+    "overlap_topk": 91,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": true,
+        "epsilon": 0.01,
+        "input_file": "../Instances/TestInstances/soc-Slashdot0902.txt",
+        "k": 0,
+        "threads": 2,
+        "version": "julia"
+    },
+    "samples_over_omega": 0.5933182421118024,
+    "tau_overall": 0.5274711715078829,
+    "tau_topk": 0.8274203751284281
+}

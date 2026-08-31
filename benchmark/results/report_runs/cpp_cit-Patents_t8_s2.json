@@ -1,0 +1,16 @@
+{
+    "execution_time_seconds": 12.315709918,
+    "io_time_seconds": 20.283301942,
+    "num_samples": 15481,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.01,
+        "input_file": "../Instances/ABCDE/cit-Patents.txt",
+        "k": 0,
+        "seed": 2,
+        "threads": 8,
+        "version": "cpp"
+    }
+}
