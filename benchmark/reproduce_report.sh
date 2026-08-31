@@ -20,7 +20,7 @@
 #   --stage k       only the top-k runtime sweep, Julia at eps=1e-4 (hours; reuses tight's k=0)
 #   --stage kx      multi-seed top-k sweep x budget-allocation variant, 4 small graphs (~3h)
 #   --stage kxs     the same variants at k=3 and k=5, where they actually differ (~3h)
-#   --stage kxl     the top-k sweep on amazon/dblp, reference vs repaired (~70h)
+#   --stage kxl     the repaired allocation on amazon/dblp, k in {10,100} (~40h)
 #   --stage all     all of the above except kxl (default)
 #
 # Notes:
@@ -260,26 +260,25 @@ run_kx() {
 # per run, so the stage is a multi-day one, written seed-outermost: a complete extra
 # seed lands before the next one starts.
 run_kxl() {
-    echo "=== Stage 'kxl': multi-seed top-k sweep on amazon/dblp, eps=1e-4 ==="
+    echo "=== Stage 'kxl': the repaired allocation on amazon/dblp, eps=1e-4 ==="
     local specs=(
         "amazon           $INST/ABCDE/amazon.txt                   "
         "dblp             $INST/ABCDE/dblp.txt                     "
     )
+    # Only the repaired allocation, and only k in {10,100}. These two graphs run 2-3 h
+    # apiece, so the full k x variant grid of stages kx/kxs is out of reach; what this
+    # buys is the one claim that needs the large instances -- that the repaired version
+    # never rises above k=0 -- on six graphs instead of four. k=0 is variant-independent
+    # and is the per-seed denominator, so it is run once per seed and kept under the
+    # historical `_code_` filename that summarize_topk.py and make_plots.py expect.
     for seed in 1 2 3; do
         for spec in "${specs[@]}"; do
             read -r name path dflag <<<"$spec"
-            # k=0 is variant-independent (absolute branch), so it is run once and
-            # serves as the denominator for both. The two arms are the two versions
-            # anyone actually runs: `cpp` is the C++ reference verbatim, which is also
-            # what NetworKit ships, and `paper_bd` is the repaired version we ship.
-            # (The `code` hybrid is deliberately not measured here -- it is neither.)
             kx_run "$OUTDIR/kx_${name}_k0_code_s${seed}.json" \
                    "$path" "${dflag:-}" 0 code "$seed"
             for k in 10 100; do
-                for variant in cpp paper_bd; do
-                    kx_run "$OUTDIR/kx_${name}_k${k}_${variant}_s${seed}.json" \
-                           "$path" "${dflag:-}" "$k" "$variant" "$seed"
-                done
+                kx_run "$OUTDIR/kx_${name}_k${k}_paper_bd_s${seed}.json" \
+                       "$path" "${dflag:-}" "$k" paper_bd "$seed"
             done
         done
     done
