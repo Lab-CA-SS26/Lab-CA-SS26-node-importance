@@ -1,0 +1,26 @@
+{
+    "execution_time_seconds": 8031.659162574,
+    "io_time_seconds": 9.858800614,
+    "kadabra_omega": 3.428682712938843e8,
+    "kadabra_tau": 3428683,
+    "mae": 1.5517941098024693e-7,
+    "max_ae": 0.0003393492783499187,
+    "ndcg_topk": 1.0,
+    "num_samples": 44572843,
+    "overlap_topk": 10,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.0001,
+        "input_file": "../Instances/ABCDE/dblp.txt",
+        "k": 10,
+        "seed": 1,
+        "threads": 8,
+        "topk_variant": "paper_bd",
+        "version": "julia"
+    },
+    "samples_over_omega": 0.1299999058874569,
+    "tau_overall": 0.9605911987777737,
+    "tau_topk": 1.0
+}
