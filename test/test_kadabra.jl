@@ -179,4 +179,31 @@ include("../src/kadabra.jl")
         @test el_p[2] ≈ eu_c[2]
         @test eu_p[2] ≈ el_c[2]
     end
+
+    @testset "8. k larger than nv(g)" begin
+        # Both entry points clamp k to nv(g). This is the only way to reach the
+        # `k == union_sample` arm of the top-k stopping test.
+        g = star_graph(5)
+        res = kadabra_centrality(g, 10, 0.1, 0.1; start_factor = 10, parallel = false,
+                                 rng = Random.Xoshiro(1))
+        @test length(res.centralities) == 5
+        @test argmax(res.centralities) == 1
+        top = kadabra_top_k(g, 10, 0.1, 0.1; start_factor = 10, parallel = false,
+                            rng = Random.Xoshiro(1))
+        @test length(top) == 5 # the four leaves all have betweenness 0 and tie
+        @test top[1].node == 1
+    end
+
+    @testset "9. _backtrack! rejects a corrupt predecessor structure" begin
+        # Breaking out of the walk silently would return a plausible but wrong path
+        # count; these states cannot arise from a correct BFS, so they must be loud.
+        counts, offsets, np = zeros(Int, 3), [1, 2, 3], ones(3)
+        rng = Random.Xoshiro(1)
+        # A cycle 1 <- 2 <- 1 in the predecessor map never reaches the target.
+        @test_throws ErrorException _backtrack!(
+            counts, 1, 3, [2, 1, 0], [1, 1, 0], offsets, np, rng, false)
+        # A vertex on the walk with no recorded predecessor.
+        @test_throws ErrorException _backtrack!(
+            counts, 1, 3, [0, 0, 0], [0, 0, 0], offsets, np, rng, false)
+    end
 end

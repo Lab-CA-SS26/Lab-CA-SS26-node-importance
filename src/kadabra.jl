@@ -496,6 +496,7 @@ Convenience wrapper that runs KADABRA and efficiently extracts the top `k` most 
 Due to adaptive sampling, nodes with overlapping confidence intervals near the k-th rank cannot 
 be strictly ordered. Therefore, this function returns a candidate set of size `k' >= k` that 
 contains the true top-k nodes with high probability.
+As in `kadabra_centrality`, `k` is clamped to `nv(g)`.
 Returns a vector of `NamedTuple`s containing the `node` ID, its `centrality` score, 
 `lower_bound`, and `upper_bound`, sorted in descending order of centrality.
 """
@@ -507,6 +508,9 @@ function kadabra_top_k(
     kwargs...,
 ) where {T}
     k > 0 || throw(ArgumentError("k must be greater than 0 to extract top k nodes"))
+    # `kadabra_centrality` clamps `k` to `nv(g)`; do the same here so that the
+    # `partialsort` below stays in bounds when more nodes are requested than exist.
+    k = min(k, Int(nv(g)))
 
     # Run the standard Kadabra algorithm
     res = kadabra_centrality(g, k, err, delta; kwargs...)
@@ -790,11 +794,10 @@ function check_finished(
     else
         for i = 1:n_tracked
             if i == 1
-                if n_tracked > 1
-                    finished = (bet[1] - err_l[1]) > (bet[2] + err_u[2])
-                else
-                    finished = true
-                end
+                # `n_tracked` is `union_sample`, and `union_sample >= min(nv(g), 20)`
+                # because `union_target >= k + 20`. `kadabra_centrality` rejects
+                # `nv(g) < 2`, so `n_tracked >= 2` and `bet[2]` always exists.
+                finished = (bet[1] - err_l[1]) > (bet[2] + err_u[2])
             elseif i < k
                 finished =
                     ((bet[i-1] - err_l[i-1]) > (bet[i] + err_u[i])) &&
@@ -962,158 +965,143 @@ The nodes on the resulting path are incremented directly in the `counts` array w
     sp_edges_len = 0
     have_to_stop = false
 
-    begin
-        iter_count = 0
-        while !have_to_stop && (cur_s_len > 0 && cur_t_len > 0)
-            iter_count += 1
-            # if iter_count > 1000000
-            #     println("INFINITE LOOP IN BFS! cur_s_len=", cur_s_len, " cur_t_len=", cur_t_len, " s=", s, " t=", t)
-            #     break
-            # end
+    while !have_to_stop && (cur_s_len > 0 && cur_t_len > 0)
+        if sum_degs_s <= sum_degs_t
+            sum_degs_s = 0
+            next_s_len = 0
+            for i = 1:cur_s_len
+                x = cur_s[i]
+                for y in neighborfn_s(g, x)
+                    @inbounds begin
+                        if ball_indicator[y] == 0x00
+                            ball_indicator[y] = 0x01
+                            n_paths[y] = n_paths[x]
+                            dist[y] = dist[x] + 1
 
-            if sum_degs_s <= sum_degs_t
-                sum_degs_s = 0
-                next_s_len = 0
-                for i = 1:cur_s_len
-                    x = cur_s[i]
-                    for y in neighborfn_s(g, x)
-                        @inbounds begin
-                            if ball_indicator[y] == 0x00
-                                ball_indicator[y] = 0x01
-                                n_paths[y] = n_paths[x]
-                                dist[y] = dist[x] + 1
-    
-                                count = preds_count[y]
-                                idx = preds_offset[y] + count
-                                preds_data[idx] = x
-                                preds_count[y] = count + 1
-    
-                                next_s_len += 1
-                                next_s[next_s_len] = y
-    
-                                visited_len += 1
-                                # if visited_len > length(visited_nodes)
-                                #     println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
-                                # end
-                                visited_nodes[visited_len] = y
-                                sum_degs_s += length(neighborfn_s(g, y))
-    
-                            elseif ball_indicator[y] == 0x02
-                                have_to_stop = true
-                                sp_edges_len += 1
-                                sp_edges[sp_edges_len] = (x, y)
-    
-                            elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x01
-                                n_paths[y] += n_paths[x]
-                                count = preds_count[y]
-                                idx = preds_offset[y] + count
-                                preds_data[idx] = x
-                                preds_count[y] = count + 1
-                            end
+                            count = preds_count[y]
+                            idx = preds_offset[y] + count
+                            preds_data[idx] = x
+                            preds_count[y] = count + 1
+
+                            next_s_len += 1
+                            next_s[next_s_len] = y
+
+                            visited_len += 1
+                            visited_nodes[visited_len] = y
+                            sum_degs_s += length(neighborfn_s(g, y))
+
+                        elseif ball_indicator[y] == 0x02
+                            have_to_stop = true
+                            sp_edges_len += 1
+                            sp_edges[sp_edges_len] = (x, y)
+
+                        elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x01
+                            n_paths[y] += n_paths[x]
+                            count = preds_count[y]
+                            idx = preds_offset[y] + count
+                            preds_data[idx] = x
+                            preds_count[y] = count + 1
                         end
                     end
                 end
-                cur_s_len = next_s_len
-                cur_s, next_s = next_s, cur_s
+            end
+            cur_s_len = next_s_len
+            cur_s, next_s = next_s, cur_s
 
-            else
-                sum_degs_t = 0
-                next_t_len = 0
-                for i = 1:cur_t_len
-                    x = cur_t[i]
-                    for y in neighborfn_t(g, x)
-                        @inbounds begin
-                            if ball_indicator[y] == 0x00
-                                ball_indicator[y] = 0x02
-                                n_paths[y] = n_paths[x]
-                                dist[y] = dist[x] + 1
+        else
+            sum_degs_t = 0
+            next_t_len = 0
+            for i = 1:cur_t_len
+                x = cur_t[i]
+                for y in neighborfn_t(g, x)
+                    @inbounds begin
+                        if ball_indicator[y] == 0x00
+                            ball_indicator[y] = 0x02
+                            n_paths[y] = n_paths[x]
+                            dist[y] = dist[x] + 1
 
-                                count = preds_count[y]
-                                idx = preds_offset[y] + count
-                                preds_data[idx] = x
-                                preds_count[y] = count + 1
+                            count = preds_count[y]
+                            idx = preds_offset[y] + count
+                            preds_data[idx] = x
+                            preds_count[y] = count + 1
 
-                                next_t_len += 1
-                                next_t[next_t_len] = y
+                            next_t_len += 1
+                            next_t[next_t_len] = y
 
-                                visited_len += 1
-                                # if visited_len > length(visited_nodes)
-                                #     println("BUG! tid: ", Threads.threadid(), " objid: ", objectid(ball_indicator))
-                                # end
-                                visited_nodes[visited_len] = y
-                                sum_degs_t += length(neighborfn_t(g, y))
+                            visited_len += 1
+                            visited_nodes[visited_len] = y
+                            sum_degs_t += length(neighborfn_t(g, y))
 
-                            elseif ball_indicator[y] == 0x01
-                                have_to_stop = true
-                                sp_edges_len += 1
-                                sp_edges[sp_edges_len] = (y, x)
+                        elseif ball_indicator[y] == 0x01
+                            have_to_stop = true
+                            sp_edges_len += 1
+                            sp_edges[sp_edges_len] = (y, x)
 
-                            elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x02
-                                n_paths[y] += n_paths[x]
-                                count = preds_count[y]
-                                idx = preds_offset[y] + count
-                                preds_data[idx] = x
-                                preds_count[y] = count + 1
-                            end
+                        elseif dist[y] == dist[x] + 1 && ball_indicator[y] == 0x02
+                            n_paths[y] += n_paths[x]
+                            count = preds_count[y]
+                            idx = preds_offset[y] + count
+                            preds_data[idx] = x
+                            preds_count[y] = count + 1
                         end
                     end
                 end
-                cur_t_len = next_t_len
-                cur_t, next_t = next_t, cur_t
+            end
+            cur_t_len = next_t_len
+            cur_t, next_t = next_t, cur_t
+        end
+    end
+
+    if sp_edges_len > 0
+        tot_weight = 0.0
+        for i = 1:sp_edges_len
+            (u_bridge, v_bridge) = sp_edges[i]
+            tot_weight += n_paths[u_bridge] * n_paths[v_bridge]
+        end
+
+        rand_val = rand(rng) * tot_weight
+        cur_weight = 0.0
+        selected_edge = sp_edges[sp_edges_len] # FALLBACK ensures an edge is always selected
+
+        for i = 1:sp_edges_len
+            (u_bridge, v_bridge) = sp_edges[i]
+            cur_weight += n_paths[u_bridge] * n_paths[v_bridge]
+            if cur_weight >= rand_val
+                selected_edge = (u_bridge, v_bridge)
+                break
             end
         end
 
-        if sp_edges_len > 0
-            tot_weight = 0.0
-            for i = 1:sp_edges_len
-                (u_bridge, v_bridge) = sp_edges[i]
-                tot_weight += n_paths[u_bridge] * n_paths[v_bridge]
-            end
+        _backtrack!(
+            counts,
+            selected_edge[1],
+            s,
+            preds_data,
+            preds_count,
+            preds_offset,
+            n_paths,
+            rng,
+            endpoints,
+        )
+        _backtrack!(
+            counts,
+            selected_edge[2],
+            t,
+            preds_data,
+            preds_count,
+            preds_offset,
+            n_paths,
+            rng,
+            endpoints,
+        )
+    end
 
-            rand_val = rand(rng) * tot_weight
-            cur_weight = 0.0
-            selected_edge = sp_edges[sp_edges_len] # FALLBACK ensures an edge is always selected
-
-            for i = 1:sp_edges_len
-                (u_bridge, v_bridge) = sp_edges[i]
-                cur_weight += n_paths[u_bridge] * n_paths[v_bridge]
-                if cur_weight >= rand_val
-                    selected_edge = (u_bridge, v_bridge)
-                    break
-                end
-            end
-
-            _backtrack!(
-                counts,
-                selected_edge[1],
-                s,
-                preds_data,
-                preds_count,
-                preds_offset,
-                n_paths,
-                rng,
-                endpoints,
-            )
-            _backtrack!(
-                counts,
-                selected_edge[2],
-                t,
-                preds_data,
-                preds_count,
-                preds_offset,
-                n_paths,
-                rng,
-                endpoints,
-            )
-        end
-
-        for i = 1:visited_len
-            v = visited_nodes[i]
-            ball_indicator[v] = 0x00
-            n_paths[v] = 0.0
-            dist[v] = typemax(Int)
-            preds_count[v] = 0
-        end
+    for i = 1:visited_len
+        v = visited_nodes[i]
+        ball_indicator[v] = 0x00
+        n_paths[v] = 0.0
+        dist[v] = typemax(Int)
+        preds_count[v] = 0
     end
 
     return
@@ -1143,18 +1131,19 @@ The thread-local `counts` buffer is incremented in-place for every node visited.
     iter_count = 0
     while curr != target
         iter_count += 1
-        if iter_count > max_steps
-            break # Failsafe against corrupted graph state causing infinite cycles
-        end
+        # A shortest path visits each vertex at most once, so the walk terminates within
+        # `nv(g)` steps unless the predecessor structure contains a cycle.
+        iter_count <= max_steps || error("_backtrack!: predecessor map contains a cycle")
         GC.safepoint()
         counts[curr] += 1
 
         count = preds_count[curr]
         offset = preds_offset[curr]
 
-        if count == 0
-            break # Failsafe against corrupt BFS reconstruction
-        elseif count == 1
+        # Every vertex the BFS reached other than its own root has a predecessor, and the
+        # walk stops at `target`, so `curr` is never a root here.
+        count > 0 || error("_backtrack!: vertex $curr has no BFS predecessor")
+        if count == 1
             curr = preds_data[offset]
         else
             tot = 0.0
