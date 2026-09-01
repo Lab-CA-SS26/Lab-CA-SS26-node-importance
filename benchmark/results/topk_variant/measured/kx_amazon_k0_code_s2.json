@@ -1,0 +1,26 @@
+{
+    "execution_time_seconds": 7271.746797947,
+    "io_time_seconds": 6.157024131,
+    "kadabra_omega": 3.5008776676064306e8,
+    "kadabra_tau": 3500878,
+    "mae": 8.300560369454215e-8,
+    "max_ae": 0.0011119097585333276,
+    "ndcg_topk": 0.9999997772741581,
+    "num_samples": 113078109,
+    "overlap_topk": 100,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.0001,
+        "input_file": "../Instances/ABCDE/amazon.txt",
+        "k": 0,
+        "seed": 2,
+        "threads": 8,
+        "topk_variant": "code",
+        "version": "julia"
+    },
+    "samples_over_omega": 0.32299931541827376,
+    "tau_overall": 0.9247729142052704,
+    "tau_topk": 0.9959595959595959
+}

@@ -117,11 +117,18 @@ Samples relative to the same seed's `k = 0` run — values above 1.00 mean the t
 | `soc-Epinions1` | 10 | 1.28 ± 0.31 | 1.00 ± 0.09 | 1.00 ± 0.09 |
 | `soc-Epinions1` | 100 | 1.30 ± 0.31 | 1.01 ± 0.09 | 1.01 ± 0.09 |
 
-The columns are cumulative, and both corrections are the paper's own. Over all 16 (graph, *k*)
+The columns are cumulative, and both corrections are the paper's own. Over these 16 (graph, *k*)
 configurations: **three sit above `k = 0` beyond one standard deviation under the reference,
 the same three still do once only the gap pairing is corrected, and none do once the boundary
 pair is collapsed as well.** Finding 1 on its own makes top-*k* uniformly cheaper but does not
 remove the effect — it takes both.
+
+We also ran the repaired allocation on two much larger instances, `amazon` (2.1M nodes) and
+`dblp` (4.0M nodes), at k ∈ {10, 100} and three seeds. Both stay below `k = 0`: `amazon` at
+0.49 and 0.53, `dblp` at 0.89 ± 0.05 and 0.91 ± 0.03. `dblp` is the interesting one — it is
+the only large instance where our earlier single-seed sweep put a top-*k* run *above* `k = 0`,
+at 1.06×. Across all six graphs and twenty configurations, the repaired version never exceeds
+`k = 0`.
 The mean falls from 0.79 to 0.69, and the top-*k* answer is unchanged in 15 of the 16
 (identical overlap and τ over the top *k*; the exception differs by 0.001 in the latter).
 
@@ -161,6 +168,7 @@ against a competitor — exercises the top-*k* branch at all.
 Both fixes together, against the reference implementation's behaviour:
 
 - **~30% fewer samples on average** in top-*k* mode, up to 2.2× fewer at small *k*.
+- **Verified on six graphs**, from 62k to 4.0M nodes, over twenty (graph, *k*) configurations.
 - **No configuration where top-*k* costs more than `k = 0`** — the effect disappears on every
   graph and every *k* we tested.
 - **Identical top-*k* output**: same vertices, same order.

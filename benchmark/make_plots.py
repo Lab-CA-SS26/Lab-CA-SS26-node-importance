@@ -259,15 +259,24 @@ def plot_topk(indir, outdir):
         print("no kx_*.json runs found in " + indir, file=sys.stderr)
         sys.exit(1)
 
-    ncol = 2
+    ncol = 3 if len(graphs) > 4 else 2
     nrow = -(-len(graphs) // ncol)
-    fig, axes = plt.subplots(nrow, ncol, figsize=(7.4, 2.35 * nrow), squeeze=False)
+    seen = set()
+    fig, axes = plt.subplots(nrow, ncol, figsize=(7.4, 2.15 * nrow), squeeze=False)
     for idx, g in enumerate(graphs):
         ax = axes[idx // ncol][idx % ncol]
         present = [k for k in ks
                    if any((g, k, v, s) in runs for v, _, _ in arms for s in (1, 2, 3))]
         x = list(range(len(present)))
+        # A graph may have only the repaired arm (amazon and dblp are too expensive to
+        # run both). Centre the single bar rather than leaving it offset into a gap.
+        live = [a for a in arms
+                if any((g, k, a[0], s) in runs for k in present for s in (1, 2, 3))]
+        width = 0.34 if len(live) > 1 else 0.5
         for j, (v, label, colour) in enumerate(arms):
+            if (v, label, colour) not in live:
+                continue
+            off = (live.index((v, label, colour)) - (len(live) - 1) / 2) * 0.36
             means, errs = [], []
             for k in present:
                 r = [runs[(g, k, v, s)] / runs[(g, 0, "code", s)]
@@ -275,12 +284,14 @@ def plot_topk(indir, outdir):
                      if (g, k, v, s) in runs and (g, 0, "code", s) in runs]
                 means.append(statistics.mean(r) if r else float("nan"))
                 errs.append(statistics.stdev(r) if len(r) > 1 else 0.0)
-            ax.bar([xi + (j - 0.5) * 0.36 for xi in x], means, 0.34, yerr=errs,
-                   capsize=2.5, color=colour, label=label if idx == 0 else None,
+            ax.bar([xi + off for xi in x], means, width, yerr=errs,
+                   capsize=2.5, color=colour,
+                   label=label if label not in seen and not seen.add(label) else None,
                    error_kw={"elinewidth": 0.9, "ecolor": INK}, zorder=3)
         ax.axhline(1.0, color=INK, linewidth=0.9, zorder=4)
         ax.set_xticks(x)
-        ax.set_xticklabels([f"$k={k}$" for k in present], fontsize=8)
+        ax.set_xticklabels([f"${k}$" for k in present], fontsize=8)
+        ax.set_xlabel("$k$", fontsize=8, color=MUTED, labelpad=1)
         ax.set_title(g, fontsize=8.5, color=INK)
         if idx % ncol == 0:
             ax.set_ylabel("samples rel. to $k=0$", fontsize=8.5, color=MUTED)
