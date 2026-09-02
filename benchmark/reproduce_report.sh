@@ -12,7 +12,7 @@
 # in the report text.
 #
 # Usage:
-#   ./reproduce_report.sh [--stage tight|tightx|bvk|k|kx|kxs|kxb|kxl|all] [--threads N] [--outdir DIR]
+#   ./reproduce_report.sh [--stage tight|tightx|bvk|k|kx|kxs|kxb|kxc|kxl|all] [--threads N] [--outdir DIR]
 #
 #   --stage tight   only the eps=1e-4 C++ vs Julia comparison  (~6h, dominated by amazon/dblp)
 #   --stage tightx  only the eps=1e-4 Julia runs on the three largest bvk graphs (~23h)
@@ -80,11 +80,17 @@ julia_run() {
         -a "$algo" -v julia --epsilon "$eps" --delta 0.1 -k 0 -s 0 -t "$THREADS" "$@" >/dev/null
 }
 
+# The C++ runner's argument parser strips every leading dash and then looks up the key
+# "d", so `--directed` becomes the key "directed", is never read, and the graph is loaded
+# UNDIRECTED with no warning and a perfectly valid JSON. Only `-d` works. The graph specs
+# carry `--directed` because that is what the Julia runner wants, so translate here.
+cpp_dflag() { [[ -n "${1:-}" ]] && echo "-d" || echo ""; }
+
 # cpp_run <out.json> <graph> <directed-flag> <epsilon>
 cpp_run() {
     local out="$1" graph="$2" dflag="$3" eps="$4"
     [[ -f "$out" ]] && { echo "  skip (exists): $(basename "$out")"; return 0; }
-    "$CPP_RUNNER" $dflag -i "$graph" -o "$out" \
+    "$CPP_RUNNER" $(cpp_dflag "$dflag") -i "$graph" -o "$out" \
         -threads "$THREADS" -k 0 -delta 0.1 -epsilon "$eps" -a kadabra -v cpp -s 0 >/dev/null
 }
 
@@ -352,6 +358,36 @@ run_kxb() {
     python3 summarize_topk.py "$OUTDIR"
 }
 
+# ---------------------------------------------------------------------------
+# Stage 4e: the C++ reference itself, in top-k mode
+# ---------------------------------------------------------------------------
+# Every other top-k stage runs the *Julia* port with `--topk-variant` selecting which
+# allocation to use, so "the reference costs 1.73x" is really "our port configured like
+# the reference". This stage runs the actual C++ binary at k > 0 to check that the two
+# agree, exactly as stage 'tight' does at k = 0. Same graphs, same seeds, same threads.
+run_kxc() {
+    echo "=== Stage 'kxc': the C++ reference in top-k mode, eps=1e-4 ==="
+    local specs=(
+        "email-EuAll      $INST/TestInstances/email-EuAll.txt      --directed"
+        "p2p-Gnutella31   $INST/TestInstances/p2p-Gnutella31.txt   "
+        "soc-Epinions1    $INST/TestInstances/soc-Epinions1.txt    --directed"
+        "soc-Slashdot0902 $INST/TestInstances/soc-Slashdot0902.txt --directed"
+    )
+    for seed in 1 2 3; do
+        for spec in "${specs[@]}"; do
+            read -r name path dflag <<<"$spec"
+            for k in 0 3 5 10 100; do
+                local out="$OUTDIR/kxc_${name}_k${k}_s${seed}.json"
+                [[ -f "$out" ]] && { echo "  skip (exists): $(basename "$out")"; continue; }
+                echo "[$(date +%H:%M:%S)] $(basename "$out")"
+                "$CPP_RUNNER" $(cpp_dflag "${dflag:-}") -i "$path" -o "$out" \
+                    -threads "$THREADS" -k "$k" -delta 0.1 -epsilon 0.0001 \
+                    -a kadabra -v cpp -s "$seed" >/dev/null
+            done
+        done
+    done
+}
+
 case "$STAGE" in
     tight)  run_tight ;;
     tightx) run_tightx ;;
@@ -360,9 +396,10 @@ case "$STAGE" in
     kx)     run_kx ;;
     kxs)    run_kxs ;;
     kxb)    run_kxb ;;
+    kxc)    run_kxc ;;
     kxl)    run_kxl ;;
     all)    run_tight; echo; run_bvk; echo; run_tightx; echo; run_k; echo; run_kx; echo; run_kxs ;;
-    *) echo "unknown stage: $STAGE (expected tight|tightx|bvk|k|kx|kxs|kxb|kxl|all)" >&2; exit 2 ;;
+    *) echo "unknown stage: $STAGE (expected tight|tightx|bvk|k|kx|kxs|kxb|kxc|kxl|all)" >&2; exit 2 ;;
 esac
 
 echo
