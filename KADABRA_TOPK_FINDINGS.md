@@ -16,7 +16,7 @@ to spend the confidence budget δ, not part of the (λ, δ) guarantee, and absol
 counter-intuitive effect we could reproduce across graphs and seeds: **asking for the top *k*
 vertices can take more samples than computing every centrality.**
 
-Following the paper on both points removes that effect entirely and needs, on average, 30%
+Following the paper on both points removes that effect entirely and needs, on average, 25%
 fewer samples for an identical top-*k* answer.
 
 We would like to know whether the reference's choices were deliberate. If they were not,
@@ -175,7 +175,8 @@ against a competitor — exercises the top-*k* branch at all.
 
 Both fixes together, against the reference implementation's behaviour:
 
-- **~30% fewer samples on average** in top-*k* mode, up to 2.2× fewer at small *k*.
+- **25% fewer samples on average** (0.75 ± 0.19 of the reference's, over 48 paired
+  measurements), up to 2.2× fewer at small *k*.
 - **Verified on six graphs**, from 62k to 4.0M nodes, over twenty (graph, *k*) configurations.
 - **No configuration where top-*k* costs more than `k = 0`** — the effect disappears on every
   graph and every *k* we tested.
@@ -207,10 +208,12 @@ Our Julia port implements both, and both are in the pull request we have open ag
 Everything is in `Lab-CA-SS26-node-importance/`:
 
 ```bash
-# the measurements above (4 graphs x k in {3,5,10,100} x 3 seeds, eps=1e-4)
-benchmark/reproduce_report.sh --stage kx    # allocation variants
-benchmark/reproduce_report.sh --stage kxs   # small k
+# all runs at eps=1e-4, delta=0.1, 8 threads, seeds 1-3
+benchmark/reproduce_report.sh --stage kx    # allocation variants, k in {10,100}
+benchmark/reproduce_report.sh --stage kxs   # the same at k in {3,5}
 benchmark/reproduce_report.sh --stage kxb   # the boundary-pair repair
+benchmark/reproduce_report.sh --stage kxc   # the C++ reference binary at k > 0
+benchmark/reproduce_report.sh --stage kxl   # amazon and dblp (~28 h)
 python3 benchmark/summarize_topk.py <outdir>
 ```
 
@@ -219,7 +222,8 @@ then, holding those estimates fixed, bisects the sample count at which each vari
 stop, reporting which vertex is binding and why. It costs about 1% of a real run and is
 deterministic given the seed.
 
-Raw runs (252 JSON files) and both summaries are under
-`benchmark/results/topk_variant/`. `src/kadabra.jl` selects the behaviour with
+Raw runs (333 JSON files) and both summaries are under
+`benchmark/results/topk_variant/`; the `kxc_*` ones are the C++ binary, everything else is
+the Julia port with `--topk-variant` selecting the allocation. `src/kadabra.jl` selects the behaviour with
 `topk_variant = :paper_bd | :paper | :cpp | :code | :paper_ex`, defaulting to the repaired
 version; `:cpp` reproduces the reference verbatim.
