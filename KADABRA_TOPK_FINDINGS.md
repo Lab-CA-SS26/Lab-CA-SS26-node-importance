@@ -123,6 +123,14 @@ the same three still do once only the gap pairing is corrected, and none do once
 pair is collapsed as well.** Finding 1 on its own makes top-*k* uniformly cheaper but does not
 remove the effect — it takes both.
 
+These figures come from our Julia port with the allocation switched. We also ran the **C++
+reference binary itself** at k ∈ {0,3,5,10,100} on the same four graphs and three seeds: it
+draws 1.045 ± 0.118 times the samples of our port configured to match it, the same agreement
+we see at k = 0. The effect is if anything **clearer in the reference** — 6 of 16
+configurations above `k = 0` beyond one standard deviation, against 3 for our port, whose
+thread-scheduling jitter widens the spread. On `soc-Epinions1` the reference sits at
+1.33 ± 0.01 and 1.34 ± 0.01 for k = 10 and k = 100.
+
 We also ran the repaired allocation on two much larger instances, `amazon` (2.1M nodes) and
 `dblp` (4.0M nodes), at k ∈ {10, 100} and three seeds. Both stay below `k = 0`: `amazon` at
 0.49 and 0.53, `dblp` at 0.89 ± 0.05 and 0.91 ± 0.03. `dblp` is the interesting one — it is
