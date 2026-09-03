@@ -105,20 +105,25 @@ def plot_threads(d, outdir):
     save(fig, outdir, "thread_scaling")
 
 
-def _repeat_means(d):
-    """Accuracy averaged over repeat runs, when `d` carries them.
+def _repeat_stats(d):
+    """Accuracy over repeat runs -- mean and standard deviation -- when `d` carries them.
 
     Panel (b)'s point is that the two methods separate on every graph, and on
     `soc-Slashdot0902` they are close enough that a single draw of each puts them the
     wrong way round -- top-100 overlap varies by up to +/-13 across runs. Plotting the
-    same means the table quotes keeps the figure from asserting a crossing that is
-    noise. Falls back to the single-run values when the repeats are absent.
+    same means the table quotes, with the same spreads as whiskers, keeps the figure
+    from asserting a separation the repeats do not support. Falls back to the
+    single-run values and zero spread when the repeats are absent.
 
-    Returns {graph: (tau_brava, tau_kadabra, ovl_brava, ovl_kadabra)}.
+    The two spreads are not the same kind of quantity: KADABRA's comes from repeated
+    *sampling* runs of one binary, BRAVA-GNN's from three separately *trained* models,
+    since its inference is deterministic once a checkpoint is fixed. The caption says so.
+
+    Returns {graph: ((mean, sd) for tau_brava, tau_kadabra, ovl_brava, ovl_kadabra)}.
     """
     try:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        from summarize_seeds import brava_seeds, kadabra_seeds
+        from summarize_seeds import brava_seeds, kadabra_seeds, ms
     except ImportError:
         return {}
     kad_dir, log = os.path.join(d, "kadabra_seeds"), os.path.join(d, "logs", "eval_seeds.log")
@@ -127,17 +132,16 @@ def _repeat_means(d):
     kad, bra = kadabra_seeds(kad_dir), brava_seeds(log)
     out = {}
     for g in set(kad) & set(bra):
-        out[g] = (sum(bra[g]["tau"]) / len(bra[g]["tau"]),
-                  sum(kad[g]["tau"]) / len(kad[g]["tau"]),
-                  sum(bra[g]["ovl"]) / len(bra[g]["ovl"]),
-                  sum(kad[g]["ovl"]) / len(kad[g]["ovl"]))
+        out[g] = (ms(bra[g]["tau"]), ms(kad[g]["tau"]),
+                  ms(bra[g]["ovl"]), ms(kad[g]["ovl"]))
     if out:
-        print(f"panel (b): accuracy averaged over repeat runs for {len(out)} graph(s)")
+        n = min(len(bra[g]["tau"]) for g in out)
+        print(f"panel (b): accuracy over {n} repeat runs for {len(out)} graph(s)")
     return out
 
 
 def plot_bvk(d, outdir):
-    means = _repeat_means(d)
+    stats = _repeat_stats(d)
     rows = []
     for g in BVK_GRAPHS:
         k = load(f"{d}/bvk_kadabra_{g}.json") or load(f"{d}/kadabra_{g}.stats.json")
@@ -147,8 +151,10 @@ def plot_bvk(d, outdir):
             continue
         # Wall-clock always comes from the single exclusive-access pass; only accuracy
         # is averaged, since the repeats did not have the machine to themselves.
-        bt, kt, bo, ko = means.get(g, (bc.get("tau_overall"), k.get("tau_overall"),
-                                       bc.get("overlap_topk"), k.get("overlap_topk")))
+        bt, kt, bo, ko = stats.get(g, ((bc.get("tau_overall"), 0.0),
+                                       (k.get("tau_overall"), 0.0),
+                                       (bc.get("overlap_topk"), 0.0),
+                                       (k.get("overlap_topk"), 0.0)))
         rows.append((g, sum(SIZES[g]), bc["execution_time_seconds"],
                      bg["execution_time_seconds"], k["execution_time_seconds"],
                      bt, kt, bo, ko))
@@ -177,14 +183,20 @@ def plot_bvk(d, outdir):
     ax1.legend(frameon=False, fontsize=7.5, loc="upper left")
     style(ax1)
 
-    # (b) the accuracy trade-off: global ranking vs the top of the ranking
-    ax2.scatter([r[5] for r in rows], [r[7] for r in rows], color=C_JULIA,
-                marker="o", s=34, label="BRAVA-GNN", zorder=3)
-    ax2.scatter([r[6] for r in rows], [r[8] for r in rows], color=C_CPP,
-                marker="s", s=34, label="KADABRA", zorder=3)
+    # (b) the accuracy trade-off: global ranking vs the top of the ranking.
+    # Whiskers are one standard deviation over the repeats -- without them the
+    # top-100 overlap reads as a point estimate, and on `p2p-Gnutella31` it swings
+    # by 13 points across training seeds.
     for r in rows:  # pair each graph's two points so the shift is legible
-        ax2.plot([r[5], r[6]], [r[7], r[8]], color=MUTED, linewidth=0.6,
+        ax2.plot([r[5][0], r[6][0]], [r[7][0], r[8][0]], color=MUTED, linewidth=0.6,
                  alpha=0.35, zorder=2)
+    for ti, oi, colour, marker, label in ((5, 7, C_JULIA, "o", "BRAVA-GNN"),
+                                          (6, 8, C_CPP, "s", "KADABRA")):
+        ax2.errorbar([r[ti][0] for r in rows], [r[oi][0] for r in rows],
+                     xerr=[r[ti][1] for r in rows], yerr=[r[oi][1] for r in rows],
+                     color=colour, marker=marker, markersize=5, linestyle="none",
+                     elinewidth=0.7, capsize=1.6, capthick=0.7, alpha=0.95,
+                     label=label, zorder=3)
     ax2.set_xlabel(r"Kendall $\tau_b$ (all nodes)", fontsize=8.5, color=MUTED)
     ax2.set_ylabel("top-100 overlap", fontsize=8.5, color=MUTED)
     ax2.set_title("(b) accuracy trade-off", fontsize=9, color=INK)
