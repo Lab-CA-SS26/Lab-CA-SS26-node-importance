@@ -1,9 +1,10 @@
 # BRAVA-GNN retrained to the paper's configuration (2026-08-15)
 
 These runs supersede the BRAVA-GNN columns in `../report_runs/bvk_brava_*.json`, which
-were produced by a misconfigured model. **They are not yet reflected in the report** --
-Section 6.4, its table, its figure, and the Conclusion still quote the old numbers. Both
-sets are kept until the report is updated.
+were produced by a misconfigured model. **The report now quotes these** -- Section 6.4's
+prose was updated 2026-08-31, and its table and Figure 3 on 2026-09-03 (they had been
+missed: the table was reverted to a pre-retraining commit by a file-sync event, and the
+figure had never been regenerated). The old runs are kept for provenance only.
 
 ## What was wrong
 
