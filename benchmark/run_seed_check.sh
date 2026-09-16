@@ -3,12 +3,13 @@
 # run_seed_check.sh --- the seed experiment from TODO.md:
 #   "why does Julia draw more samples than the C++ reference?"
 #
-# For each graph and each seed, run five arms at eps=1e-4, delta=0.1, k=0, 8 threads:
+# For each graph and each seed, run six arms at eps=1e-4, delta=0.1, k=0, 8 threads:
 #   julia   arm 1: Julia as is (default check interval max(1000, tau/10))
 #   cpp     arm 2: the C++ reference (checks every 11 samples per thread)
 #   ci11    arm 3: Julia with --check-interval 11 (fine-grained checks)
 #   seq     arm 4: Julia with --no-parallel (single sampling stream)
 #   sib     arm 5: Julia with --stop-in-batch (workers test the stop flag before every sample)
+#   fix     arm 6: arm 5 plus --consistent-pairs (checks count unfinished batches too)
 #
 # Same seeds for every arm. Raw per-run JSON lands in results/seed_check/.
 #
@@ -97,6 +98,7 @@ for spec in "${specs[@]}"; do
         julia_arm  "$OUTDIR/sc_julia_${name}_s${seed}.json" "$path" "${dflag:-}" "$seed"
         julia_arm  "$OUTDIR/sc_ci11_${name}_s${seed}.json"  "$path" "${dflag:-}" "$seed" --check-interval 11
         julia_arm  "$OUTDIR/sc_sib_${name}_s${seed}.json"   "$path" "${dflag:-}" "$seed" --stop-in-batch
+        julia_arm  "$OUTDIR/sc_fix_${name}_s${seed}.json"   "$path" "${dflag:-}" "$seed" --stop-in-batch --consistent-pairs
         julia_arm  "$OUTDIR/sc_seq_${name}_s${seed}.json"   "$path" "${dflag:-}" "$seed" --no-parallel
     done
     echo

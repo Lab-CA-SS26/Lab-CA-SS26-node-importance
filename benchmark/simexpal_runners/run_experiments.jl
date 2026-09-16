@@ -84,6 +84,9 @@ function parse_cmdline()
         "--stop-in-batch"
         help = "Workers test the stop flag before every sample, not only between batches. Instrumentation for the seed experiment."
         action = :store_true
+        "--consistent-pairs"
+        help = "Stopping checks use every pair drawn so far, not only completed batches. Instrumentation for the seed experiment."
+        action = :store_true
     end
 
     return parse_args(s)
@@ -131,6 +134,7 @@ function main()
         check_interval_kw = check_interval_arg == 0 ? nothing : check_interval_arg
         use_parallel = !parsed_args["no-parallel"]
         stop_in_batch = parsed_args["stop-in-batch"]
+        consistent_pairs = parsed_args["consistent-pairs"]
 
         # ---------------------------------------------------------
         # Pre-load BRAVA model if needed
@@ -181,6 +185,7 @@ function main()
                     parallel = use_parallel,
                     check_interval = check_interval_kw,
                     stop_in_batch = stop_in_batch,
+                    consistent_pairs = consistent_pairs,
                     rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
                 )
             elseif algo == "brava"
@@ -232,6 +237,7 @@ function main()
                 parallel = use_parallel,
                 check_interval = check_interval_kw,
                 stop_in_batch = stop_in_batch,
+                consistent_pairs = consistent_pairs,
                 rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
             )
         elseif algo == "brava"
@@ -275,6 +281,7 @@ function main()
                 parallel = use_parallel,
                 check_interval = check_interval_kw,
                 stop_in_batch = stop_in_batch,
+                consistent_pairs = consistent_pairs,
                 rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
             )
             centralities = res.centralities
@@ -443,6 +450,7 @@ function main()
                 "directed" => is_directed,
                 "parallel" => use_parallel,
                 "stop_in_batch" => stop_in_batch,
+                "consistent_pairs" => consistent_pairs,
                 "check_interval_requested" => check_interval_arg,
                 "check_interval_effective" =>
                     (algo == "kadabra" && kadabra_tau !== nothing) ?

@@ -3,7 +3,7 @@
 summarize_seed_check.py --- report the seed experiment (TODO.md).
 
 Reads the raw per-run JSON written by run_seed_check.sh (sc_<arm>_<graph>_s<seed>.json,
-arm in {cpp, julia, ci11, sib, seq}) and prints, per graph:
+arm in {cpp, julia, ci11, sib, fix, seq}) and prints, per graph:
 
   * mean +- std of num_samples, runtime, tau_b (tau_overall), top-100 overlap, n_checks,
     for each arm;
@@ -21,15 +21,16 @@ import re
 import sys
 from collections import defaultdict
 
-ARMS = ["cpp", "julia", "ci11", "sib", "seq"]
+ARMS = ["cpp", "julia", "ci11", "sib", "fix", "seq"]
 ARM_LABEL = {
     "cpp": "C++ (arm 2)",
     "julia": "Julia default (arm 1)",
     "ci11": "Julia ci=11 (arm 3)",
     "seq": "Julia sequential (arm 4)",
     "sib": "Julia stop-in-batch (arm 5)",
+    "fix": "Julia sib+consistent (arm 6)",
 }
-FNAME = re.compile(r"sc_(cpp|julia|ci11|sib|seq)_(.+)_s(\d+)\.json$")
+FNAME = re.compile(r"sc_(cpp|julia|ci11|sib|fix|seq)_(.+)_s(\d+)\.json$")
 
 
 def mean(xs):
@@ -129,7 +130,7 @@ def main():
                 break
 
         # per-arm aggregate table
-        hdr = f"{'arm':<26}{'num_samples':>26}{'runtime s':>16}{'tau_b':>14}{'overlap':>12}{'n_checks':>16}"
+        hdr = f"{'arm':<30}{'num_samples':>26}{'runtime s':>16}{'tau_b':>14}{'overlap':>12}{'n_checks':>16}"
         print(hdr)
         print("-" * len(hdr))
         for arm in ARMS:
@@ -148,7 +149,7 @@ def main():
             # runner's node mapping.
             tb_cell = " n/a*  " if arm == "cpp" else fmt(mean(tb), std(tb), 4)
             ov_cell = " n/a*  " if arm == "cpp" else fmt(mean(ov), std(ov), 1)
-            print(f"{ARM_LABEL[arm]:<26}"
+            print(f"{ARM_LABEL[arm]:<30}"
                   f"{fmt(mean(ns), std(ns), 0):>26}"
                   f"{fmt(mean(rt), std(rt), 2):>16}"
                   f"{tb_cell:>14}"
@@ -163,8 +164,8 @@ def main():
             print(f"check_interval (default Julia) = {interval:,}   "
                   f"[= max(1000, tau/10), tau ~ omega/100]")
             print(f"{'seed':<6}{'C++ samples':>16}{'Julia samples':>16}{'J/C ratio':>11}"
-                  f"{'J-C':>14}{'J-C /interval':>15}{'ci11 J/C':>11}{'sib J/C':>11}{'seq J/C':>11}")
-            print("-" * 111)
+                  f"{'J-C':>14}{'J-C /interval':>15}{'ci11 J/C':>11}{'sib J/C':>11}{'fix J/C':>11}{'seq J/C':>11}")
+            print("-" * 122)
             for seed in sorted(cpp):
                 c = cpp[seed]["num_samples"]
                 row = f"{seed:<6}{c:>16,}"
@@ -175,9 +176,11 @@ def main():
                     row += f"{'--':>16}{'--':>11}{'--':>14}{'--':>15}"
                 ci = arms.get("ci11", {}).get(seed, {}).get("num_samples")
                 sb = arms.get("sib", {}).get(seed, {}).get("num_samples")
+                fx = arms.get("fix", {}).get(seed, {}).get("num_samples")
                 sq = arms.get("seq", {}).get(seed, {}).get("num_samples")
                 row += f"{ci / c:>11.4f}" if ci else f"{'--':>11}"
                 row += f"{sb / c:>11.4f}" if sb else f"{'--':>11}"
+                row += f"{fx / c:>11.4f}" if fx else f"{'--':>11}"
                 row += f"{sq / c:>11.4f}" if sq else f"{'--':>11}"
                 print(row)
             print()
@@ -192,10 +195,10 @@ def main():
                     rs.append(a / c)
             return rs
 
-        for arm in ("julia", "ci11", "sib", "seq"):
+        for arm in ("julia", "ci11", "sib", "fix", "seq"):
             rs = ratio_over_cpp(arm)
             if rs:
-                print(f"  {ARM_LABEL[arm]:<26} / C++ samples: "
+                print(f"  {ARM_LABEL[arm]:<30} / C++ samples: "
                       f"{mean(rs):.4f} +- {std(rs):.4f}  (n={len(rs)})")
         print()
 

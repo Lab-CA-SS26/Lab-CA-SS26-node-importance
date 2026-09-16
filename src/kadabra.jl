@@ -202,6 +202,10 @@ Weighted graphs are not supported; passing a `distmx` argument throws an `Argume
 - `stop_in_batch::Bool`: with `parallel=true`, have every worker test the shared stop flag
   before each sample instead of only between batches, so the other workers stop within one
   sample rather than finishing their batch (default: false). Instrumentation only.
+- `consistent_pairs::Bool`: with `parallel=true`, evaluate the stopping condition against
+  every pair drawn so far, not only against completed batches (default: false). The counts
+  a check reads already include other workers' unfinished batches, so the batch-level
+  counter understates the sample size the counts come from. Instrumentation only.
 
 # Returns
 A `NamedTuple` with fields:
@@ -234,6 +238,7 @@ function kadabra_centrality(
     topk_variant::Symbol = :paper_bd,
     check_interval::Union{Int,Nothing} = nothing,
     stop_in_batch::Bool = false,
+    consistent_pairs::Bool = false,
 ) where {T}
     nv(g) >= 2 || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
     err > 0 || throw(ArgumentError("err must be positive (got $err)"))
@@ -338,6 +343,9 @@ function kadabra_centrality(
         check_lock = Threads.SpinLock()
         n_checks_atomic = Threads.Atomic{Int}(0)
         check_interval = interval
+        # One slot per worker, each a separate heap object so that per-sample writes do not
+        # share a cache line. Only read when `consistent_pairs` is set.
+        pair_slots = [Threads.Atomic{Int}(0) for _ = 1:nthreads]
 
         # --- PHASE 2: fresh sampling round, checked against the calibrated deltas ---
         phase2_tasks = Vector{Task}(undef, nthreads)
@@ -347,6 +355,7 @@ function kadabra_centrality(
                     local ws = KadabraWorkspace(g)
                     local counts = approx_local[tid]
                     local t_rng = Random.Xoshiro(seed)
+                    local slot = pair_slots[tid]
 
                     local_pairs = 0
                     while !stop_flag[] && n_pairs2[] < omega
@@ -361,6 +370,7 @@ function kadabra_centrality(
                             end
                             sample_shortest_path!(counts, ws, g, t_rng, T(s), T(t); endpoints = endpoints)
                             local_pairs += 1
+                            consistent_pairs && (slot[] = slot[] + 1)
                         end
 
                         Threads.atomic_add!(n_pairs2, local_pairs)
@@ -373,11 +383,16 @@ function kadabra_centrality(
                                 end
 
                                 fill!(global_approx, 0)
-                                for t_approx in approx_local
+                                n_seen = 0
+                                for (ti, t_approx) in enumerate(approx_local)
+                                    # Read each worker's pair count next to its counts, so the
+                                    # two differ by at most the one sample it is drawing.
+                                    consistent_pairs && (n_seen += pair_slots[ti][])
                                     for v = 1:n
                                         global_approx[v] += t_approx[v]
                                     end
                                 end
+                                n_check = consistent_pairs ? max(n_seen, 1) : n_pairs2[]
 
                                 copyto!(top_k_nodes, 1:n)
                                 partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev = true)
@@ -385,7 +400,7 @@ function kadabra_centrality(
                                 Threads.atomic_add!(n_checks_atomic, 1)
                                 if check_finished(
                                     global_approx, view(top_k_nodes, 1:union_sample),
-                                    n_pairs2[], k, err, delta_l_guess, delta_u_guess,
+                                    n_check, k, err, delta_l_guess, delta_u_guess,
                                     omega, absolute, bet_buf, err_l_buf, err_u_buf;
                                     variant = topk_variant
                                 )
