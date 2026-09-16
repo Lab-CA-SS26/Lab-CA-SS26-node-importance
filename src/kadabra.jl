@@ -201,11 +201,13 @@ Weighted graphs are not supported; passing a `distmx` argument throws an `Argume
   not change the guarantee. Instrumentation only --- leave it at the default for reported runs.
 - `stop_in_batch::Bool`: with `parallel=true`, have every worker test the shared stop flag
   before each sample instead of only between batches, so the other workers stop within one
-  sample rather than finishing their batch (default: false). Instrumentation only.
+  sample rather than finishing their batch (default: true).
 - `consistent_pairs::Bool`: with `parallel=true`, evaluate the stopping condition against
-  every pair drawn so far, not only against completed batches (default: false). The counts
+  every pair drawn so far, not only against completed batches (default: true). The counts
   a check reads already include other workers' unfinished batches, so the batch-level
-  counter understates the sample size the counts come from. Instrumentation only.
+  counter understates the sample size the counts come from.
+  Setting both to false restores the behaviour every measurement before 2026-09-16 used,
+  which drew 4-6% more samples than the C++ reference at 8 threads.
 
 # Returns
 A `NamedTuple` with fields:
@@ -237,8 +239,8 @@ function kadabra_centrality(
     rng::Union{AbstractRNG,Nothing} = nothing,
     topk_variant::Symbol = :paper_bd,
     check_interval::Union{Int,Nothing} = nothing,
-    stop_in_batch::Bool = false,
-    consistent_pairs::Bool = false,
+    stop_in_batch::Bool = true,
+    consistent_pairs::Bool = true,
 ) where {T}
     nv(g) >= 2 || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
     err > 0 || throw(ArgumentError("err must be positive (got $err)"))

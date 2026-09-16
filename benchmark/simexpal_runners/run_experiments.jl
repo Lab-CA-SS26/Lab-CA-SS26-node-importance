@@ -81,11 +81,11 @@ function parse_cmdline()
         "--no-parallel"
         help = "Run KADABRA's Phase 2 on a single sampling stream (sequential, bit-reproducible with a seed)."
         action = :store_true
-        "--stop-in-batch"
-        help = "Workers test the stop flag before every sample, not only between batches. Instrumentation for the seed experiment."
+        "--no-stop-in-batch"
+        help = "Workers test the stop flag only between batches (pre-2026-09-16 behaviour). Seed experiment only."
         action = :store_true
-        "--consistent-pairs"
-        help = "Stopping checks use every pair drawn so far, not only completed batches. Instrumentation for the seed experiment."
+        "--no-consistent-pairs"
+        help = "Stopping checks count completed batches only (pre-2026-09-16 behaviour). Seed experiment only."
         action = :store_true
     end
 
@@ -133,8 +133,8 @@ function main()
         check_interval_arg = parsed_args["check-interval"]
         check_interval_kw = check_interval_arg == 0 ? nothing : check_interval_arg
         use_parallel = !parsed_args["no-parallel"]
-        stop_in_batch = parsed_args["stop-in-batch"]
-        consistent_pairs = parsed_args["consistent-pairs"]
+        stop_in_batch = !parsed_args["no-stop-in-batch"]
+        consistent_pairs = !parsed_args["no-consistent-pairs"]
 
         # ---------------------------------------------------------
         # Pre-load BRAVA model if needed
