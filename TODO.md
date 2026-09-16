@@ -6,6 +6,48 @@
 reference (Section 6.1: mean 1.04×). Is that a systematic implementation effect, or run-to-run
 randomness? And how much do sample counts vary between seeds, per implementation?
 
+### Result (DONE 2026-09-16) — systematic, caused by the parallel stopping check, fixed
+
+Measured on the server: 4 graphs × seeds 1–5 × 6 arms, ε = 1e-4, δ = 0.1, k = 0, 8 threads.
+Raw JSON in `benchmark/results/seed_check/` (120 runs), table in `summary.txt` there
+(`python3 benchmark/summarize_seed_check.py benchmark/results/seed_check`). Scripts:
+`benchmark/run_seed_check.sh`. The C++ arm uses `run_experiments_cpp` rebuilt on the server
+from the current source (old binary kept as `run_experiments_cpp.jul22.bak`); its internal
+τ_b/overlap use a node numbering incompatible with the CSV and are ignored.
+
+Samples relative to C++ at the same seed, mean ± std over 5 seeds:
+
+| arm | p2p-Gnutella31 | soc-Epinions1 | soc-Slashdot0902 | email-EuAll |
+| --- | --- | --- | --- | --- |
+| 1 Julia as it was | 1.055 ± 0.007 | 1.043 ± 0.003 | 1.030 ± 0.002 | 1.056 ± 0.005 |
+| 5 + stop flag tested before every sample | 1.027 ± 0.014 | 1.019 ± 0.002 | 1.018 ± 0.003 | 1.039 ± 0.007 |
+| 6 + checks count unfinished batches (**now default**) | 1.012 ± 0.010 | 1.010 ± 0.009 | 1.005 ± 0.002 | 1.004 ± 0.004 |
+| 3 arm 1 with check interval 11 | 1.000 ± 0.008 | 0.998 ± 0.001 | 1.003 ± 0.002 | 1.002 ± 0.004 |
+| 4 arm 1 single-threaded | 1.003 ± 0.007 | 1.002 ± 0.003 | 1.002 ± 0.002 | 1.003 ± 0.003 |
+
+Runtime in s (C++ / arm 1 / arm 6 / arm 3 / arm 4): p2p 93.8 / 98.3 / 93.4 / 107.1 / 713.7;
+Epinions 97.9 / 78.7 / 74.2 / 90.6 / 561.8; Slashdot 306.2 / 278.7 / 265.0 / 331.8 / 2007.7;
+email-EuAll 52.8 / 43.2 / 41.9 / 50.6 / 225.3.
+τ_b arm 1 → arm 6: 0.9953 → 0.9952, 0.9696 → 0.9691, 0.9755 → 0.9751, 0.8979 → 0.8959
+(accuracy follows the sample count: arms 3 and 4 land at the same values as arm 6);
+top-100 overlap identical.
+
+- **Hypothesis confirmed, with two causes, not one.** Arm 1's excess is 7.8–11.2 check
+  intervals (~one per thread). 30–56% of it comes from workers finishing their batch after
+  the stop (arm 5 removes it); most of the rest from the check dividing counts that already
+  include other workers' unfinished batches by the pair count of completed batches only,
+  which makes it stop late (arm 6 removes it, leaving 0.4–1.2%). Checking every 11 samples
+  (arm 3) removes both but costs 9–19% runtime; arm 6 is 3–6% *faster* than arm 1.
+- The coarse interval on its own is not the problem: single-threaded with the same interval
+  (arm 4) matches C++.
+- Why C++ can check every 11 samples: it updates one shared count array and an incremental
+  top-k list under a global lock after every sample, so a check copies ~hundreds of entries.
+  Our workers use thread-local arrays without locks, so a check merges n × threads counts.
+- Section 6.1's sentence was fixed on 2026-09-16 (Report `abc991e`). Every KADABRA number in
+  the report is being re-measured with the fix: `benchmark/rerun_after_fix.sh`, tmux `rerun`,
+  log `~/rerun_fix.log`, output `~/rerun_fix/`, started 2026-09-16 22:44.
+- Upstream: the fix goes into PR #518's single commit.
+
 ### What the existing runs already show
 
 Julia: `report_runs/tight_julia_<g>.json` + `topk_variant/measured/kx_<g>_k0_code_s{1,2,3}.json`

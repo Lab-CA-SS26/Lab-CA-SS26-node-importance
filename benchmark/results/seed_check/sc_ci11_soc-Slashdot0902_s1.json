@@ -1,0 +1,33 @@
+{
+    "execution_time_seconds": 335.376142828,
+    "io_time_seconds": 0.689266306,
+    "kadabra_omega": 3.428682712938843e8,
+    "kadabra_tau": 3428683,
+    "mae": 1.7681687695362764e-7,
+    "max_ae": 4.200187628862484e-5,
+    "n_checks": 381934,
+    "ndcg_topk": 0.9999998485799981,
+    "num_samples": 119247199,
+    "overlap_topk": 100,
+    "parameters": {
+        "algorithm": "kadabra",
+        "check_interval_effective": 11,
+        "check_interval_requested": 11,
+        "consistent_pairs": false,
+        "delta": 0.1,
+        "directed": true,
+        "epsilon": 0.0001,
+        "input_file": "../Instances/TestInstances/soc-Slashdot0902.txt",
+        "k": 0,
+        "parallel": true,
+        "seed": 1,
+        "stop_in_batch": false,
+        "threads": 8,
+        "topk_variant": "code",
+        "version": "julia"
+    },
+    "phase2_pairs": 115818516,
+    "samples_over_omega": 0.347793041770812,
+    "tau_overall": 0.9752534085193297,
+    "tau_topk": 0.9947474747474747
+}

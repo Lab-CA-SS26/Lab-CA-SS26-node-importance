@@ -1,0 +1,22 @@
+{
+    "execution_time_seconds": 307.844848653,
+    "io_time_seconds": 0.802266764,
+    "mae": 5.19604485966789e-05,
+    "max_ae": 0.04123453462849935,
+    "ndcg_topk": 0.06344727233614496,
+    "num_samples": 118613532,
+    "overlap_topk": 2,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": true,
+        "epsilon": 0.0001,
+        "input_file": "../Instances/TestInstances/soc-Slashdot0902.txt",
+        "k": 0,
+        "seed": 1,
+        "threads": 8,
+        "version": "cpp"
+    },
+    "tau_overall": 0.2922227676433456,
+    "tau_topk": -0.0014194564039078958
+}
