@@ -194,6 +194,11 @@ Weighted graphs are not supported; passing a `distmx` argument throws an `Argume
   measured identical top-`k` accuracy; they differ only in how many samples they need,
   where `:paper` needed 0.80 +- 0.17 times as many as the reference's allocation over
   4 graphs x 4 values of k x 3 seeds at `err = 1e-4`.
+- `check_interval::Union{Int,Nothing}`: number of shortest-path pairs a worker draws
+  between successive evaluations of the stopping condition (default: `nothing`, i.e. the
+  original `max(1000, tau ÷ 10)` ≈ omega/1000). A smaller value checks more often and
+  overshoots the stopping threshold by less, at the cost of more (locked) checks; it does
+  not change the guarantee. Instrumentation only --- leave it at the default for reported runs.
 
 # Returns
 A `NamedTuple` with fields:
@@ -202,6 +207,8 @@ A `NamedTuple` with fields:
 - `n_samples::Int`: total shortest-path pairs sampled, including the burn-in phase.
 - `omega::Float64`: the worst-case sample budget implied by `err`, `delta`, and the estimated diameter.
 - `tau::Int`: the burn-in sample count.
+- `phase2_pairs::Int`: pairs drawn in Phase 2 only (equals `n_samples - tau`).
+- `n_checks::Int`: how many times the stopping condition was evaluated during Phase 2.
 
 # Examples
 ```julia
@@ -222,6 +229,7 @@ function kadabra_centrality(
     parallel::Bool = true,
     rng::Union{AbstractRNG,Nothing} = nothing,
     topk_variant::Symbol = :paper_bd,
+    check_interval::Union{Int,Nothing} = nothing,
 ) where {T}
     nv(g) >= 2 || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
     err > 0 || throw(ArgumentError("err must be positive (got $err)"))
@@ -263,6 +271,11 @@ function kadabra_centrality(
     base_rng = rng === nothing ? Random.default_rng() : rng
     final_n_pairs = 0
     phase2_n = 0
+    n_checks = 0
+    # The stopping condition is evaluated once per `default_interval` pairs per worker
+    # unless the caller overrides it; a smaller interval overshoots the threshold by less.
+    default_interval = max(1000, tau ÷ 10)
+    interval = check_interval === nothing ? default_interval : max(1, check_interval)
 
     if parallel
         nthreads = Threads.nthreads()
@@ -319,7 +332,8 @@ function kadabra_centrality(
         n_pairs2 = Threads.Atomic{Int}(0)
         stop_flag = Threads.Atomic{Bool}(false)
         check_lock = Threads.SpinLock()
-        check_interval = max(1000, tau ÷ 10)
+        n_checks_atomic = Threads.Atomic{Int}(0)
+        check_interval = interval
 
         # --- PHASE 2: fresh sampling round, checked against the calibrated deltas ---
         phase2_tasks = Vector{Task}(undef, nthreads)
@@ -361,6 +375,7 @@ function kadabra_centrality(
                                 copyto!(top_k_nodes, 1:n)
                                 partialsort!(top_k_nodes, 1:union_sample, by = x -> global_approx[x], rev = true)
 
+                                Threads.atomic_add!(n_checks_atomic, 1)
                                 if check_finished(
                                     global_approx, view(top_k_nodes, 1:union_sample),
                                     n_pairs2[], k, err, delta_l_guess, delta_u_guess,
@@ -387,6 +402,7 @@ function kadabra_centrality(
             global_approx .+= t_approx
         end
         phase2_n = n_pairs2[]
+        n_checks = n_checks_atomic[]
         final_n_pairs = phase2_n + tau
     else
         ws = KadabraWorkspace(g)
@@ -417,7 +433,8 @@ function kadabra_centrality(
 
         phase2_pairs = 0
         stop_flag_seq = false
-        check_interval = max(1000, tau ÷ 10)
+        check_interval = interval
+        n_checks_seq = 0
 
         # --- PHASE 2: fresh sampling round, checked against the calibrated deltas ---
         while !stop_flag_seq && phase2_pairs < omega
@@ -434,6 +451,7 @@ function kadabra_centrality(
             copyto!(top_k_nodes, 1:n)
             partialsort!(top_k_nodes, 1:union_sample, by = x -> counts[x], rev = true)
 
+            n_checks_seq += 1
             if check_finished(
                 counts, view(top_k_nodes, 1:union_sample), phase2_pairs,
                 k, err, delta_l_guess, delta_u_guess, omega, absolute,
@@ -443,6 +461,7 @@ function kadabra_centrality(
             end
         end
         phase2_n = phase2_pairs
+        n_checks = n_checks_seq
         final_n_pairs = phase2_n + tau
     end
 
@@ -479,6 +498,8 @@ function kadabra_centrality(
         n_samples = final_n_pairs,
         omega = omega,
         tau = tau,
+        phase2_pairs = phase2_n,
+        n_checks = n_checks,
     )
 end
 
