@@ -4,12 +4,15 @@
 #   "why does Julia draw more samples than the C++ reference?"
 #
 # For each graph and each seed, run six arms at eps=1e-4, delta=0.1, k=0, 8 threads:
-#   julia   arm 1: Julia as is (default check interval max(1000, tau/10))
+#   julia   arm 1: Julia as it was before 2026-09-16 (default check interval max(1000, tau/10))
 #   cpp     arm 2: the C++ reference (checks every 11 samples per thread)
-#   ci11    arm 3: Julia with --check-interval 11 (fine-grained checks)
+#   ci11    arm 3: arm 1 with --check-interval 11 (fine-grained checks)
 #   seq     arm 4: Julia with --no-parallel (single sampling stream)
-#   sib     arm 5: Julia with --stop-in-batch (workers test the stop flag before every sample)
-#   fix     arm 6: arm 5 plus --consistent-pairs (checks count unfinished batches too)
+#   sib     arm 5: arm 1, but workers test the stop flag before every sample
+#   fix     arm 6: arm 5, and checks also count unfinished batches (now the default)
+#
+# Arms 5 and 6 became the default on 2026-09-16, so arms 1, 3 and 5 pass --no-* flags
+# to reproduce the old behaviour.
 #
 # Same seeds for every arm. Raw per-run JSON lands in results/seed_check/.
 #
@@ -95,10 +98,10 @@ for spec in "${specs[@]}"; do
     echo "=== $name ==="
     for seed in $SEEDS; do
         cpp_arm    "$OUTDIR/sc_cpp_${name}_s${seed}.json"   "$path" "${dflag:-}" "$seed"
-        julia_arm  "$OUTDIR/sc_julia_${name}_s${seed}.json" "$path" "${dflag:-}" "$seed"
-        julia_arm  "$OUTDIR/sc_ci11_${name}_s${seed}.json"  "$path" "${dflag:-}" "$seed" --check-interval 11
-        julia_arm  "$OUTDIR/sc_sib_${name}_s${seed}.json"   "$path" "${dflag:-}" "$seed" --stop-in-batch
-        julia_arm  "$OUTDIR/sc_fix_${name}_s${seed}.json"   "$path" "${dflag:-}" "$seed" --stop-in-batch --consistent-pairs
+        julia_arm  "$OUTDIR/sc_julia_${name}_s${seed}.json" "$path" "${dflag:-}" "$seed" --no-stop-in-batch --no-consistent-pairs
+        julia_arm  "$OUTDIR/sc_ci11_${name}_s${seed}.json"  "$path" "${dflag:-}" "$seed" --check-interval 11 --no-stop-in-batch --no-consistent-pairs
+        julia_arm  "$OUTDIR/sc_sib_${name}_s${seed}.json"   "$path" "${dflag:-}" "$seed" --no-consistent-pairs
+        julia_arm  "$OUTDIR/sc_fix_${name}_s${seed}.json"   "$path" "${dflag:-}" "$seed"
         julia_arm  "$OUTDIR/sc_seq_${name}_s${seed}.json"   "$path" "${dflag:-}" "$seed" --no-parallel
     done
     echo
