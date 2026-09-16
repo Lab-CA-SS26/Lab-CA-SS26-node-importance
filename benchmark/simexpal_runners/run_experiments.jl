@@ -74,6 +74,13 @@ function parse_cmdline()
         help = "Top-k confidence-budget allocation: code (C++ reference), paper, or cpp (C++ verbatim). Ignored when k=0."
         arg_type = String
         default = "code"
+        "--check-interval"
+        help = "Pairs a worker draws between stopping checks (0 = default max(1000, tau/10)). Instrumentation for the seed experiment."
+        arg_type = Int
+        default = 0
+        "--no-parallel"
+        help = "Run KADABRA's Phase 2 on a single sampling stream (sequential, bit-reproducible with a seed)."
+        action = :store_true
     end
 
     return parse_args(s)
@@ -115,6 +122,11 @@ function main()
         algo = parsed_args["algorithm"]
         version = parsed_args["version"]
         is_directed = parsed_args["directed"]
+
+        # Seed experiment instrumentation: stopping-check granularity and parallel toggle.
+        check_interval_arg = parsed_args["check-interval"]
+        check_interval_kw = check_interval_arg == 0 ? nothing : check_interval_arg
+        use_parallel = !parsed_args["no-parallel"]
 
         # ---------------------------------------------------------
         # Pre-load BRAVA model if needed
@@ -162,13 +174,15 @@ function main()
                     start_factor = 10,
                     endpoints = false,
                     topk_variant = topk_variant,
+                    parallel = use_parallel,
+                    check_interval = check_interval_kw,
                     rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
                 )
             elseif algo == "brava"
                 Main.BRAVAGNN.brava_centrality(
-                    dummy_g, 
-                    k, 
-                    epsilon, 
+                    dummy_g,
+                    k,
+                    epsilon,
                     delta;
                     model = brava_model,
                     use_gpu = parsed_args["gpu"]
@@ -210,13 +224,15 @@ function main()
                 start_factor = 10,
                 endpoints = false,
                 topk_variant = topk_variant,
+                parallel = use_parallel,
+                check_interval = check_interval_kw,
                 rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
             )
         elseif algo == "brava"
             Main.BRAVAGNN.brava_centrality(
-                dummy_g, 
-                k, 
-                epsilon, 
+                dummy_g,
+                k,
+                epsilon,
                 delta;
                 model = brava_model
             )
@@ -234,6 +250,8 @@ function main()
         local upper_bounds = nothing
         local kadabra_omega = nothing
         local kadabra_tau = nothing
+        local kadabra_phase2_pairs = nothing
+        local kadabra_n_checks = nothing
 
         if algo == "kadabra"
             # Start timing
@@ -248,6 +266,8 @@ function main()
                 start_factor = 100,
                 endpoints = false,
                 topk_variant = topk_variant,
+                parallel = use_parallel,
+                check_interval = check_interval_kw,
                 rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
             )
             centralities = res.centralities
@@ -256,6 +276,8 @@ function main()
             n_samples = res.n_samples
             kadabra_omega = res.omega
             kadabra_tau = res.tau
+            kadabra_phase2_pairs = res.phase2_pairs
+            kadabra_n_checks = res.n_checks
 
             end_time = time_ns()
             execution_time = (end_time - start_time) / 1e9
@@ -412,10 +434,18 @@ function main()
                 "delta" => delta,
                 "epsilon" => epsilon,
                 "directed" => is_directed,
+                "parallel" => use_parallel,
+                "check_interval_requested" => check_interval_arg,
+                "check_interval_effective" =>
+                    (algo == "kadabra" && kadabra_tau !== nothing) ?
+                    (check_interval_kw === nothing ? max(1000, kadabra_tau ÷ 10) : check_interval_kw) :
+                    check_interval_arg,
             ),
             "execution_time_seconds" => execution_time,
             "io_time_seconds" => io_time,
             "num_samples" => n_samples,
+            "phase2_pairs" => kadabra_phase2_pairs,
+            "n_checks" => kadabra_n_checks,
             "kadabra_omega" => kadabra_omega,
             "kadabra_tau" => kadabra_tau,
             "samples_over_omega" =>
