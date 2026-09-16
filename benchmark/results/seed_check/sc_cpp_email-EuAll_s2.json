@@ -1,0 +1,22 @@
+{
+    "execution_time_seconds": 50.174936225,
+    "io_time_seconds": 0.38222284,
+    "mae": 2.930857053140412e-06,
+    "max_ae": 0.007586474261504097,
+    "ndcg_topk": 0.04208496930951257,
+    "num_samples": 53841808,
+    "overlap_topk": 2,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": true,
+        "epsilon": 0.0001,
+        "input_file": "../Instances/TestInstances/email-EuAll.txt",
+        "k": 0,
+        "seed": 2,
+        "threads": 8,
+        "version": "cpp"
+    },
+    "tau_overall": 0.10433402269586461,
+    "tau_topk": 0.0791752399854601
+}
