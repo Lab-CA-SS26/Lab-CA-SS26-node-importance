@@ -81,6 +81,9 @@ function parse_cmdline()
         "--no-parallel"
         help = "Run KADABRA's Phase 2 on a single sampling stream (sequential, bit-reproducible with a seed)."
         action = :store_true
+        "--stop-in-batch"
+        help = "Workers test the stop flag before every sample, not only between batches. Instrumentation for the seed experiment."
+        action = :store_true
     end
 
     return parse_args(s)
@@ -127,6 +130,7 @@ function main()
         check_interval_arg = parsed_args["check-interval"]
         check_interval_kw = check_interval_arg == 0 ? nothing : check_interval_arg
         use_parallel = !parsed_args["no-parallel"]
+        stop_in_batch = parsed_args["stop-in-batch"]
 
         # ---------------------------------------------------------
         # Pre-load BRAVA model if needed
@@ -176,6 +180,7 @@ function main()
                     topk_variant = topk_variant,
                     parallel = use_parallel,
                     check_interval = check_interval_kw,
+                    stop_in_batch = stop_in_batch,
                     rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
                 )
             elseif algo == "brava"
@@ -226,6 +231,7 @@ function main()
                 topk_variant = topk_variant,
                 parallel = use_parallel,
                 check_interval = check_interval_kw,
+                stop_in_batch = stop_in_batch,
                 rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
             )
         elseif algo == "brava"
@@ -268,6 +274,7 @@ function main()
                 topk_variant = topk_variant,
                 parallel = use_parallel,
                 check_interval = check_interval_kw,
+                stop_in_batch = stop_in_batch,
                 rng = parsed_args["seed"] == 0 ? nothing : Main.Random.Xoshiro(parsed_args["seed"])
             )
             centralities = res.centralities
@@ -435,6 +442,7 @@ function main()
                 "epsilon" => epsilon,
                 "directed" => is_directed,
                 "parallel" => use_parallel,
+                "stop_in_batch" => stop_in_batch,
                 "check_interval_requested" => check_interval_arg,
                 "check_interval_effective" =>
                     (algo == "kadabra" && kadabra_tau !== nothing) ?
