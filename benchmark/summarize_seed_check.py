@@ -140,12 +140,20 @@ def main():
             tb = [r["tau_b"] for r in seeds.values()]
             ov = [r["overlap"] for r in seeds.values()]
             nc = [r["n_checks"] for r in seeds.values()]
+            # The C++ binary's own ground-truth scoring maps nodes by a numbering that does
+            # not line up with the CSV, so its internal tau_b/overlap are meaningless (the
+            # report scores C++ centralities through a separate pipeline). Suppress them;
+            # accuracy-invariance is assessed across the three Julia arms, which share the
+            # runner's node mapping.
+            tb_cell = " n/a*  " if arm == "cpp" else fmt(mean(tb), std(tb), 4)
+            ov_cell = " n/a*  " if arm == "cpp" else fmt(mean(ov), std(ov), 1)
             print(f"{ARM_LABEL[arm]:<26}"
                   f"{fmt(mean(ns), std(ns), 0):>26}"
                   f"{fmt(mean(rt), std(rt), 2):>16}"
-                  f"{fmt(mean(tb), std(tb), 4):>14}"
-                  f"{fmt(mean(ov), std(ov), 1):>12}"
+                  f"{tb_cell:>14}"
+                  f"{ov_cell:>12}"
                   f"{('  --   ' if all(x is None for x in nc) else fmt(mean(nc), std(nc), 0)):>16}")
+        print("  * C++ internal tau_b/overlap use an incompatible node numbering; ignore them.")
         print()
 
         # per-seed Julia/C++ ratio and interval accounting
