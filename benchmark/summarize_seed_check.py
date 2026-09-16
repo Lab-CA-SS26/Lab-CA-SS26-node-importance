@@ -3,7 +3,7 @@
 summarize_seed_check.py --- report the seed experiment (TODO.md).
 
 Reads the raw per-run JSON written by run_seed_check.sh (sc_<arm>_<graph>_s<seed>.json,
-arm in {cpp, julia, ci11, seq}) and prints, per graph:
+arm in {cpp, julia, ci11, sib, seq}) and prints, per graph:
 
   * mean +- std of num_samples, runtime, tau_b (tau_overall), top-100 overlap, n_checks,
     for each arm;
@@ -21,14 +21,15 @@ import re
 import sys
 from collections import defaultdict
 
-ARMS = ["cpp", "julia", "ci11", "seq"]
+ARMS = ["cpp", "julia", "ci11", "sib", "seq"]
 ARM_LABEL = {
     "cpp": "C++ (arm 2)",
     "julia": "Julia default (arm 1)",
     "ci11": "Julia ci=11 (arm 3)",
     "seq": "Julia sequential (arm 4)",
+    "sib": "Julia stop-in-batch (arm 5)",
 }
-FNAME = re.compile(r"sc_(cpp|julia|ci11|seq)_(.+)_s(\d+)\.json$")
+FNAME = re.compile(r"sc_(cpp|julia|ci11|sib|seq)_(.+)_s(\d+)\.json$")
 
 
 def mean(xs):
@@ -162,8 +163,8 @@ def main():
             print(f"check_interval (default Julia) = {interval:,}   "
                   f"[= max(1000, tau/10), tau ~ omega/100]")
             print(f"{'seed':<6}{'C++ samples':>16}{'Julia samples':>16}{'J/C ratio':>11}"
-                  f"{'J-C':>14}{'J-C /interval':>15}{'ci11 J/C':>11}{'seq J/C':>11}")
-            print("-" * 100)
+                  f"{'J-C':>14}{'J-C /interval':>15}{'ci11 J/C':>11}{'sib J/C':>11}{'seq J/C':>11}")
+            print("-" * 111)
             for seed in sorted(cpp):
                 c = cpp[seed]["num_samples"]
                 row = f"{seed:<6}{c:>16,}"
@@ -173,9 +174,11 @@ def main():
                 else:
                     row += f"{'--':>16}{'--':>11}{'--':>14}{'--':>15}"
                 ci = arms.get("ci11", {}).get(seed, {}).get("num_samples")
+                sb = arms.get("sib", {}).get(seed, {}).get("num_samples")
                 sq = arms.get("seq", {}).get(seed, {}).get("num_samples")
-                row += f"{(ci / c if ci else float('nan')):>11.4f}" if ci else f"{'--':>11}"
-                row += f"{(sq / c if sq else float('nan')):>11.4f}" if sq else f"{'--':>11}"
+                row += f"{ci / c:>11.4f}" if ci else f"{'--':>11}"
+                row += f"{sb / c:>11.4f}" if sb else f"{'--':>11}"
+                row += f"{sq / c:>11.4f}" if sq else f"{'--':>11}"
                 print(row)
             print()
 
@@ -189,7 +192,7 @@ def main():
                     rs.append(a / c)
             return rs
 
-        for arm in ("julia", "ci11", "seq"):
+        for arm in ("julia", "ci11", "sib", "seq"):
             rs = ratio_over_cpp(arm)
             if rs:
                 print(f"  {ARM_LABEL[arm]:<26} / C++ samples: "

@@ -199,6 +199,9 @@ Weighted graphs are not supported; passing a `distmx` argument throws an `Argume
   original `max(1000, tau ÷ 10)` ≈ omega/1000). A smaller value checks more often and
   overshoots the stopping threshold by less, at the cost of more (locked) checks; it does
   not change the guarantee. Instrumentation only --- leave it at the default for reported runs.
+- `stop_in_batch::Bool`: with `parallel=true`, have every worker test the shared stop flag
+  before each sample instead of only between batches, so the other workers stop within one
+  sample rather than finishing their batch (default: false). Instrumentation only.
 
 # Returns
 A `NamedTuple` with fields:
@@ -230,6 +233,7 @@ function kadabra_centrality(
     rng::Union{AbstractRNG,Nothing} = nothing,
     topk_variant::Symbol = :paper_bd,
     check_interval::Union{Int,Nothing} = nothing,
+    stop_in_batch::Bool = false,
 ) where {T}
     nv(g) >= 2 || throw(ArgumentError("Graph must have at least 2 vertices (got $(nv(g)))"))
     err > 0 || throw(ArgumentError("err must be positive (got $err)"))
@@ -347,6 +351,9 @@ function kadabra_centrality(
                     local_pairs = 0
                     while !stop_flag[] && n_pairs2[] < omega
                         for _ = 1:check_interval
+                            # Without this, the other workers finish their whole batch
+                            # after the stop flag is set: ~one batch per thread of overshoot.
+                            stop_in_batch && stop_flag[] && break
                             s = rand(t_rng, 1:n)
                             t = rand(t_rng, 1:n)
                             while s == t
