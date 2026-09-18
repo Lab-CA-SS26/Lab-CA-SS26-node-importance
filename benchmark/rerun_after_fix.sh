@@ -115,6 +115,7 @@ run_ts() {
         "cit-Patents      $INST/ABCDE/cit-Patents.txt              "
         "com-lj           $INST/ABCDE/com-lj.txt                   "
     )
+    local name path dflag
     for spec in "${specs[@]}"; do
         read -r name path dflag <<<"$spec"
         for t in 1 2 4 8 16 24 32 48; do
@@ -155,6 +156,7 @@ run_bvk() {
         "cit-Patents      $INST/ABCDE/cit-Patents.txt              "
         "com-lj           $INST/ABCDE/com-lj.txt                   "
     )
+    local name path dflag
     for s in 1 2 3; do
         for spec in "${specs[@]}"; do
             read -r name path dflag <<<"$spec"
