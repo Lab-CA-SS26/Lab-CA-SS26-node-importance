@@ -191,8 +191,9 @@ def tightx(d):
     for g, kt, bt, ktau, btau, kov, bov in rows:
         r = load(f"{d}/tight_julia_{g}.json")
         sow = r.get("samples_over_omega") if r else None
+        ratio = f"{kt/bt:,.0f}".replace(",", "\\,")
         print(f"            {g:<17} & ${ktau:.3f}$ & ${kov}$ & "
-              f"${sow:.2f}$ & {_secs(kt)} & ${kt/bt:.0f}\\times$ \\\\"
+              f"${sow:.2f}$ & {_secs(kt)} & ${ratio}\\times$ \\\\"
               + ("  % KADABRA loses tau_b to BRAVA-GNN here" if ktau <= btau else ""))
 
     print("\n% ---- figures quoted in Section 6.4 and the Conclusion ----")
