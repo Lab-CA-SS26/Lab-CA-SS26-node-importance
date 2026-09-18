@@ -1,0 +1,33 @@
+{
+    "execution_time_seconds": 70.743330796,
+    "io_time_seconds": 0.15463765,
+    "kadabra_omega": 3.2581642540213096e8,
+    "kadabra_tau": 3258164,
+    "mae": 6.850503347064228e-7,
+    "max_ae": 2.3670120455622848e-5,
+    "n_checks": 105,
+    "ndcg_topk": 1.0,
+    "num_samples": 39479201,
+    "overlap_topk": 5,
+    "parameters": {
+        "algorithm": "kadabra",
+        "check_interval_effective": 325816,
+        "check_interval_requested": 0,
+        "consistent_pairs": true,
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.0001,
+        "input_file": "../Instances/TestInstances/p2p-Gnutella31.txt",
+        "k": 5,
+        "parallel": true,
+        "seed": 2,
+        "stop_in_batch": true,
+        "threads": 8,
+        "topk_variant": "cpp",
+        "version": "julia"
+    },
+    "phase2_pairs": 36221037,
+    "samples_over_omega": 0.12117007591398672,
+    "tau_overall": 0.9944471762186476,
+    "tau_topk": 1.0
+}

@@ -1,0 +1,33 @@
+{
+    "execution_time_seconds": 109.202658416,
+    "io_time_seconds": 0.38683012,
+    "kadabra_omega": 3.869360464689534e8,
+    "kadabra_tau": 3869360,
+    "mae": 1.2810801496576293e-7,
+    "max_ae": 1.70289795173445e-5,
+    "n_checks": 300,
+    "ndcg_topk": 1.0,
+    "num_samples": 122104147,
+    "overlap_topk": 10,
+    "parameters": {
+        "algorithm": "kadabra",
+        "check_interval_effective": 386936,
+        "check_interval_requested": 0,
+        "consistent_pairs": true,
+        "delta": 0.1,
+        "directed": true,
+        "epsilon": 0.0001,
+        "input_file": "../Instances/TestInstances/soc-Epinions1.txt",
+        "k": 10,
+        "parallel": true,
+        "seed": 2,
+        "stop_in_batch": true,
+        "threads": 8,
+        "topk_variant": "cpp",
+        "version": "julia"
+    },
+    "phase2_pairs": 118234787,
+    "samples_over_omega": 0.3155667405874456,
+    "tau_overall": 0.9739441879409978,
+    "tau_topk": 1.0
+}

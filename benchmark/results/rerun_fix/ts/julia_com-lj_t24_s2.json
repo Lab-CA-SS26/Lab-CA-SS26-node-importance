@@ -1,0 +1,33 @@
+{
+    "execution_time_seconds": 15.17896718,
+    "io_time_seconds": 33.060492249,
+    "kadabra_omega": 35664.999342455565,
+    "kadabra_tau": 357,
+    "mae": 1.4423045513290628e-6,
+    "max_ae": 0.0014837216133076064,
+    "n_checks": 3,
+    "ndcg_topk": 0.9974799787633839,
+    "num_samples": 25893,
+    "overlap_topk": 90,
+    "parameters": {
+        "algorithm": "kadabra",
+        "check_interval_effective": 1000,
+        "check_interval_requested": 0,
+        "consistent_pairs": true,
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.01,
+        "input_file": "/home/stud/schlaierm0/Lab-CA-SS26-node-importance/Instances/ABCDE/com-lj.txt",
+        "k": 0,
+        "parallel": true,
+        "seed": 2,
+        "stop_in_batch": true,
+        "threads": 24,
+        "topk_variant": "code",
+        "version": "julia"
+    },
+    "phase2_pairs": 25536,
+    "samples_over_omega": 0.7260059015107567,
+    "tau_overall": 0.1843113941684877,
+    "tau_topk": 0.8343324863702872
+}

@@ -1,0 +1,33 @@
+{
+    "execution_time_seconds": 14.287842778,
+    "io_time_seconds": 18.517954912,
+    "kadabra_omega": 37818.17111410488,
+    "kadabra_tau": 378,
+    "mae": 2.9578032294828944e-6,
+    "max_ae": 0.0008865669611524954,
+    "n_checks": 1,
+    "ndcg_topk": 0.9500782459517076,
+    "num_samples": 20870,
+    "overlap_topk": 66,
+    "parameters": {
+        "algorithm": "kadabra",
+        "check_interval_effective": 1000,
+        "check_interval_requested": 0,
+        "consistent_pairs": true,
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.01,
+        "input_file": "/home/stud/schlaierm0/Lab-CA-SS26-node-importance/Instances/ABCDE/cit-Patents.txt",
+        "k": 0,
+        "parallel": true,
+        "seed": 2,
+        "stop_in_batch": true,
+        "threads": 24,
+        "topk_variant": "code",
+        "version": "julia"
+    },
+    "phase2_pairs": 20492,
+    "samples_over_omega": 0.5518511177346755,
+    "tau_overall": 0.20187149873236793,
+    "tau_topk": 0.5448738014874748
+}
