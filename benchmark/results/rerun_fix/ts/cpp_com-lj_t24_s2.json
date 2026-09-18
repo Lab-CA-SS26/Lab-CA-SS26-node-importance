@@ -1,0 +1,16 @@
+{
+    "execution_time_seconds": 20.114643429,
+    "io_time_seconds": 39.877554559,
+    "num_samples": 22037,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.01,
+        "input_file": "../Instances/ABCDE/com-lj.txt",
+        "k": 0,
+        "seed": 2,
+        "threads": 24,
+        "version": "cpp"
+    }
+}

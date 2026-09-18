@@ -1,0 +1,16 @@
+{
+    "execution_time_seconds": 9.283716711,
+    "io_time_seconds": 5.712752599,
+    "num_samples": 19655,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.01,
+        "input_file": "../Instances/ABCDE/amazon.txt",
+        "k": 0,
+        "seed": 2,
+        "threads": 32,
+        "version": "cpp"
+    }
+}

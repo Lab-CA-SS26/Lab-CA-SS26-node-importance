@@ -1,0 +1,16 @@
+{
+    "execution_time_seconds": 91.784178082,
+    "io_time_seconds": 0.087813961,
+    "num_samples": 51145729,
+    "parameters": {
+        "algorithm": "kadabra",
+        "delta": 0.1,
+        "directed": false,
+        "epsilon": 0.0001,
+        "input_file": "../Instances/TestInstances/p2p-Gnutella31.txt",
+        "k": 0,
+        "seed": 0,
+        "threads": 8,
+        "version": "cpp"
+    }
+}
