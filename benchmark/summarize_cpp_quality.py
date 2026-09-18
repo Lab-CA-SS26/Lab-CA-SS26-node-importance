@@ -14,9 +14,15 @@ surrounding prose quotes. Reads, all relative to `benchmark/results/`:
 The pre-fix Julia runs are used for tau_b and overlap, which are scale-invariant and so
 unaffected by the fix; the absolute-error column for Julia comes from the fixed runs only.
 
+With `--julia-from rerun_fix`, the Julia side comes from the 2026-09-16 rerun with the
+stopping-coordination fix instead: rerun_fix/tight/tight_julia_<g>.json and
+rerun_fix/topk/kx_<g>_k0_code_s{1,2,3}.json for tau_b and overlap, and the seed-1 k = 0 run for
+the absolute error (every rerun run also carries the normalisation fix). The C++ side is the
+same either way.
+
 Usage
 -----
-    python3 summarize_cpp_quality.py [results_dir]
+    python3 summarize_cpp_quality.py [results_dir] [--julia-from rerun_fix]
 """
 import json
 import os
@@ -46,7 +52,25 @@ def span(xs):
 
 
 def main():
-    d = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+    args = sys.argv[1:]
+    rerun = None
+    if "--julia-from" in args:
+        i = args.index("--julia-from")
+        rerun = args[i + 1]
+        del args[i:i + 2]
+    d = args[0] if args else os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+
+    def julia_runs(g):
+        if rerun:
+            return [load(f"{d}/{rerun}/tight/tight_julia_{g}.json")] + \
+                   [load(f"{d}/{rerun}/topk/kx_{g}_k0_code_s{s}.json") for s in (1, 2, 3)]
+        return [load(f"{d}/report_runs/tight_julia_{g}.json")] + \
+               [load(f"{d}/topk_variant/measured/kx_{g}_k0_code_s{s}.json") for s in (1, 2, 3)]
+
+    def fixed_run(g):
+        if rerun:
+            return load(f"{d}/{rerun}/topk/kx_{g}_k0_code_s1.json")
+        return load(f"{d}/bias_fix/fix_{g}_k0_s1.json")
     cpp = {}
     for s in ("set_report", "set_aug10"):
         for r in jsonl(f"{d}/cpp_quality/{s}.jsonl"):
@@ -57,8 +81,7 @@ def main():
     rows, q = [], {"dtau": [], "tau": [], "ovl": [], "bias": [], "raw": [], "over": [],
                    "resc": [], "fixed": [], "jhigher": 0}
     for g in GRAPHS:
-        jl = [load(f"{d}/report_runs/tight_julia_{g}.json")] + \
-             [load(f"{d}/topk_variant/measured/kx_{g}_k0_code_s{s}.json") for s in (1, 2, 3)]
+        jl = julia_runs(g)
         jl = [r for r in jl if r and r.get("tau_overall") is not None]
         c = cpp[g]
         ct = st.mean(r["tau_overall"] for r in c)
@@ -67,7 +90,7 @@ def main():
         jo = [r["overlap_topk"] for r in jl]
         raw = report_set[g]["max_ae"] / EPS
         resc = debias[g]["debiased_tau"]["max_ae"] / EPS
-        fx = load(f"{d}/bias_fix/fix_{g}_k0_s1.json")
+        fx = fixed_run(g)
         fixed = fx["max_ae"] / EPS if fx else None
         q["dtau"].append(jt - ct); q["tau"] += [ct, jt]; q["ovl"] += co + jo
         q["bias"].append(debias[g]["tau"] / debias[g]["N"]); q["raw"].append(raw)
@@ -80,7 +103,8 @@ def main():
             f"${raw:.1f}$ & ${resc:.2f}$ & {'$%.2f$' % fixed if fixed is not None else '--'} \\\\"
         )
 
-    print(f"% C++: {len(cpp[GRAPHS[0]])} runs/graph; Julia: up to 4 pre-fix runs/graph for tau_b and overlap")
+    print(f"% C++: {len(cpp[GRAPHS[0]])} runs/graph; Julia: up to 4 runs/graph for tau_b and overlap"
+          f" ({'rerun ' + rerun if rerun else 'pre-fix runs'})")
     print("% ---- Report/tables/cpp_julia_quality_table.tex (body) ----")
     print("\n".join(rows))
     print("\n% ---- ranges quoted in the text ----")
@@ -94,7 +118,7 @@ def main():
     if q["fixed"]:
         print(f"  Julia after the fix: {min(q['fixed']):.2f}--{max(q['fixed']):.2f} x eps "
               f"({len(q['fixed'])}/{len(GRAPHS)} graphs measured)")
-    missing = [g for g in GRAPHS if not load(f"{d}/bias_fix/fix_{g}_k0_s1.json")]
+    missing = [g for g in GRAPHS if not fixed_run(g)]
     if missing:
         print(f"  !! no post-fix run yet for: {', '.join(missing)}")
     return 0
