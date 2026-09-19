@@ -1,0 +1,11 @@
+1. port(:cpp) / C++ binary, k>=3: 1.011 +- 0.119, n=48, range 0.646--1.368
+   same at k=0 (port / C++ binary): 1.007 +- 0.007, n=12
+2. C++ binary above its own k=0 beyond 1 std: 6 of 16: email-EuAll k=3 1.77x, email-EuAll k=5 1.66x, soc-Epinions1 k=3 1.16x, soc-Epinions1 k=5 1.76x, soc-Epinions1 k=10 1.33x, soc-Epinions1 k=100 1.34x
+3. port :code above k=0 beyond 1 std: 3 of 16: email-EuAll k=3 1.76x, email-EuAll k=5 1.65x, soc-Epinions1 k=5 1.79x
+4. mean ratio to k=0 over 16 configs, paper_bd: 0.692
+4. mean ratio to k=0 over 16 configs, code    : 0.979
+4. mean ratio to k=0 over 16 configs, cpp     : 0.974
+5. :paper_bd gives the same top-k answer as :code in 14 of 16 (largest top-k tau_b difference 0.001); differ: email-EuAll k=100: overlap 100.00 vs 100.00, tau_topk 0.994 vs 0.993; soc-Epinions1 k=100: overlap 100.00 vs 100.00, tau_topk 0.996 vs 0.997
+6. :paper_bd configurations: 20; mean above 1 in 3 [('soc-Epinions1', 5), ('soc-Epinions1', 10), ('soc-Epinions1', 100)]; beyond 1 std in 0; largest mean 1.012 (soc-Epinions1 k=100)
+   dblp :paper_bd k=10 0.90 +- 0.06, k=100 0.93 +- 0.03
+7. Figure fig:topk_allocation is drawn from 126 runs (108 top-k + 18 k=0)

@@ -11,7 +11,10 @@ are edited by hand from that output). Each figure is written by make_plots.py.
   Report/tables/tight_accuracy_table.tex       summarize_reproduce.py tightx  rerun_fix/tight + rerun_fix/bvk
   Report/tables/brava_vs_kadabra_table.tex     summarize_seeds.py             rerun_fix/bvk (+ kadabra_seeds),
                                                                               BRAVA-GNN seed log unchanged
+  Report/tables/topk_allocation_table.tex      summarize_topk.py              rerun_fix/topk (4 small graphs only)
+  Report/tables/cpp_julia_quality_table.tex    summarize_cpp_quality.py       --julia-from rerun_fix
   Report/figures/thread_scaling.{pdf,png}      make_plots.py threads          rerun_fix/ts
+  Report/figures/topk_allocation.{pdf,png}     make_plots.py topk             rerun_fix/topk
   Report/figures/brava_vs_kadabra.{pdf,png}    make_plots.py bvk              rerun_fix/bvk (+ kadabra_seeds, BRAVA log)
 
 Usage:  python3 update_report_from_rerun.py [--check]
@@ -89,6 +92,29 @@ def main():
                   os.path.join(RF, "bvk"))
         splice("brava_vs_kadabra_table.tex", body_after(out, "brava_vs_kadabra_table"), check)
 
+        # A.5: the table carries the four graphs run under every allocation; amazon and dblp,
+        # run under the repaired one only, appear in the figure.
+        out = run("summarize_topk.py", os.path.join(RF, "topk"))
+        lines = out.splitlines()
+        i = next(n for n, l in enumerate(lines) if "topk_allocation_table" in l)
+        blocks, cur = [], []
+        for l in lines[i + 1:]:
+            if not l.strip():
+                break
+            if l.strip() == "\\midrule":
+                blocks.append(cur); cur = []
+            else:
+                cur.append(l.rstrip())
+        blocks.append(cur)
+        keep = [b for b in blocks if not any(g in b[0] for g in ("{amazon}", "{dblp}"))]
+        rows = []
+        for n, b in enumerate(keep):
+            rows += b + (["            \\midrule"] if n < len(keep) - 1 else [])
+        splice("topk_allocation_table.tex", rows, check)
+
+        out = run("summarize_cpp_quality.py", "--julia-from", "rerun_fix")
+        splice("cpp_julia_quality_table.tex", body_after(out, "cpp_julia_quality_table"), check)
+
         # --- figures ---
         figdir = os.path.join(tmp, "fig")
         run("make_plots.py", "threads", os.path.join(RF, "ts"), figdir)
@@ -97,6 +123,7 @@ def main():
         os.makedirs(os.path.join(bvk, "logs"))
         os.symlink(BRAVA_LOG, os.path.join(bvk, "logs", "eval_seeds.log"))
         run("make_plots.py", "bvk", bvk, figdir)
+        run("make_plots.py", "topk", os.path.join(RF, "topk"), figdir)
         for f in sorted(os.listdir(figdir)):
             dst = os.path.join(REPORT, "figures", f)
             if check:
