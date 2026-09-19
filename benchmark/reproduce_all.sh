@@ -29,6 +29,8 @@
 #   --only STEP      run just STEP
 #   --retrain        train the three BRAVA-GNN checkpoints instead of using the committed ones
 #   --dry-run        print every command instead of running it
+#   --from-archive   run only the report step, on the committed runs in benchmark/results/
+#                    (seconds; checks that the tables and figures follow from the data)
 #
 # Every step is incremental: a run whose JSON already exists is skipped, so an interrupted
 # run is resumed by launching the script again. Delete a file to force that measurement.
@@ -55,7 +57,7 @@ set -uo pipefail
 B="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(dirname "$B")"
 OUT="$HOME/reproduce_all"
-FROM="" ONLY="" RETRAIN=0 DRY=0
+FROM="" ONLY="" RETRAIN=0 DRY=0 ARCHIVE=0
 STEPS=(build weights tight threads bvk brava-seeds topk cpp-quality tightx kxl report)
 
 while [[ $# -gt 0 ]]; do
@@ -65,7 +67,8 @@ while [[ $# -gt 0 ]]; do
         --only)    ONLY="$2"; shift 2 ;;
         --retrain) RETRAIN=1; shift ;;
         --dry-run) DRY=1; shift ;;
-        -h|--help) sed -n '2,48p' "$0"; exit 0 ;;
+        --from-archive) ARCHIVE=1; ONLY=report; shift ;;
+        -h|--help) sed -n '2,/^set -uo/p' "$0" | sed '$d'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
@@ -75,6 +78,13 @@ done
 mkdir -p "$OUT"
 OUT="$(cd "$OUT" && pwd)"
 
+if (( ARCHIVE )); then
+    # the archived runs, arranged in the layout the report step reads
+    for pair in rerun_fix:rerun_fix kxc:topk_variant/measured cpp_quality:cpp_quality \
+                brava_retrained:brava_retrained; do
+        [[ -e "$OUT/${pair%%:*}" ]] || ln -s "$B/results/${pair#*:}" "$OUT/${pair%%:*}"
+    done
+fi
 RF="$OUT/rerun_fix"          # the name update_report_from_rerun.py and summarize_cpp_quality.py expect
 INST="$ROOT/Instances"
 GT="$INST/ground_truth/test_instances"
