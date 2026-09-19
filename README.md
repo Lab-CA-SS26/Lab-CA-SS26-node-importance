@@ -278,6 +278,7 @@ fork checked out next to this repository.
 | `test/` | unit tests and the `Graphs.jl`-style suite |
 | `Instances/` | graphs and ground truth — not in git |
 | `KADABRA_TOPK_FINDINGS.md` | standalone write-up of finding 2 |
+| `presentation/` | the slides of the final talk (16 September 2026, without speaker notes) and the interactive demo shown in it; open `presentation_demo/betweenness_demo.html` in a browser, or use the slides' demo buttons with the folder kept next to the PDF |
 
 ### Committed run data
 
