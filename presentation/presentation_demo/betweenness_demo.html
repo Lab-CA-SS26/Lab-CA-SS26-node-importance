@@ -1,0 +1,1212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KADABRA & BRAVA-GNN Demo</title>
+<style>
+:root{
+  --bg:#f7f6f2; --panel:#ffffff; --ink:#1d1d1f; --muted:#6b6b70; --line:#d9d6cf;
+  --s:#1f77b4; --s-soft:#cfe3f3; --t:#e8710a; --t-soft:#fbdcc0;
+  --path:#c2185b; --bridge:#f2b705; --ok:#2e7d32; --bad:#c62828;
+  --heat0:#fff7ec; --heat1:#b30000; --pruned:#bdbdbd; --exact:#111;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden}
+button,select,input{font:inherit}
+#app{display:grid;grid-template-rows:auto 1fr auto;height:100vh}
+header{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+header h1{font-size:17px;margin:0 10px 0 0;font-weight:650;letter-spacing:.2px}
+.tabs{display:flex;gap:4px;background:#eeece6;border-radius:9px;padding:3px}
+.tabs button{border:0;background:transparent;padding:6px 14px;border-radius:7px;cursor:pointer;color:var(--muted);font-weight:600}
+.tabs button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.ctl{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+.ctl select,.ctl input[type=number]{padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+.ctl input[type=number]{width:64px}
+.spacer{flex:1}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:600;color:var(--ink)}
+.btn:hover{background:#f1efe9}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.primary:hover{background:#333}
+.btn:disabled{opacity:.4;cursor:default}
+kbd{font:11px var(--mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;color:var(--muted);background:#fff}
+main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);min-height:0}
+.pane{min-height:0;position:relative}
+.graphpane{padding:8px 4px 0 12px}
+.graphpane svg{width:100%;height:100%;display:block}
+.side{padding:12px 16px 8px 8px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.card h3{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:650}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.stat{background:#faf9f6;border-radius:8px;padding:6px 8px}
+.stat .k{font-size:11px;color:var(--muted)}
+.stat .v{font:600 18px var(--mono)}
+.progress{position:relative;height:14px;border-radius:7px;background:#eeece6;overflow:hidden;margin-top:8px}
+.progress .burn{position:absolute;left:0;top:0;bottom:0;background:#b9b3a6}
+.progress .main{position:absolute;top:0;bottom:0;background:var(--s)}
+.progress .lbl{position:absolute;right:6px;top:-1px;font:11px var(--mono);color:#fff;mix-blend-mode:difference}
+footer{border-top:1px solid var(--line);background:var(--panel);padding:10px 18px;display:flex;gap:16px;align-items:center;min-height:74px}
+#narr{flex:1;font-size:17px;line-height:1.35}
+#narr b{font-weight:650}
+#narr .phase{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.7px;padding:2px 7px;border-radius:5px;background:#eeece6;color:var(--muted);margin-right:8px;vertical-align:2px;font-weight:700}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-2px;margin-right:4px}
+.mono{font-family:var(--mono)}
+svg text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.node circle.body{stroke:#333;stroke-width:1.6}
+.node text.lab{font-weight:700;font-size:20px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.badge rect{fill:#fff;stroke:#999;stroke-width:1}
+.badge text{font:600 13px var(--mono);text-anchor:middle;dominant-baseline:central}
+.edge{stroke:#aaa;stroke-width:2.5}
+#tip{position:fixed;pointer-events:none;background:#1d1d1f;color:#fff;border-radius:8px;padding:7px 9px;font:12px/1.45 var(--mono);white-space:pre;z-index:10;opacity:0;transition:opacity .1s}
+table.tbl{border-collapse:collapse;width:100%;font:13px var(--mono)}
+table.tbl th{font:600 11px -apple-system,Helvetica,Arial,sans-serif;color:var(--muted);text-align:right;padding:3px 6px;border-bottom:1px solid var(--line)}
+table.tbl td{text-align:right;padding:3px 6px;border-bottom:1px solid #f0eee8}
+table.tbl tr.cur td{background:#fff4d6}
+table.tbl td:first-child,table.tbl th:first-child{text-align:left}
+.hidden{display:none!important}
+.nt{text-transform:none}
+.bct{position:relative;display:inline-block}
+.bct::before{content:"~";position:absolute;left:0;right:0;top:-0.55em;text-align:center;line-height:1}
+.stepper{display:flex;gap:4px;flex-wrap:wrap}
+.stepper span{font-size:12px;padding:3px 8px;border-radius:12px;background:#eeece6;color:var(--muted);cursor:pointer}
+.stepper span.on{background:var(--ink);color:#fff}
+.stepper span.done{background:#d9d6cf;color:var(--ink)}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <h1>Betweenness, step by step</h1>
+  <div class="tabs"><button id="tabK" class="on">KADABRA</button><button id="tabB">BRAVA-GNN</button></div>
+  <label class="ctl">graph <select id="graphSel"></select></label>
+  <span id="kCtl" class="ctl" style="gap:12px">
+    <label class="ctl">&epsilon; <select id="epsSel"><option>0.1</option><option selected>0.05</option><option>0.03</option></select></label>
+    <label class="ctl">&delta; <select id="delSel"><option selected>0.1</option><option>0.01</option></select></label>
+    <label class="ctl">top-k <select id="kSel"><option value="0" selected>k=0 (all vertices)</option><option>1</option><option>2</option><option>3</option></select></label>
+    <label class="ctl">seed <input id="seedIn" type="number" value="7"></label>
+  </span>
+  <div class="spacer"></div>
+  <span id="kBtns" class="ctl">
+    <button class="btn" id="bStep" title="one sample, animated (→ / space)">Step</button>
+    <button class="btn primary" id="bPlay" title="P">Play</button>
+    <label class="ctl">speed <input id="speed" type="range" min="1" max="5" value="2" style="width:90px"></label>
+    <button class="btn" id="bEnd" title="E">Run to stop</button>
+    <button class="btn" id="bReset" title="R">Reset</button>
+  </span>
+  <span id="bBtns" class="ctl hidden">
+    <button class="btn" id="bPrev" title="←">Back</button>
+    <button class="btn primary" id="bNext" title="→ / space">Next</button>
+  </span>
+</header>
+<main>
+  <div class="pane graphpane"><svg id="gsvg" viewBox="0 0 1000 640" preserveAspectRatio="xMidYMid meet"></svg></div>
+  <div class="pane side" id="sideK">
+    <div class="card">
+      <h3>Sampling budget</h3>
+      <div class="stats">
+        <div class="stat"><div class="k">diameter bound D</div><div class="v" id="stD">–</div></div>
+        <div class="stat"><div class="k">&omega; (worst case)</div><div class="v" id="stW">–</div></div>
+        <div class="stat"><div class="k">burn-in N<sub>0</sub></div><div class="v" id="stB">–</div></div>
+        <div class="stat"><div class="k">N (main phase)</div><div class="v" id="stT">0</div></div>
+      </div>
+      <div class="progress"><div class="burn" id="pgB"></div><div class="main" id="pgM"></div><span class="lbl" id="pgL"></span></div>
+    </div>
+    <div class="card" style="flex:1;min-height:250px;display:flex;flex-direction:column">
+      <h3 id="barsTitle">Estimates <span class="bct">bc</span>(v) with confidence interval [<span class="bct">bc</span>−f, <span class="bct">bc</span>+g]</h3>
+      <svg id="bars" style="flex:1;width:100%;min-height:200px"></svg>
+      <div class="legend" style="margin-top:4px">
+        <span><i style="background:var(--s);border-radius:2px"></i>estimate <span class="bct">bc</span>(v)</span>
+        <span><i style="background:transparent;border:2px solid var(--exact);border-radius:0;width:3px"></i>exact (Brandes); scale: fraction of pairs, ÷ n(n−1)</span>
+        <span id="legOk">✓ stopping condition met for v</span>
+        <span id="legBad" style="color:var(--bad)">✗ not yet met</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3 id="errTitle">Largest error bound max<sub>v</sub> max(f, g) vs. N</h3>
+      <svg id="errc" style="width:100%;height:120px"></svg>
+    </div>
+  </div>
+  <div class="pane side hidden" id="sideB">
+    <div class="card"><h3>Pipeline</h3><div class="stepper" id="bStepper"></div></div>
+    <div class="card" id="bCardVec"><h3 id="bVecTitle">Feature vector</h3><div id="bVec"></div></div>
+    <div class="card" style="flex:1" id="bCardAll"><h3 id="bAllTitle">All vertices</h3><div id="bAll"></div></div>
+  </div>
+</main>
+<footer>
+  <div id="narr"></div>
+  <div class="legend" id="gLegend"></div>
+</footer>
+</div>
+<div id="tip"></div>
+
+<script id="engine">
+// =====================================================================
+//  Engine: faithful ports of src/kadabra.jl and src/BRAVAGNN.jl.
+//  Pure functions, no DOM -- the verification harness runs this block in node.
+// =====================================================================
+const GRAPHS = {
+  slide: {
+    name: "Slide example (7 vertices)",
+    labels: ["A","B","C","D","E","F","G"],
+    pos: [[230,170],[230,470],[370,320],[500,320],[630,320],[770,170],[770,470]],
+    edges: [[0,2],[1,2],[2,3],[3,4],[4,5],[4,6]],
+    focus: 3,
+  },
+  demo: {
+    name: "Two communities (14 vertices)",
+    labels: ["A","B","C","D","E","F","G","H","I","J","K","L","M","N"],
+    pos: [[110,150],[80,340],[150,520],[250,250],[260,430],[410,230],[410,440],
+          [560,335],[700,215],[700,455],[850,120],[900,335],[850,550],[410,600]],
+    edges: [[0,1],[1,2],[0,3],[1,3],[1,4],[2,4],[3,4],[3,5],[4,6],[5,7],[6,7],[6,13],
+            [7,8],[7,9],[8,10],[8,11],[9,11],[9,12],[10,11],[11,12]],
+    focus: 7,
+  },
+};
+
+function buildGraph(key) {
+  const d = GRAPHS[key];
+  const n = d.labels.length;
+  const adj = Array.from({length: n}, () => []);
+  for (const [a, b] of d.edges) { adj[a].push(b); adj[b].push(a); }
+  for (const l of adj) l.sort((x, y) => x - y);          // Graphs.jl keeps neighbours sorted
+  const hasEdge = (a, b) => adj[a].includes(b);
+  return {key, n, m: d.edges.length, adj, hasEdge, ...d};
+}
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const randInt = (rng, n) => Math.floor(rng() * n);   // 0..n-1
+
+// ---- exact betweenness (Brandes), as the fraction of ordered pairs (s,t), s != t,
+//      whose shortest paths pass through v -- the quantity KADABRA estimates.
+function exactBetweenness(G) {
+  const {n, adj} = G, bc = new Float64Array(n);
+  for (let s = 0; s < n; s++) {
+    const S = [], P = Array.from({length: n}, () => []);
+    const sigma = new Float64Array(n), dist = new Int32Array(n).fill(-1);
+    sigma[s] = 1; dist[s] = 0; const Q = [s];
+    for (let h = 0; h < Q.length; h++) {
+      const v = Q[h]; S.push(v);
+      for (const w of adj[v]) {
+        if (dist[w] < 0) { dist[w] = dist[v] + 1; Q.push(w); }
+        if (dist[w] === dist[v] + 1) { sigma[w] += sigma[v]; P[w].push(v); }
+      }
+    }
+    const dep = new Float64Array(n);
+    while (S.length) {
+      const w = S.pop();
+      for (const v of P[w]) dep[v] += sigma[v] / sigma[w] * (1 + dep[w]);
+      if (w !== s) bc[w] += dep[w];
+    }
+  }
+  return Array.from(bc, x => x / (n * (n - 1)));
+}
+
+function ecc(G, v) {
+  const dist = new Int32Array(G.n).fill(-1); dist[v] = 0; const Q = [v];
+  for (let h = 0; h < Q.length; h++) for (const w of G.adj[Q[h]]) if (dist[w] < 0) { dist[w] = dist[Q[h]] + 1; Q.push(w); }
+  return dist[Q[Q.length - 1]];
+}
+// estimate_diameter on a connected undirected graph: pivot = first vertex of maximum
+// degree, bound = forward + backward eccentricity of the pivot = 2 ecc(pivot).
+function estimateDiameter(G) {
+  let piv = 0;
+  for (let v = 1; v < G.n; v++) if (G.adj[v].length > G.adj[piv].length) piv = v;
+  return Math.max(2 * ecc(G, piv), 1);
+}
+
+// ---- one sample: balanced bidirectional BFS + weighted backtracking
+//      (_sample_shortest_path! / _backtrack!), recording every level for the animation.
+function samplePath(G, rng, s, t) {
+  const {n, adj} = G;
+  const ball = new Uint8Array(n), np = new Float64Array(n), dist = new Int32Array(n).fill(-1);
+  const preds = Array.from({length: n}, () => []);
+  ball[s] = 1; np[s] = 1; dist[s] = 0; let curS = [s]; let sumS = adj[s].length;
+  ball[t] = 2; np[t] = 1; dist[t] = 0; let curT = [t]; let sumT = adj[t].length;
+  const levels = [], bridges = [];
+  let stop = false;
+  while (!stop && curS.length > 0 && curT.length > 0) {
+    const sideS = sumS <= sumT;
+    const lvl = {side: sideS ? "s" : "t", sumS, sumT, frontier: (sideS ? curS : curT).slice(), discovered: [], bridges: []};
+    const own = sideS ? 1 : 2, other = sideS ? 2 : 1, next = [];
+    let sum = 0;
+    for (const x of (sideS ? curS : curT)) {
+      for (const y of adj[x]) {
+        if (ball[y] === 0) {
+          ball[y] = own; np[y] = np[x]; dist[y] = dist[x] + 1; preds[y].push(x);
+          next.push(y); sum += adj[y].length;
+        } else if (ball[y] === other) {
+          stop = true;
+          const e = sideS ? [x, y] : [y, x];            // always (s-side, t-side)
+          bridges.push(e); lvl.bridges.push(e);
+        } else if (dist[y] === dist[x] + 1 && ball[y] === own) {
+          np[y] += np[x]; preds[y].push(x);
+        }
+      }
+    }
+    if (sideS) { curS = next; sumS = sum; } else { curT = next; sumT = sum; }
+    lvl.discovered = next.slice();
+    lvl.ball = Array.from(ball); lvl.np = Array.from(np);
+    levels.push(lvl);
+  }
+  const weights = bridges.map(([u, v]) => np[u] * np[v]);
+  const tot = weights.reduce((a, b) => a + b, 0);
+  let chosen = bridges.length - 1;
+  const r = rng() * tot; let c = 0;
+  for (let i = 0; i < bridges.length; i++) { c += weights[i]; if (c >= r) { chosen = i; break; } }
+  const back = (cur, target) => {
+    const walk = [cur];
+    while (cur !== target) {
+      const ps = preds[cur];
+      if (ps.length === 1) cur = ps[0];
+      else {
+        const tw = ps.reduce((a, p) => a + np[p], 0), rr = rng() * tw;
+        let cc = 0, pick = ps[ps.length - 1];
+        for (const p of ps) { cc += np[p]; if (cc >= rr) { pick = p; break; } }
+        cur = pick;
+      }
+      walk.push(cur);
+    }
+    return walk;                                           // cur ... target
+  };
+  const [bu, bv] = bridges[chosen];
+  const sHalf = back(bu, s).reverse(), tHalf = back(bv, t);
+  const path = sHalf.concat(tHalf);                        // s ... t
+  return {s, t, levels, bridges, weights, chosen, path, internal: path.slice(1, -1),
+          np: Array.from(np), preds: preds.map(p => p.slice())};
+}
+
+function computeF(b, it, dl, omega) {
+  const tmp = omega / it - 1 / 3, L = Math.log(1 / dl);
+  return Math.min((L / it) * (-tmp + Math.sqrt(tmp * tmp + 2 * b * omega / L)), b);
+}
+function computeG(b, it, du, omega) {
+  const tmp = omega / it + 1 / 3, L = Math.log(1 / du);
+  return Math.min((L / it) * (tmp + Math.sqrt(tmp * tmp + 2 * b * omega / L)), 1 - b);
+}
+
+// compute_bet_err! with the shipped :paper_bd allocation
+function computeBetErr(bet, kT, absolute, eps, startFactor) {
+  const U = bet.length, el = new Array(U), eu = new Array(U);
+  if (absolute || U <= kT) { el.fill(eps); eu.fill(eps); return [el, eu]; }
+  const B = i => bet[i - 1];                               // 1-based helpers
+  const maxErr = Math.sqrt(startFactor) * eps / 4;
+  el[0] = Math.max(eps, (B(1) - B(2)) / 2); eu[0] = 10;
+  for (let i = 2; i <= kT; i++) {
+    el[i - 1] = Math.max(eps, (B(i) - B(i + 1)) / 2);
+    eu[i - 1] = Math.max(eps, (B(i - 1) - B(i)) / 2);
+  }
+  const gapK = (B(kT) - B(kT + 1)) / 2;
+  for (let i = kT + 1; i <= U; i++) { el[i - 1] = 10; eu[i - 1] = Math.max(eps, B(kT) - gapK - B(i)); }
+  const collapse = (i, j) => { el[i - 1] = eu[i - 1] = el[j - 1] = eu[j - 1] = eps; };
+  for (let i = 1; i <= kT - 1; i++) if (B(i) - B(i + 1) < maxErr) collapse(i, i + 1);
+  if (kT + 1 <= U && B(kT) - B(kT + 1) < maxErr) collapse(kT, kT + 1);
+  for (let i = kT + 2; i <= U; i++) if (B(kT + 1) - B(i) < maxErr) collapse(kT + 1, i);
+  return [el, eu];
+}
+
+// compute_delta_guess!  (order: vertices sorted by burn-in count, descending)
+function computeDeltaGuess(counts, order, nPairs, n, kT, absolute, eps, delta, startFactor) {
+  const U = order.length, bf = 0.001;
+  const bet = order.map(v => counts[v] / nPairs);
+  const [el, eu] = computeBetErr(bet, kT, absolute, eps, startFactor);
+  let a = 0, b = 1 / (eps * eps) * Math.log(n * 4 * (1 - bf) / delta);
+  const term = (c, e, bb) => Math.exp(-c * e * e / bb);
+  while (b - a > eps / 10) {
+    const c = (a + b) / 2; let s = 0;
+    for (let i = 0; i < U; i++) s += term(c, el[i], bet[i]) + term(c, eu[i], bet[i]);
+    s += (n - U) * (term(c, el[U - 1], bet[U - 1]) + term(c, eu[U - 1], bet[U - 1]));
+    if (s >= delta / 2 * (1 - bf)) a = c; else b = c;
+  }
+  const floor = delta * bf / 4 / n;
+  const dL = new Array(n).fill(term(b, el[U - 1], bet[U - 1]) + floor);
+  const dU = new Array(n).fill(term(b, eu[U - 1], bet[U - 1]) + floor);
+  for (let i = 0; i < U; i++) { dL[order[i]] = term(b, el[i], bet[i]) + floor; dU[order[i]] = term(b, eu[i], bet[i]) + floor; }
+  return {dL, dU, C: b, lamL: el, lamU: eu};
+}
+
+// check_finished; returns per-vertex status too, for the display
+function checkFinished(counts, order, nPairs, k, eps, dL, dU, omega, absolute) {
+  const U = order.length;
+  const bet = order.map(v => Math.min(Math.max(counts[v] / nPairs, 0), 1));
+  const f = order.map((v, i) => computeF(bet[i], nPairs, dL[v], omega));
+  const g = order.map((v, i) => computeG(bet[i], nPairs, dU[v], omega));
+  const ok = new Array(U), why = new Array(U);
+  for (let j = 0; j < U; j++) {
+    const i = j + 1, B = x => bet[x - 1], F = x => f[x - 1], Gx = x => g[x - 1];
+    let fin = false, sep = false;
+    if (!absolute) {
+      if (i === 1) sep = B(1) - F(1) > B(2) + Gx(2);
+      else if (i < k) sep = (B(i - 1) - F(i - 1) > B(i) + Gx(i)) && (B(i) - F(i) > B(i + 1) + Gx(i + 1));
+      else if (i === k) sep = k < U ? (B(k - 1) - F(k - 1) > B(k) + Gx(k)) && (B(k) - F(k) > B(k + 1) + Gx(k + 1))
+                                    : (B(k - 1) - F(k - 1) > B(k) + Gx(k));
+      else sep = B(k) - F(k) > B(i) + Gx(i);
+    }
+    const tight = F(i) < eps && Gx(i) < eps;
+    fin = sep || tight;
+    ok[j] = fin; why[j] = sep ? "separated" : tight ? "f,g < ε" : "";
+  }
+  return {done: ok.every(Boolean), bet, f, g, ok, why};
+}
+
+// Smallest N at which f and g both drop below eps if the estimate and the calibrated deltas stayed
+// as they are now -- a readout for the demo, not part of the algorithm. null beyond `cap`.
+function samplesNeeded(b, tau0, dl, du, omega, eps, cap) {
+  for (let t = Math.max(1, tau0); t <= cap; t++)
+    if (computeF(b, t, dl, omega) < eps && computeG(b, t, du, omega) < eps) return t;
+  return null;
+}
+
+class Kadabra {
+  constructor(G, eps, delta, k, seed, startFactor = 100) {
+    Object.assign(this, {G, eps, delta, startFactor});
+    const n = G.n;
+    this.absolute = k === 0;
+    this.k = k === 0 ? n : Math.min(k, n);
+    this.kUser = k;
+    this.rng = mulberry32(seed);
+    this.diam = Math.max(estimateDiameter(G), 2);
+    this.omega = 0.5 / (eps * eps) * (Math.log2(this.diam - 1) + 1 + Math.log(0.5 / delta));
+    this.tau = Math.max(Math.round(this.omega / startFactor), 1);
+    // union_sample = min(n, max(2 sqrt(m)/threads, k + 20)) = n on these graphs
+    this.U = Math.min(n, Math.floor(Math.max(2 * Math.sqrt(G.m), this.kUser + 20)));
+    this.counts = new Array(n).fill(0);
+    this.phase = "burn"; this.nPairs = 0; this.total = 0;
+    this.dL = null; this.dU = null; this.status = null; this.hist = []; this.stopReason = null;
+  }
+  order() {
+    return [...Array(this.G.n).keys()].sort((a, b) => this.counts[b] - this.counts[a] || a - b).slice(0, this.U);
+  }
+  drawPair() {
+    const n = this.G.n, s = randInt(this.rng, n);
+    let t = randInt(this.rng, n);
+    while (t === s) t = randInt(this.rng, n);
+    return [s, t];
+  }
+  // draw one sample and account for it; returns the trace plus what changed
+  step() {
+    if (this.phase === "done") return null;
+    const [s, t] = this.drawPair();
+    const tr = samplePath(this.G, this.rng, s, t);
+    for (const v of tr.internal) this.counts[v]++;
+    this.nPairs++; this.total++;
+    tr.phaseBefore = this.phase;
+    if (this.phase === "burn" && this.nPairs >= this.tau) {
+      tr.burnCounts = this.counts.slice();
+      this.calibrate();
+      tr.calibrated = true;
+    } else if (this.phase === "main") {
+      this.evaluate();
+    }
+    return tr;
+  }
+  calibrate() {
+    const order = this.order();
+    const r = computeDeltaGuess(this.counts, order, this.tau, this.G.n, this.k, this.absolute,
+                                this.eps, this.delta, this.startFactor);
+    this.dL = r.dL; this.dU = r.dU; this.C = r.C; this.burnCounts = this.counts.slice();
+    this.counts.fill(0); this.nPairs = 0; this.phase = "main";
+  }
+  evaluate() {
+    const order = this.order();
+    const st = checkFinished(this.counts, order, this.nPairs, this.k, this.eps, this.dL, this.dU, this.omega, this.absolute);
+    st.order = order;
+    this.status = st;
+    this.hist.push([this.nPairs, Math.max(...st.f, ...st.g), st.ok.filter(x => !x).length]);
+    if (st.done) { this.phase = "done"; this.stopReason = "adaptive"; }
+    else if (this.nPairs >= this.omega) { this.phase = "done"; this.stopReason = "omega"; }
+  }
+  estimate(v) { return this.nPairs ? this.counts[v] / this.nPairs : 0; }
+}
+
+// ---- BRAVA-GNN features (brava_clique_mask, compute_degree_masses with m_hops = 6)
+function cliqueCheck(G, v) {
+  const nb = G.adj[v], missing = [];
+  if (nb.length === 0) return {pruned: true, missing};
+  for (let i = 0; i < nb.length; i++)
+    for (let j = i + 1; j < nb.length; j++)
+      if (!G.hasEdge(nb[i], nb[j])) missing.push([nb[i], nb[j]]);
+  return {pruned: missing.length === 0, missing};
+}
+function bravaFeatures(G, hops = 6) {
+  const n = G.n;
+  const checks = [...Array(n).keys()].map(v => cliqueCheck(G, v));
+  const mask = checks.map(c => c.pruned ? 0 : 1);
+  const walks = [new Array(n).fill(1)];                     // w_0 = 1
+  const mass = [], x = [];
+  let acc = new Array(n).fill(0);
+  for (let k = 1; k <= hops; k++) {
+    const prev = walks[k - 1];
+    const w = [...Array(n).keys()].map(v => mask[v] ? G.adj[v].reduce((a, u) => a + prev[u], 0) : 0);
+    walks.push(w);
+    acc = acc.map((a, v) => a + w[v]);
+    mass.push(acc.slice());
+    x.push(acc.map(Math.log1p));
+  }
+  return {checks, mask, walks, mass, x};                    // mass[k-1][v], x[k-1][v]
+}
+
+if (typeof module !== "undefined") module.exports = {GRAPHS, buildGraph, mulberry32, exactBetweenness, estimateDiameter,
+  samplePath, computeF, computeG, samplesNeeded, computeBetErr, computeDeltaGuess, checkFinished, Kadabra, bravaFeatures};
+</script>
+
+<script>
+// =====================================================================
+//  UI
+// =====================================================================
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, parent) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+};
+const fmt = (x, d = 3) => (Math.abs(x) < 1e-12 ? 0 : x).toFixed(d);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const heat = t => {                                         // 0..1 -> cream..dark red
+  t = Math.max(0, Math.min(1, t));
+  const a = [255, 247, 236], b = [179, 0, 0];
+  return `rgb(${a.map((x, i) => Math.round(x + (b[i] - x) * Math.pow(t, 0.8))).join(",")})`;
+};
+
+let G, exact, K, BF, tab = "K";
+let token = 0;                                              // bumps to cancel running animations
+let playing = false, busy = false;
+
+// ---------------- graph drawing ----------------
+const svg = $("gsvg");
+let L = {};                                                 // layers + per-node elements
+
+function drawGraph() {
+  svg.innerHTML = "";
+  const defs = el("defs", {}, svg);
+  const mk = el("marker", {id: "arr", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: "auto-start-reverse"}, defs);
+  el("path", {d: "M0,0 L10,5 L0,10 z", fill: "#7a5c00"}, mk);
+  const pat = el("pattern", {id: "hatch", width: 7, height: 7, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)"}, defs);
+  el("rect", {width: 7, height: 7, fill: "#e4e4e4"}, pat);
+  el("line", {x1: 0, y1: 0, x2: 0, y2: 7, stroke: "#b0b0b0", "stroke-width": 3}, pat);
+  L = {edges: el("g", {}, svg), over: el("g", {}, svg), path: el("g", {}, svg), nodes: el("g", {}, svg), fx: el("g", {}, svg), node: [], edge: {}};
+  for (const [a, b] of G.edges) {
+    const [x1, y1] = G.pos[a], [x2, y2] = G.pos[b];
+    L.edge[a + "-" + b] = L.edge[b + "-" + a] = el("line", {class: "edge", x1, y1, x2, y2}, L.edges);
+  }
+  for (let v = 0; v < G.n; v++) {
+    const [x, y] = G.pos[v];
+    const g = el("g", {class: "node", transform: `translate(${x},${y})`, style: "cursor:pointer"}, L.nodes);
+    const ring = el("circle", {r: 38, fill: "none", stroke: "none", "stroke-width": 5}, g);
+    const body = el("circle", {class: "body", r: 27, fill: "#fff"}, g);
+    const lab = el("text", {class: "lab"}, g); lab.textContent = G.labels[v];
+    const badge = el("g", {class: "badge", transform: "translate(0,46)"}, g);
+    const br = el("rect", {x: -30, y: -12, width: 60, height: 24, rx: 12}, badge);
+    const bt = el("text", {}, badge);
+    const tag = el("text", {x: 0, y: -44, "text-anchor": "middle", "font-size": 15, "font-weight": 700}, g);
+    g.addEventListener("mousemove", ev => showTip(ev, v));
+    g.addEventListener("mouseleave", hideTip);
+    g.addEventListener("click", () => nodeClick(v));
+    L.node.push({g, ring, body, lab, badge, br, bt, tag});
+  }
+}
+function setBadge(v, text, opts = {}) {
+  const N = L.node[v];
+  if (text === null || text === undefined) { N.badge.setAttribute("visibility", "hidden"); return; }
+  N.badge.setAttribute("visibility", "visible");
+  N.bt.textContent = text;
+  const w = Math.max(34, 9 * String(text).length + 16);
+  N.br.setAttribute("x", -w / 2); N.br.setAttribute("width", w);
+  N.br.style.fill = opts.fill || "#fff"; N.br.style.stroke = opts.stroke || "#999";
+  N.bt.style.fill = opts.color || "#1d1d1f";
+}
+function resetNodeStyles() {
+  for (let v = 0; v < G.n; v++) {
+    const N = L.node[v];
+    N.body.setAttribute("fill", "#fff"); N.body.style.stroke = "#333"; N.body.style.strokeWidth = 1.6;
+    N.ring.setAttribute("stroke", "none"); N.lab.style.fill = "#1d1d1f"; N.tag.textContent = "";
+    N.g.style.opacity = 1;
+  }
+  for (const k in L.edge) { L.edge[k].style.stroke = ""; L.edge[k].style.strokeWidth = ""; L.edge[k].style.opacity = 1; L.edge[k].removeAttribute("stroke-dasharray"); }
+  L.over.innerHTML = ""; L.path.innerHTML = ""; L.fx.innerHTML = "";
+}
+
+// ---------------- tooltip ----------------
+function showTip(ev, v) {
+  const tip = $("tip");
+  let s = `vertex ${G.labels[v]}   deg ${G.adj[v].length}\nexact bc     ${fmt(exact[v], 4)}   (÷ n(n−1))`;
+  if (tab === "K" && K) {
+    s += `\nestimate bc̃   ${fmt(K.estimate(v), 4)}`;
+    if (K.dL) {
+      s += `\nδ_L ${K.dL[v].toExponential(2)}   δ_U ${K.dU[v].toExponential(2)}`;
+      if (K.status) { const i = K.status.order.indexOf(v); if (i >= 0) s += `\nf ${fmt(K.status.f[i], 4)}   g ${fmt(K.status.g[i], 4)}`; }
+    }
+  }
+  if (tab === "B" && BF) {
+    s += `\n${BF.mask[v] ? "kept" : "pruned"} by clique mask`;
+    s += `\nx = [${BF.x.map(r => r[v].toFixed(2)).join(", ")}]`;
+  }
+  tip.textContent = s; tip.style.opacity = 1;
+  tip.style.left = Math.min(ev.clientX + 14, innerWidth - 330) + "px"; tip.style.top = (ev.clientY + 14) + "px";
+}
+function hideTip() { $("tip").style.opacity = 0; }
+
+function narrate(phase, html) { $("narr").innerHTML = (phase ? `<span class="phase">${phase}</span>` : "") + html; }
+function legend(items) { $("gLegend").innerHTML = items.map(([c, t, sq]) => `<span><i style="background:${c};${sq ? "border-radius:2px" : ""}"></i>${t}</span>`).join(""); }
+
+// =====================================================================
+//  KADABRA view
+// =====================================================================
+const SPEEDS = {1: 1300, 2: 700, 3: 300, 4: 60, 5: 0};
+const stageMs = () => SPEEDS[$("speed").value];
+
+function kReset() {
+  token++; playing = false; busy = false; updatePlayBtn();
+  const eps = +$("epsSel").value, delta = +$("delSel").value, k = +$("kSel").value, seed = +$("seedIn").value | 0;
+  K = new Kadabra(G, eps, delta, k, seed);
+  resetNodeStyles();
+  kPaintHeat();
+  kPanel();
+  legend([[css("--s-soft"), "ball of s"], [css("--t-soft"), "ball of t"], [css("--bridge"), "meeting edge"], [css("--path"), "sampled path"], [heat(0.8), 'estimate <span class="bct">bc</span> (fill)']]);
+  narrate("setup", `KADABRA estimates <b>bc(v)</b> = fraction of pairs (s,t) whose shortest path passes through v. ` +
+    `Budget: <b>ω = ${K.omega.toFixed(0)}</b> samples at most for ε = ${K.eps}, δ = ${K.delta}. ` +
+    `First a <b>burn-in of N<sub>0</sub> = ${K.tau}</b> samples to calibrate δ<sub>L</sub>, δ<sub>U</sub>. Press <kbd>→</kbd> for one sample.`);
+}
+
+function kPaintHeat() {
+  const mx = Math.max(...exact, 1e-9);
+  for (let v = 0; v < G.n; v++) {
+    const b = K.estimate(v);
+    L.node[v].body.setAttribute("fill", heat(b / mx));
+    L.node[v].lab.style.fill = b / mx > 0.55 ? "#fff" : "#1d1d1f";
+    setBadge(v, K.nPairs ? fmt(b, 2) : null);
+  }
+}
+
+function kPanel() {
+  $("stD").textContent = K.diam; $("stW").textContent = K.omega.toFixed(0); $("stB").textContent = K.tau;
+  $("stT").textContent = K.phase === "burn" ? "–" : K.nPairs;
+  const W = K.tau + K.omega;
+  $("pgB").style.width = (100 * (K.phase === "burn" ? K.nPairs : K.tau) / W) + "%";
+  $("pgM").style.left = (100 * K.tau / W) + "%";
+  $("pgM").style.width = (100 * (K.phase === "burn" ? 0 : K.nPairs) / W) + "%";
+  $("pgM").style.background = K.phase === "done" ? css("--ok") : css("--s");
+  $("pgL").textContent = K.phase === "burn" ? `burn-in ${K.nPairs}/${K.tau}` : `N = ${K.nPairs} / ω = ${K.omega.toFixed(0)}`;
+  kBars(); kErrChart();
+}
+
+function kBars() {
+  const s = $("bars"); s.innerHTML = "";
+  const box = s.getBoundingClientRect(); const W = Math.max(box.width, 300), H = Math.max(box.height, 200);
+  s.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const topk = !K.absolute;
+  const order = K.status ? K.status.order : [...Array(G.n).keys()].sort((a, b) => (topk ? K.counts[b] - K.counts[a] : 0) || a - b);
+  const rows = topk ? order : [...Array(G.n).keys()];
+  const padL = 34, padR = topk ? 58 : 104, padT = 16, padB = 18;
+  const rowH = (H - padT - padB) / G.n;
+  const xmax = Math.min(1, Math.max(...exact) * 1.35 + 0.05);
+  const X = b => padL + (W - padL - padR) * Math.max(0, Math.min(b, xmax)) / xmax;
+  // axis
+  for (let i = 0; i <= 4; i++) {
+    const b = xmax * i / 4, x = X(b);
+    el("line", {x1: x, x2: x, y1: padT - 4, y2: H - padB, stroke: "#eeece6"}, s);
+    const t = el("text", {x, y: H - 4, "text-anchor": "middle", "font-size": 10, fill: "#999"}, s); t.textContent = b.toFixed(2);
+  }
+  const hi = K.lastInternal || [];
+  rows.forEach((v, r) => {
+    const y = padT + r * rowH, cy = y + rowH / 2, bh = Math.min(16, rowH * 0.55);
+    const lt = el("text", {x: 4, y: cy, "dominant-baseline": "central", "font-size": Math.min(15, rowH * 0.7), "font-weight": 700, fill: hi.includes(v) ? css("--path") : "#1d1d1f"}, s);
+    lt.textContent = G.labels[v];
+    const b = K.estimate(v);
+    el("rect", {x: X(0), y: cy - bh / 2, width: Math.max(0, X(b) - X(0)), height: bh, rx: 2, fill: hi.includes(v) ? css("--path") : css("--s"), opacity: 0.85}, s);
+    if (K.status) {
+      const i = K.status.order.indexOf(v);
+      if (i >= 0) {
+        const lo = b - K.status.f[i], up = b + K.status.g[i];
+        el("line", {x1: X(lo), x2: X(up), y1: cy, y2: cy, stroke: "#333", "stroke-width": 1.5}, s);
+        el("line", {x1: X(lo), x2: X(lo), y1: cy - bh / 2 - 2, y2: cy + bh / 2 + 2, stroke: "#333", "stroke-width": 1.5}, s);
+        if (up <= xmax) el("line", {x1: X(up), x2: X(up), y1: cy - bh / 2 - 2, y2: cy + bh / 2 + 2, stroke: "#333", "stroke-width": 1.5}, s);
+        else el("path", {d: `M${X(xmax)},${cy - 5} l7,5 l-7,5 z`, fill: "#333"}, s);
+        const ok = K.status.ok[i];
+        const m = el("text", {x: W - padR + 8, y: cy, "dominant-baseline": "central", "font-size": 11, fill: ok ? css("--ok") : css("--bad"), "font-weight": 600}, s);
+        m.textContent = ok ? "✓ " + (K.status.why[i] === "separated" ? "sep." : "f,g<ε") : "✗";
+        if (!ok && K.absolute) {
+          const need = samplesNeeded(b, K.nPairs, K.dL[v], K.dU[v], K.omega, K.eps, Math.ceil(10 * K.omega));
+          const over = need === null || need > K.omega;
+          m.textContent = "✗ " + (need === null ? "> 10ω" : "needs " + need);
+          m.setAttribute("fill", over ? css("--bad") : "#b26a00");
+        }
+      }
+    }
+    el("line", {x1: X(exact[v]), x2: X(exact[v]), y1: cy - bh / 2 - 4, y2: cy + bh / 2 + 4, stroke: css("--exact"), "stroke-width": 3}, s);
+    if (topk && r === K.k - 1) el("line", {x1: 0, x2: W, y1: y + rowH, y2: y + rowH, stroke: css("--t"), "stroke-width": 2, "stroke-dasharray": "6 4"}, s);
+  });
+  if (topk) {
+    const t = el("text", {x: W - padR - 6, y: padT + K.k * rowH + 13, "text-anchor": "end", "font-size": 11, fill: css("--t"), "font-weight": 700, stroke: "#fff", "stroke-width": 4, "paint-order": "stroke"}, s);
+    t.textContent = `top-${K.k} boundary`;
+  }
+  $("legBad").innerHTML = K.absolute ? '✗ needs N: samples until f,g &lt; ε at the current <span class="bct">bc</span> (red: beyond ω)' : "✗ not yet met";
+  $("errTitle").innerHTML = K.absolute ? "Largest error bound max<sub>v</sub> max(f, g) vs. N" : "Vertices whose condition is not yet met vs. N";
+  $("barsTitle").innerHTML = K.phase === "burn"
+    ? "Burn-in estimates (no intervals yet — thrown away after calibration)"
+    : topk ? 'Sorted by estimate: intervals must separate ranks, or shrink below <span class="nt">ε</span>' : 'Estimates <span class="bct">bc</span>(v) with confidence interval [<span class="bct">bc</span>−f, <span class="bct">bc</span>+g]';
+}
+
+function kErrChart() {
+  const s = $("errc"); s.innerHTML = "";
+  const box = s.getBoundingClientRect(); const W = Math.max(box.width, 300), H = 120;
+  s.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const padL = 44, padR = 10, padT = 8, padB = 20;
+  if (!K.absolute) return kOpenChart(s, W, H, padL, padR, padT, padB);
+  const ymin = Math.log10(K.eps / 4), ymax = Math.log10(2);
+  const Y = e => padT + (H - padT - padB) * (1 - (Math.log10(Math.max(e, 10 ** ymin)) - ymin) / (ymax - ymin));
+  const X = t => padL + (W - padL - padR) * t / K.omega;
+  el("rect", {x: padL, y: padT, width: W - padL - padR, height: H - padT - padB, fill: "#faf9f6"}, s);
+  for (const e of [1, 0.1, 0.01]) if (Math.log10(e) >= ymin) {
+    el("line", {x1: padL, x2: W - padR, y1: Y(e), y2: Y(e), stroke: "#eeece6"}, s);
+    const t = el("text", {x: padL - 4, y: Y(e), "text-anchor": "end", "dominant-baseline": "central", "font-size": 10, fill: "#999"}, s); t.textContent = e;
+  }
+  el("line", {x1: padL, x2: W - padR, y1: Y(K.eps), y2: Y(K.eps), stroke: css("--ok"), "stroke-width": 2, "stroke-dasharray": "5 4"}, s);
+  const te = el("text", {x: W - padR - 2, y: Y(K.eps) - 6, "text-anchor": "end", "font-size": 11, fill: css("--ok"), "font-weight": 700}, s); te.textContent = "ε";
+  const t0 = el("text", {x: padL, y: H - 5, "font-size": 10, fill: "#999"}, s); t0.textContent = "0";
+  const t1 = el("text", {x: W - padR, y: H - 5, "font-size": 10, fill: "#999", "text-anchor": "end"}, s); t1.textContent = "ω = " + K.omega.toFixed(0);
+  if (K.hist.length > 1) {
+    el("path", {d: K.hist.map(([t, e], i) => (i ? "L" : "M") + X(t).toFixed(1) + "," + Y(e).toFixed(1)).join(""), fill: "none", stroke: css("--s"), "stroke-width": 2}, s);
+  }
+  if (K.phase === "done") {
+    const x = X(K.nPairs);
+    el("line", {x1: x, x2: x, y1: padT, y2: H - padB, stroke: css("--ok"), "stroke-width": 2}, s);
+    const t = el("text", {x: x - 4, y: padT + 12, "text-anchor": "end", "font-size": 11, fill: css("--ok"), "font-weight": 700}, s);
+    t.textContent = `stopped at N = ${K.nPairs}`;
+  }
+}
+
+function kOpenChart(s, W, H, padL, padR, padT, padB) {
+  const n = G.n;
+  const Y = c => padT + (H - padT - padB) * (1 - c / n);
+  const X = t => padL + (W - padL - padR) * t / K.omega;
+  el("rect", {x: padL, y: padT, width: W - padL - padR, height: H - padT - padB, fill: "#faf9f6"}, s);
+  for (const c of [0, Math.round(n / 2), n]) {
+    el("line", {x1: padL, x2: W - padR, y1: Y(c), y2: Y(c), stroke: "#eeece6"}, s);
+    const t = el("text", {x: padL - 4, y: Y(c), "text-anchor": "end", "dominant-baseline": "central", "font-size": 10, fill: "#999"}, s); t.textContent = c;
+  }
+  const t0 = el("text", {x: padL, y: H - 5, "font-size": 10, fill: "#999"}, s); t0.textContent = "0";
+  const t1 = el("text", {x: W - padR, y: H - 5, "font-size": 10, fill: "#999", "text-anchor": "end"}, s); t1.textContent = "ω = " + K.omega.toFixed(0);
+  if (K.hist.length > 1)
+    el("path", {d: K.hist.map(([t, , c], i) => (i ? "L" : "M") + X(t).toFixed(1) + "," + Y(c).toFixed(1)).join(""), fill: "none", stroke: css("--bad"), "stroke-width": 2}, s);
+  if (K.phase === "done") {
+    const x = X(K.nPairs);
+    el("line", {x1: x, x2: x, y1: padT, y2: H - padB, stroke: css("--ok"), "stroke-width": 2}, s);
+    const t = el("text", {x: x + 4, y: padT + 12, "font-size": 11, fill: css("--ok"), "font-weight": 700}, s);
+    t.textContent = `stopped at N = ${K.nPairs}`;
+  }
+}
+
+function edgeEl(a, b) { return L.edge[a + "-" + b]; }
+
+async function animateSample(tr, ms, tk) {
+  const alive = () => tk === token;
+  const hold = async f => { await sleep(ms * f); return alive(); };
+  const {s, t} = tr;
+  resetNodeStyles();
+  for (let v = 0; v < G.n; v++) setBadge(v, null);
+  const phaseTag = tr.phaseBefore === "burn" ? "burn-in" : "sample";
+  const idx = tr.phaseBefore === "burn" ? `${K.total}` : `N = ${K.nPairs}`;
+  // 1) pair
+  L.node[s].ring.setAttribute("stroke", css("--s")); L.node[t].ring.setAttribute("stroke", css("--t"));
+  L.node[s].body.setAttribute("fill", css("--s-soft")); L.node[t].body.setAttribute("fill", css("--t-soft"));
+  L.node[s].tag.textContent = "s"; L.node[s].tag.style.fill = css("--s");
+  L.node[t].tag.textContent = "t"; L.node[t].tag.style.fill = css("--t");
+  setBadge(s, "σ=1", {stroke: css("--s")}); setBadge(t, "σ=1", {stroke: css("--t")});
+  narrate(phaseTag + " " + idx, `Draw a pair uniformly at random: <b style="color:var(--s)">s = ${G.labels[s]}</b>, <b style="color:var(--t)">t = ${G.labels[t]}</b>. Grow a BFS ball from each end.`);
+  if (!await hold(1)) return false;
+  // 2) balanced bidirectional BFS, level by level
+  for (const lvl of tr.levels) {
+    const isS = lvl.side === "s", col = isS ? css("--s") : css("--t"), soft = isS ? css("--s-soft") : css("--t-soft");
+    for (const x of lvl.frontier) L.node[x].body.style.strokeWidth = 4, L.node[x].body.style.stroke = col;
+    narrate("balanced BFS", `Frontier degree sums: <b style="color:var(--s)">Σdeg Γ(s) = ${lvl.sumS}</b> vs <b style="color:var(--t)">Σdeg Γ(t) = ${lvl.sumT}</b> ` +
+      `→ expand the cheaper side, <b style="color:${col}">${isS ? "s" : "t"}</b>.`);
+    if (!await hold(0.9)) return false;
+    for (const y of lvl.discovered) {
+      L.node[y].body.setAttribute("fill", soft);
+      edgeEl(...[tr.preds[y][0], y]).style.stroke = col;
+    }
+    for (let v = 0; v < G.n; v++) if (lvl.ball[v]) {
+      setBadge(v, "σ=" + lvl.np[v], {stroke: lvl.ball[v] === 1 ? css("--s") : css("--t")});
+      for (const p of tr.preds[v]) if (lvl.ball[p] === lvl.ball[v]) edgeEl(p, v).style.stroke = lvl.ball[v] === 1 ? css("--s") : css("--t");
+    }
+    for (const x of lvl.frontier) L.node[x].body.style.strokeWidth = 1.6, L.node[x].body.style.stroke = "#333";
+    for (const [u, v] of lvl.bridges) { const e = edgeEl(u, v); e.style.stroke = css("--bridge"); e.style.strokeWidth = 7; }
+    const multi = lvl.discovered.filter(y => tr.preds[y].length > 1 && lvl.ball[y]);
+    narrate("balanced BFS", lvl.bridges.length
+      ? `The balls <b>touch</b>: ${lvl.bridges.length} meeting edge${lvl.bridges.length > 1 ? "s" : ""} (gold). Every shortest s–t path crosses exactly one of them. Stop the BFS.`
+      : `Discovered ${lvl.discovered.map(y => G.labels[y]).join(", ") || "nothing"}. σ(v) = number of shortest paths from the root` +
+        (multi.length ? ` — ${multi.map(y => G.labels[y]).join(", ")} ${multi.length > 1 ? "are" : "is"} reached along several.` : "."));
+    if (!await hold(1.1)) return false;
+  }
+  // 3) choose a meeting edge
+  if (tr.bridges.length > 1 || tr.weights[0] > 1) {
+    L.over.innerHTML = "";
+    tr.bridges.forEach(([u, v], i) => {
+      const [x1, y1] = G.pos[u], [x2, y2] = G.pos[v];
+      const g = el("g", {class: "badge", transform: `translate(${(x1 + x2) / 2},${(y1 + y2) / 2 - 18})`}, L.over);
+      const txt = `${tr.np[u]}·${tr.np[v]}`;
+      el("rect", {x: -8 * txt.length / 2 - 8, y: -12, width: 8 * txt.length + 16, height: 24, rx: 12, style: `fill:${css("--bridge")};stroke:none`}, g);
+      const tt = el("text", {}, g); tt.textContent = txt;
+    });
+    narrate("pick edge", `Pick a meeting edge (u,w) with probability ∝ σ<sub>s</sub>(u)·σ<sub>t</sub>(w) = number of shortest paths through it — so every shortest path is equally likely.`);
+    if (!await hold(1.3)) return false;
+  }
+  // 4) backtrack
+  const [bu, bv] = tr.bridges[tr.chosen];
+  tr.bridges.forEach(([u, v], i) => { if (i !== tr.chosen) edgeEl(u, v).style.opacity = 0.35; });
+  L.over.innerHTML = "";
+  narrate("backtrack", `Walk back from the chosen edge to s and to t, choosing among predecessors with probability ∝ σ. Result: one uniformly random shortest path.`);
+  const p = tr.path;
+  for (let i = 0; i + 1 < p.length; i++) {
+    const [x1, y1] = G.pos[p[i]], [x2, y2] = G.pos[p[i + 1]];
+    const ln = el("line", {x1, y1, x2: x1, y2: y1, stroke: css("--path"), "stroke-width": 10, "stroke-linecap": "round", opacity: 0.9}, L.path);
+    const steps = Math.max(1, Math.round(Math.min(ms, 500) / 16 / Math.max(1, p.length - 1) * 2));
+    for (let k = 1; k <= steps; k++) {
+      ln.setAttribute("x2", x1 + (x2 - x1) * k / steps); ln.setAttribute("y2", y1 + (y2 - y1) * k / steps);
+      await sleep(16); if (!alive()) return false;
+    }
+  }
+  for (const v of p) { L.node[v].ring.setAttribute("stroke", css("--path")); }
+  L.node[s].ring.setAttribute("stroke", css("--s")); L.node[t].ring.setAttribute("stroke", css("--t"));
+  if (!await hold(0.6)) return false;
+  // 5) +1
+  for (const v of tr.internal) floatText(v, "+1");
+  narrate("update", tr.internal.length
+    ? `Path ${p.map(v => G.labels[v]).join(" → ")}. Its <b>inner</b> vertices ${tr.internal.map(v => G.labels[v]).join(", ")} get +1; <span class="bct">bc</span>(v) = count / N.`
+    : `Path ${p.map(v => G.labels[v]).join(" → ")} has no inner vertex — nothing to count, but the sample still counts towards N.`);
+  return await hold(1);
+}
+
+function floatText(v, txt) {
+  const [x, y] = G.pos[v];
+  const t = el("text", {x: x + 26, y: y - 26, "font-size": 24, "font-weight": 800, fill: css("--path")}, L.fx);
+  t.textContent = txt;
+  const t0 = performance.now();
+  const tick = now => {
+    const a = Math.min(1, (now - t0) / 900);
+    t.setAttribute("y", y - 26 - 30 * a); t.setAttribute("opacity", 1 - a * a);
+    if (a < 1) requestAnimationFrame(tick); else t.remove();
+  };
+  requestAnimationFrame(tick);
+}
+
+// The finished state of one sample, drawn at once: both BFS balls with σ, the meeting
+// edges, the sampled path. Used by the #kadabra-snap still for the slides.
+function kStill(tr) {
+  resetNodeStyles();
+  const last = tr.levels[tr.levels.length - 1];
+  for (let v = 0; v < G.n; v++) {
+    const side = last.ball[v];
+    if (!side) { setBadge(v, null); continue; }
+    L.node[v].body.setAttribute("fill", side === 1 ? css("--s-soft") : css("--t-soft"));
+    setBadge(v, "σ=" + last.np[v], {stroke: side === 1 ? css("--s") : css("--t")});
+    for (const p of tr.preds[v]) edgeEl(p, v).style.stroke = side === 1 ? css("--s") : css("--t");
+  }
+  tr.bridges.forEach(([u, w], i) => { const e = edgeEl(u, w); e.style.stroke = css("--bridge"); e.style.strokeWidth = 7; if (i !== tr.chosen) e.style.opacity = 0.5; });
+  const p = tr.path;
+  for (let i = 0; i + 1 < p.length; i++) {
+    const [x1, y1] = G.pos[p[i]], [x2, y2] = G.pos[p[i + 1]];
+    el("line", {x1, y1, x2, y2, stroke: css("--path"), "stroke-width": 10, "stroke-linecap": "round", opacity: 0.85}, L.path);
+  }
+  for (const [v, c, tag] of [[tr.s, css("--s"), "s"], [tr.t, css("--t"), "t"]]) {
+    L.node[v].ring.setAttribute("stroke", c); L.node[v].tag.textContent = tag; L.node[v].tag.style.fill = c;
+  }
+  narrate(`sample N = ${K.nPairs}`, `Balls around <b style="color:var(--s)">s = ${G.labels[tr.s]}</b> and <b style="color:var(--t)">t = ${G.labels[tr.t]}</b> met on ` +
+    `${tr.bridges.length} gold edges; sampled path ${p.map(v => G.labels[v]).join(" → ")}, inner vertices get +1.`);
+}
+
+function flashPath(tr) {
+  resetNodeStyles();
+  const p = tr.path;
+  for (let i = 0; i + 1 < p.length; i++) {
+    const [x1, y1] = G.pos[p[i]], [x2, y2] = G.pos[p[i + 1]];
+    el("line", {x1, y1, x2, y2, stroke: css("--path"), "stroke-width": 8, "stroke-linecap": "round", opacity: 0.8}, L.path);
+  }
+}
+
+function afterSample(tr, detailed) {
+  K.lastInternal = tr.internal;
+  if (!detailed) flashPath(tr);
+  kPaintHeat(); kPanel();
+  if (tr.calibrated) {
+    playing = false; updatePlayBtn();
+    resetNodeStyles(); kPaintHeat(); kPanel();
+    narrate("calibration", `Burn-in done (N<sub>0</sub> = ${K.tau} samples). From these rough estimates a bisection finds C and sets per-vertex ` +
+      `<b>δ<sub>L</sub>(v), δ<sub>U</sub>(v)</b> so that Σ<sub>v</sub> δ<sub>L</sub>(v) + δ<sub>U</sub>(v) ≈ δ/2 (hover a vertex). ` +
+      `The burn-in counts are then <b>discarded</b> and sampling restarts with N = 0.`);
+    return false;
+  }
+  if (K.phase === "done") {
+    playing = false; updatePlayBtn();
+    resetNodeStyles(); kPaintHeat(); kPanel();
+    const saved = (100 * (1 - K.nPairs / K.omega)).toFixed(0);
+    narrate("stopped", K.stopReason === "adaptive"
+      ? `<b>Adaptive stop at N = ${K.nPairs}</b> — every vertex satisfies its condition, ${saved}% below the worst-case ω = ${K.omega.toFixed(0)}. ` +
+        (K.absolute ? `With probability ≥ 1−δ, |<span class="bct">bc</span>(v) − bc(v)| ≤ ε for all v.` : `Each vertex's interval is separated from its rank neighbours (or from v<sub>k</sub>), or narrower than ε.`) + ` Max error here: ${fmt(Math.max(...exact.map((b, v) => Math.abs(b - K.estimate(v)))), 3)}.`
+      : `Reached the worst-case budget N = ω = ${K.omega.toFixed(0)}: the guarantee holds by the fixed-sample bound. ` +
+        `On a graph this small ω is already low and the bc(v) are large, so the adaptive test cannot beat it — ` +
+        `adaptivity pays off when betweenness values are small, as on large graphs.` +
+        (G.key === "demo" ? ` Try <b>top-k = 1, ε = 0.03</b>: it stops at roughly half of ω.` : ""));
+    return false;
+  }
+  return true;
+}
+
+async function kStep(detailed) {
+  if (busy || !K || K.phase === "done") return;
+  busy = true; const tk = token;
+  const tr = K.step();
+  // counts are already incremented; show the pre-update state during the animation
+  if (detailed) {
+    const ms = Math.max(stageMs(), 300);
+    const ok = await animateSample(tr, ms, tk);
+    if (tk !== token) { busy = false; return; }
+  }
+  busy = false;
+  return afterSample(tr, detailed);
+}
+
+async function kPlay() {
+  if (playing) { playing = false; updatePlayBtn(); return; }
+  if (!K || K.phase === "done") return;
+  playing = true; updatePlayBtn();
+  const tk = token;
+  while (playing && tk === token && K.phase !== "done") {
+    const sp = +$("speed").value;
+    if (sp <= 3) {
+      busy = true; const tr = K.step();
+      await animateSample(tr, stageMs(), tk);
+      busy = false; if (tk !== token) return;
+      if (!afterSample(tr, true)) break;
+      await sleep(stageMs() * 0.5);
+    } else {
+      const batch = sp === 4 ? 1 : 8;
+      let cont = true;
+      for (let i = 0; i < batch && cont; i++) {
+        const tr = K.step();
+        cont = afterSample(tr, false);
+        if (cont) narrate("sampling", `${K.phase === "burn" ? "burn-in" : "N = " + K.nPairs}: path ${tr.path.map(v => G.labels[v]).join(" → ")}`);
+      }
+      if (!cont) break;
+      await sleep(sp === 4 ? 90 : 16);
+    }
+  }
+  playing = false; updatePlayBtn();
+}
+
+async function kRunToEnd() {
+  token++; playing = false; busy = false;
+  const tk = token;
+  while (K.phase !== "done" && tk === token) {
+    for (let i = 0; i < 25 && K.phase !== "done"; i++) {
+      const tr = K.step();
+      if (tr.calibrated) { K.lastInternal = tr.internal; }
+    }
+    K.lastInternal = [];
+    resetNodeStyles(); kPaintHeat(); kPanel();
+    narrate("sampling", K.phase === "burn" ? "burn-in…" : `N = ${K.nPairs}`);
+    await sleep(16);
+  }
+  if (tk === token) afterSample({internal: [], path: [], calibrated: false}, true);
+}
+
+function updatePlayBtn() { $("bPlay").textContent = playing ? "Pause" : "Play"; }
+
+// =====================================================================
+//  BRAVA-GNN view
+// =====================================================================
+const HOPS = 6;
+let bStage = 0, bFocus = 0;
+const B_STAGES = ["graph", "mask", ...Array.from({length: HOPS}, (_, i) => "hop" + (i + 1)), "vector", "model"];
+const stageLabel = st => st === "graph" ? "graph" : st === "mask" ? "clique mask" : st === "vector" ? "feature vector" : st === "model" ? "into the GNN" : "d(" + (+st.slice(3) - 1) + ")";
+
+function bReset() {
+  token++;
+  BF = bravaFeatures(G, HOPS);
+  bFocus = G.focus; bStage = 0;
+  bRender();
+}
+
+function bStepper() {
+  $("bStepper").innerHTML = B_STAGES.map((st, i) => `<span class="${i === bStage ? "on" : i < bStage ? "done" : ""}" data-i="${i}">${stageLabel(st)}</span>`).join("");
+  for (const sp of $("bStepper").children) sp.onclick = () => { bStage = +sp.dataset.i; bRender(); };
+}
+
+function prunedStyle(v) {
+  const N = L.node[v];
+  N.body.setAttribute("fill", "url(#hatch)"); N.lab.style.fill = "#777"; N.body.style.stroke = "#999";
+}
+
+async function bRender() {
+  const tk = ++token;
+  resetNodeStyles(); bStepper();
+  const st = B_STAGES[bStage], v = bFocus, lab = G.labels[v];
+  const col = css("--s");
+  legend([[css("--pruned"), "pruned (row of A zeroed)"], [heat(0.6), "value (fill)"], ["#f2b705", "focus vertex"]]);
+  L.node[v].ring.setAttribute("stroke", css("--bridge"));
+  for (let u = 0; u < G.n; u++) setBadge(u, null);
+  $("bVecTitle").textContent = `Feature vector of ${lab}`;
+  bVecTable(st);
+  bAllTable(st);
+  if (st === "graph") {
+    narrate("BRAVA-GNN", `No sampling: every vertex gets a <b>6-number feature vector</b> from degrees alone, then a tiny GNN (~1300 parameters) scores it. ` +
+      `We follow vertex <b>${lab}</b> (click any vertex to switch).`);
+    for (let u = 0; u < G.n; u++) setBadge(u, "deg " + G.adj[u].length);
+    return;
+  }
+  if (st === "mask") {
+    narrate("preprocessing", `A vertex whose neighbours are <b>pairwise adjacent</b> (a clique) lies on no shortest path: any path through it has a shortcut. Such vertices are pruned.`);
+    const fast = bStage !== B_STAGES.indexOf("mask") ? 0 : 1;
+    for (let u = 0; u < G.n; u++) {
+      if (tk !== token) return;
+      const c = BF.checks[u];
+      L.node[u].body.style.strokeWidth = 4; L.node[u].body.style.stroke = css("--t");
+      L.over.innerHTML = "";
+      for (const w of G.adj[u]) { const e = edgeEl(u, w); e.style.stroke = css("--t"); e.style.strokeWidth = 5; }
+      for (const [a, b] of c.missing) {
+        const [x1, y1] = G.pos[a], [x2, y2] = G.pos[b];
+        el("line", {x1, y1, x2, y2, stroke: css("--bad"), "stroke-width": 3, "stroke-dasharray": "7 6"}, L.over);
+      }
+      setBadge(u, c.pruned ? "pruned" : "kept", {color: c.pruned ? "#777" : css("--ok"), stroke: c.pruned ? "#999" : css("--ok")});
+      narrate("clique mask", `<b>${G.labels[u]}</b>: neighbours {${G.adj[u].map(w => G.labels[w]).join(", ")}} ` +
+        (c.pruned ? `form a clique → <b>pruned</b>, its betweenness is exactly 0.`
+                  : `are not a clique (${c.missing.length} missing edge${c.missing.length > 1 ? "s" : ""}, red) → <b style="color:var(--ok)">kept</b>.`));
+      await sleep(u === v ? 1600 : 650);
+      if (tk !== token) return;
+      for (const w of G.adj[u]) { const e = edgeEl(u, w); e.style.stroke = ""; e.style.strokeWidth = ""; }
+      L.node[u].body.style.strokeWidth = 1.6; L.node[u].body.style.stroke = "#333";
+      if (c.pruned) prunedStyle(u);
+    }
+    L.over.innerHTML = "";
+    const np = BF.mask.filter(m => !m).length;
+    narrate("clique mask", `${np} of ${G.n} vertices pruned. Pruned rows of A are zeroed (A ← D·A): they <b>send</b> nothing from hop 2 on and <b>receive</b> nothing — their features are all 0, so they tie, exactly as their true betweenness does.`);
+    return;
+  }
+  for (let u = 0; u < G.n; u++) if (!BF.mask[u]) prunedStyle(u);
+  if (st.startsWith("hop")) {
+    const k = +st.slice(3), prev = BF.walks[k - 1], cur = BF.walks[k];
+    const mx = Math.max(...cur, 1);
+    // show previous-hop values first
+    for (let u = 0; u < G.n; u++) setBadge(u, String(prev[u]), {color: BF.mask[u] || k === 1 ? "#1d1d1f" : "#999"});
+    const m = k - 1;
+    narrate(`hop ${k}`, k === 1
+      ? `Start with the all-ones vector. Each kept vertex sums over its neighbours: <b>d(0)(v) = Σ<sub>u∈N(v)</sub> 1 = deg(v)</b>.`
+      : `Each kept vertex collects its neighbours' previous values: w<sub>${k}</sub>(v) = Σ<sub>u∈N(v)</sub> w<sub>${k - 1}</sub>(u) — the number of ${k}-step walks, pruned vertices sending 0.`);
+    await sleep(700); if (tk !== token) return;
+    if (BF.mask[v]) {
+      const dots = [];
+      for (const u of G.adj[v]) {
+        const e = edgeEl(u, v); e.style.stroke = "#7a5c00"; e.style.strokeWidth = 4;
+        const g = el("g", {class: "badge"}, L.fx);
+        const txt = String(prev[u]);
+        el("rect", {x: -(8 * txt.length + 14) / 2, y: -12, width: 8 * txt.length + 14, height: 24, rx: 12, style: `fill:${css("--bridge")};stroke:none`}, g);
+        const t = el("text", {}, g); t.textContent = txt;
+        dots.push([g, G.pos[u]]);
+      }
+      const [vx, vy] = G.pos[v], t0 = performance.now(), dur = 1100;
+      await new Promise(res => {
+        const tick = now => {
+          if (tk !== token) return res();
+          const a = Math.min(1, (now - t0) / dur), e = a < .5 ? 2 * a * a : 1 - Math.pow(-2 * a + 2, 2) / 2;
+          for (const [g, [x, y]] of dots) g.setAttribute("transform", `translate(${x + (vx - x) * e},${y + (vy - y) * e})`);
+          if (a < 1) requestAnimationFrame(tick); else res();
+        };
+        requestAnimationFrame(tick);
+      });
+      if (tk !== token) return;
+      L.fx.innerHTML = "";
+      const terms = G.adj[v].map(u => prev[u]);
+      narrate(`hop ${k}`, `<b>${lab}</b>: w<sub>${k}</sub> = ${terms.join(" + ")} = <b>${cur[v]}</b>. Cumulative degree mass d(${m}) = w<sub>1</sub>+…+w<sub>${k}</sub> = <b>${BF.mass[k - 1][v]}</b>, feature x<sub>${k}</sub> = log(1 + ${BF.mass[k - 1][v]}) = <b>${BF.x[k - 1][v].toFixed(2)}</b>. All vertices update in parallel (one sparse matrix–vector product).`);
+    } else {
+      narrate(`hop ${k}`, `<b>${lab}</b> is pruned: its row of A is zero, so w<sub>${k}</sub>(${lab}) = 0 and its whole feature vector is 0.`);
+    }
+    for (let u = 0; u < G.n; u++) {
+      if (BF.mask[u]) { L.node[u].body.setAttribute("fill", heat(cur[u] / mx)); L.node[u].lab.style.fill = cur[u] / mx > .55 ? "#fff" : "#1d1d1f"; }
+      setBadge(u, String(cur[u]), {color: BF.mask[u] ? "#1d1d1f" : "#999"});
+    }
+    L.node[v].ring.setAttribute("stroke", css("--bridge"));
+    return;
+  }
+  if (st === "vector") {
+    const last = BF.x[HOPS - 1], kept = last.filter((_, u) => BF.mask[u]);
+    const lo = Math.min(...kept), hi = Math.max(...kept);
+    for (let u = 0; u < G.n; u++) if (BF.mask[u]) {
+      const sh = hi > lo ? 0.12 + 0.88 * (last[u] - lo) / (hi - lo) : 0.5;
+      L.node[u].body.setAttribute("fill", heat(sh)); L.node[u].lab.style.fill = sh > .55 ? "#fff" : "#1d1d1f";
+    }
+    for (let u = 0; u < G.n; u++) setBadge(u, fmt(exact[u], 2), {color: "#555"});
+    narrate("result", `x(${lab}) = log(1 + [d(0), …, d(5)]). Badges show the <b>exact</b> betweenness for comparison: degree mass correlates with betweenness but does not determine it — closing that gap is what the GNN learns. Pruned vertices tie at 0, as their true betweenness does. ` +
+      `(Heat colours: min–max per hop over kept vertices.)`);
+    return;
+  }
+  if (st === "model") {
+    narrate("into the GNN", `x<sup>out</sup> from A and x<sup>in</sup> from Aᵀ (identical on an undirected graph) pass through the <b>same</b> weights: ` +
+      `Dense 6→12, ReLU, L2-norm, then 2 message-passing layers. One MLP 12→24→24→1 reads the embedding and each layer's output, and the three readings are summed into y. ` +
+      `Score = y<sub>in</sub>(v)·y<sub>out</sub>(v). Trained on rankings only (margin ranking loss).`);
+    bModelDiagram();
+  }
+}
+
+function bVecTable(st) {
+  const v = bFocus, si = B_STAGES.indexOf(st);
+  const shown = Math.max(0, si - 1);                        // hops completed so far
+  let h = `<table class="tbl"><tr><th>hop k</th><th>w<sub>k</sub>(v) walks</th><th>d(k−1) = Σ w</th><th>x<sub>k</sub> = log(1+d)</th></tr>`;
+  for (let k = 1; k <= HOPS; k++) {
+    const vis = st !== "graph" && st !== "mask" && k <= shown;
+    h += `<tr class="${st === "hop" + k ? "cur" : ""}"><td>${k}</td><td>${vis ? BF.walks[k][v] : "·"}</td><td>${vis ? BF.mass[k - 1][v] : "·"}</td><td>${vis ? BF.x[k - 1][v].toFixed(3) : "·"}</td></tr>`;
+  }
+  h += `</table>`;
+  if (si >= B_STAGES.indexOf("hop1")) {
+    const xs = BF.x.map(r => r[v]), mx = Math.max(...BF.x.map(r => Math.max(...r)), 1e-9);
+    h += `<div style="display:flex;gap:4px;margin-top:10px;align-items:center"><span class="mono" style="font-size:15px;margin-right:6px">x(${G.labels[v]}) =</span>` +
+      xs.map((x, i) => `<div style="flex:1;text-align:center;padding:8px 0;border-radius:6px;font:600 14px var(--mono);background:${i < shown ? heat(x / mx) : "#eeece6"};color:${i < shown && x / mx > .55 ? "#fff" : "#1d1d1f"}">${i < shown ? x.toFixed(2) : "?"}</div>`).join("") + `</div>`;
+    if (!BF.mask[v]) h += `<div style="margin-top:6px;color:var(--muted);font-size:13px">${G.labels[v]} is pruned → all zeros.</div>`;
+  } else if (st === "mask") {
+    const c = BF.checks[v];
+    h += `<div style="margin-top:8px;font-size:14px">${G.labels[v]}: ${c.pruned ? "neighbourhood is a clique → <b>pruned</b>" : `${c.missing.length} missing neighbour edge(s) → <b style="color:var(--ok)">kept</b>`}</div>`;
+  }
+  $("bVec").innerHTML = h;
+}
+
+function bAllTable(st) {
+  const si = B_STAGES.indexOf(st), shown = Math.max(0, si - 1);
+  const card = $("bCardAll");
+  if (st === "graph" || st === "mask" || st === "model") { card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  $("bAllTitle").textContent = st === "vector" ? "All feature vectors next to exact betweenness" : "Features of every vertex so far";
+  const kept = [...Array(G.n).keys()].filter(u => BF.mask[u]);
+  const colLo = BF.x.map(r => Math.min(...kept.map(u => r[u])));
+  const colHi = BF.x.map(r => Math.max(...kept.map(u => r[u])));
+  const shade = (k, x) => colHi[k] > colLo[k] ? 0.12 + 0.88 * (x - colLo[k]) / (colHi[k] - colLo[k]) : 0.5;
+  const rows = [...Array(G.n).keys()].sort((a, b) => exact[b] - exact[a] || a - b);
+  let h = `<table class="tbl"><tr><th>v</th>${Array.from({length: HOPS}, (_, k) => `<th>x<sub>${k + 1}</sub></th>`).join("")}<th>exact bc*</th></tr>`;
+  for (const u of rows) {
+    h += `<tr class="${u === bFocus ? "cur" : ""}" style="${BF.mask[u] ? "" : "color:#999"}"><td><b>${G.labels[u]}</b>${BF.mask[u] ? "" : " ⌀"}</td>`;
+    for (let k = 0; k < HOPS; k++) {
+      const x = BF.x[k][u], vis = k < shown;
+      const sh = shade(k, x);
+      h += `<td style="background:${vis && BF.mask[u] ? heat(sh) : "transparent"};color:${vis && BF.mask[u] && sh > .55 ? "#fff" : "inherit"}">${vis ? x.toFixed(2) : "·"}</td>`;
+    }
+    h += `<td>${fmt(exact[u], 2)}</td></tr>`;
+  }
+  $("bAll").innerHTML = h + `</table><div style="font-size:11px;color:var(--muted);margin-top:4px">* exact betweenness ÷ n(n−1), the same scale as the KADABRA tab and the slides; rows sorted by it. Heat = min–max per column over kept vertices; ⌀ = pruned</div>`;
+}
+
+function bModelDiagram() {
+  // draw a schematic over the graph pane
+  L.fx.innerHTML = "";
+  const g = el("g", {}, L.fx);
+  el("rect", {x: 20, y: 20, width: 960, height: 600, rx: 16, fill: "#f7f6f2", opacity: 0.96}, g);
+  const box = (x, y, w, h, txt, fill = "#fff", sub = "") => {
+    el("rect", {x, y, width: w, height: h, rx: 10, fill, stroke: "#555", "stroke-width": 1.5}, g);
+    const t = el("text", {x: x + w / 2, y: y + h / 2 - (sub ? 9 : 0), "text-anchor": "middle", "dominant-baseline": "central", "font-size": 17, "font-weight": 650}, g); t.textContent = txt;
+    if (sub) { const s = el("text", {x: x + w / 2, y: y + h / 2 + 13, "text-anchor": "middle", "dominant-baseline": "central", "font-size": 13, fill: "#666"}, g); s.textContent = sub; }
+  };
+  const arrow = (x1, y1, x2, y2) => el("line", {x1, y1, x2, y2, stroke: "#7a5c00", "stroke-width": 2.5, "marker-end": "url(#arr)"}, g);
+  const lab = G.labels[bFocus];
+  const rows = [[150, "x_out(" + lab + ")", "over A", css("--s-soft")], [430, "x_in(" + lab + ")", "over Aᵀ", css("--t-soft")]];
+  for (const [y, name, over, fill] of rows) {
+    box(45, y - 35, 150, 70, name, fill, "6 numbers");
+    arrow(195, y, 235, y);
+    box(240, y - 35, 150, 70, "Dense 6→12", "#fff", "ReLU, L2-norm");
+    arrow(390, y, 430, y);
+    box(435, y - 35, 170, 70, "GNN layer 1", "#fff", "ReLU(A·W h + b) " + over);
+    arrow(605, y, 645, y);
+    box(650, y - 35, 170, 70, "GNN layer 2", "#fff", "ReLU(A·W h + b) " + over);
+    arrow(820, y, 860, y);
+    box(865, y - 35, 90, 70, "y", fill, "Σ MLP(h)");
+  }
+  const sh = el("text", {x: 527, y: 290, "text-anchor": "middle", "font-size": 15, fill: "#666"}, g);
+  sh.textContent = "same weights in both streams";
+  el("line", {x1: 350, x2: 350 + 354, y1: 300, y2: 300, stroke: "#aaa", "stroke-dasharray": "5 5"}, g);
+  arrow(910, 185, 910, 250); arrow(910, 395, 910, 330);
+  el("circle", {cx: 910, cy: 290, r: 32, fill: css("--bridge"), stroke: "#555", "stroke-width": 1.5}, g);
+  const m = el("text", {x: 910, y: 290, "text-anchor": "middle", "dominant-baseline": "central", "font-size": 18, "font-weight": 700}, g); m.textContent = "×";
+  const out = el("text", {x: 500, y: 560, "text-anchor": "middle", "font-size": 19, "font-weight": 650}, g);
+  out.textContent = `score(${lab}) = y_in(${lab}) · y_out(${lab})  →  rank all vertices by score`;
+}
+
+// =====================================================================
+//  wiring
+// =====================================================================
+function nodeClick(v) {
+  if (tab === "B") { bFocus = v; bRender(); }
+}
+function loadGraph(key) {
+  G = buildGraph(key); exact = exactBetweenness(G);
+  drawGraph();
+  if (tab === "K") kReset(); else bReset();
+}
+function switchTab(t) {
+  tab = t; token++; playing = false; updatePlayBtn();
+  $("tabK").classList.toggle("on", t === "K"); $("tabB").classList.toggle("on", t === "B");
+  $("sideK").classList.toggle("hidden", t !== "K"); $("sideB").classList.toggle("hidden", t !== "B");
+  $("kCtl").classList.toggle("hidden", t !== "K"); $("kBtns").classList.toggle("hidden", t !== "K"); $("bBtns").classList.toggle("hidden", t !== "B");
+  drawGraph();
+  if (t === "K") kReset(); else bReset();
+}
+
+for (const k in GRAPHS) { const o = document.createElement("option"); o.value = k; o.textContent = GRAPHS[k].name; $("graphSel").appendChild(o); }
+$("graphSel").value = "demo";
+$("graphSel").onchange = e => loadGraph(e.target.value);
+for (const id of ["epsSel", "delSel", "kSel", "seedIn"]) $(id).onchange = kReset;
+$("tabK").onclick = () => switchTab("K"); $("tabB").onclick = () => switchTab("B");
+$("bStep").onclick = () => { if (!playing) kStep(true); };
+$("bPlay").onclick = kPlay;
+$("bEnd").onclick = kRunToEnd;
+$("bReset").onclick = kReset;
+$("bNext").onclick = () => { if (bStage < B_STAGES.length - 1) { bStage++; bRender(); } };
+$("bPrev").onclick = () => { if (bStage > 0) { bStage--; bRender(); } };
+addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  if (e.key === "1") return switchTab("K");
+  if (e.key === "2") return switchTab("B");
+  if (tab === "K") {
+    if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); if (!playing) kStep(true); }
+    else if (e.key === "p" || e.key === "P") kPlay();
+    else if (e.key === "e" || e.key === "E") kRunToEnd();
+    else if (e.key === "r" || e.key === "R") kReset();
+  } else {
+    if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); $("bNext").click(); }
+    else if (e.key === "ArrowLeft") $("bPrev").click();
+  }
+});
+addEventListener("resize", () => { if (tab === "K" && K) kPanel(); });
+// Deep links: #kadabra, #brava, and the stills used for the slide screenshots
+// (#kadabra-snap: mid-run with intervals and one sample drawn; #brava-snap: the feature-vector stage).
+const hash = location.hash.slice(1);
+// #kadabra-topk opens in the setting where the adaptive stop fires on this graph
+if (hash.startsWith("kadabra-topk")) { $("kSel").value = "1"; $("epsSel").value = "0.03"; }
+loadGraph("demo");
+if (hash.startsWith("brava")) switchTab("B");
+if (hash === "kadabra-snap") {
+  while (K.phase === "burn") K.step();
+  let tr = null;
+  for (let i = 0; i < 2000 && K.phase !== "done"; i++) {
+    const cand = K.step();
+    if (K.nPairs >= 250 && cand.bridges.length > 1 && cand.internal.length >= 3) { tr = cand; break; }
+  }
+  K.lastInternal = tr.internal; kPaintHeat(); kPanel(); kStill(tr);
+} else if (hash === "kadabra-topk-snap") {
+  while (K.phase !== "done") K.step();
+  K.lastInternal = []; resetNodeStyles(); kPaintHeat(); kPanel();
+  afterSample({internal: [], path: [], calibrated: false}, true);
+} else if (hash === "brava-snap") {
+  bStage = B_STAGES.indexOf("vector"); bRender();
+}
+</script>
+</body>
+</html>
