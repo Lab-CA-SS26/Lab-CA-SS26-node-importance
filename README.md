@@ -174,7 +174,7 @@ Tables and figures land in `~/reproduce_all/report/`, the numbers the prose quot
 `~/reproduce_all/claims/`. `benchmark/reproduce_all.sh --help` lists the steps, which report
 section each feeds, and what is deliberately not re-run (the exact ground truth). Run on the
 archived data in `benchmark/results/`, the `report` step reproduces the report's tables and
-figures byte for byte.
+figures exactly (the PDFs differ only in their embedded creation date).
 
 The individual stages it chains can also be run on their own:
 
