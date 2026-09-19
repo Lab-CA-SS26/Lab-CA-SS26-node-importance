@@ -1,90 +1,205 @@
 # Node Importance — KADABRA and BRAVA-GNN in Julia
 
-Lab course project (SS26, Computational Analytics). Two approximate betweenness-centrality
-algorithms reimplemented in Julia from their papers, plus the benchmark harness that
-measures them against each other, against the authors' C++ reference, and against exact
-Brandes:
+Lab course project (SS26, Computational Analytics, University of Bonn). We reimplemented two
+approximate betweenness-centrality algorithms in Julia and evaluated them against each other,
+against the authors' C++ reference, and against exact betweenness:
 
 - **KADABRA** — adaptive sampling with an $(\varepsilon, \delta)$ guarantee
   (Borassi & Natale, *ESA 2016 / JEA 2019*).
-- **BRAVA-GNN** — a graph neural network that regresses betweenness rankings
+- **BRAVA-GNN** — a graph neural network that learns betweenness *rankings*
   (Dachille, Rossi et al., *CIKM '26*).
 
-The deliverable is the LaTeX report in `Report/`. Everything in this repository exists to
-produce a number that goes into it.
-
-Two findings came out of the work and are written up below: a **train/inference mismatch
-plus a spurious PageRank channel** that together cost BRAVA-GNN 14 points of Kendall
-$\tau_b$, and a **three-way disagreement between the KADABRA paper, the authors' C++
-reference, and NetworKit** over the top-$k$ confidence-budget allocation.
+This README covers [what we did](#what-we-did), [what you need](#prerequisites) to
+reproduce it, and [how to reproduce it](#reproducing-the-results). Every number in the
+report is produced by the scripts in `benchmark/`; none is typed in by hand.
 
 ---
 
-## Layout
+## What we did
 
-| path | what |
-| --- | --- |
-| `src/kadabra.jl` | the KADABRA port — diameter bound, adaptive stopping rule, threaded sampler |
-| `src/BRAVAGNN.jl` | the BRAVA-GNN architecture and inference wrapper (Flux, sparse) |
-| `src/train_bravagnn.jl` | training loop: pairwise margin-ranking loss over exact-BC labels |
-| `benchmark/` | the measurement harness — see [`benchmark/README.md`](benchmark/README.md) |
-| `benchmark/simexpal_runners/` | the per-run drivers (`run_experiments.jl`, `run_experiments_cpp`) |
-| `benchmark/results/` | committed run data backing the report |
-| `test/` | unit tests plus a Graphs.jl-style suite run against the fork |
-| `scripts/` | dataset download, training-data generation, instance tables |
-| `cpp_reference/` | Borassi & Natale's C++ KADABRA, used as the baseline |
-| `BRAVA-GNN-A0BD/` | the authors' Python BRAVA-GNN, used as ground truth for the port |
-| `Instances/` | graph data — **not in git**, fetch it (see below) |
-| `Report/` | the LaTeX report — **its own separate git repository**, ignored here |
-| `docs/`, `state.md`, `training.md` | working notes from the port |
-| `KADABRA_TOPK_FINDINGS.md` | the write-up of the allocation discrepancy, for the authors |
-| `KADABRA_DELTA_PROBLEM.md`, `HANDOFF_TIGHT_EXTRA.md` | closed investigations |
+### Implementations
 
-The KADABRA implementation is also maintained as a Graphs.jl fork
-(`../Graphs.jl`, `src/centrality/kadabra.jl`), proposed upstream as
-[JuliaGraphs/Graphs.jl#518](https://github.com/JuliaGraphs/Graphs.jl/pull/518).
+- **KADABRA** (`src/kadabra.jl`): a multithreaded port of the authors' C++ reference, with
+  both modes — additive error $\varepsilon$ on every vertex ($k = 0$) and a correct top-$k$
+  ranking ($k > 0$). It follows the `Graphs.jl` conventions and is proposed upstream as
+  [JuliaGraphs/Graphs.jl#518](https://github.com/JuliaGraphs/Graphs.jl/pull/518), from the
+  fork at [DerSchmachtin/Graphs.jl](https://github.com/DerSchmachtin/Graphs.jl).
+- **BRAVA-GNN** (`src/BRAVAGNN.jl`, `src/train_bravagnn.jl`): the architecture, inference
+  with the leaf/clique pruning mask, and GPU training with the paper's pairwise ranking loss,
+  ported from the authors' Python code.
+- **Benchmark harness** (`benchmark/`): per-run drivers for Julia and for the C++ reference
+  (one JSON per run), stage scripts, summarizers that emit the LaTeX table bodies, and the
+  plotting code.
+
+### Experiments
+
+| report | experiment | instances |
+| --- | --- | --- |
+| 6.1, Table 1 | C++ reference vs. Julia port at $\varepsilon = 10^{-4}$: runtime and samples | 6 graphs |
+| 6.1, Figure 1 | thread scaling, 1–48 threads, both implementations | 4 graphs × 8 thread counts × 3 seeds |
+| 6.3, Figure 2, Table 6 | cost of top-$k$ mode relative to $k = 0$, under five budget allocations | 4 graphs × $k \in \{3,5,10,100\}$, plus `amazon` and `dblp` at $k \in \{10,100\}$; 3 seeds |
+| 6.4, Table 2, Figure 3 | BRAVA-GNN vs. KADABRA at $\varepsilon = 10^{-2}$: Kendall $\tau_b$, top-100 overlap, runtime | 9 graphs × 3 seeds |
+| 6.4, Table 5 | KADABRA at $\varepsilon = 10^{-4}$ against BRAVA-GNN | 9 graphs |
+| A.7, Table 8 | per-vertex accuracy of the C++ reference vs. the port | 6 graphs |
+
+### Results in brief
+
+- **The Julia port matches the C++ reference.** At $\varepsilon = 10^{-4}$ it draws 1.003×
+  the reference's samples (range 0.996–1.012) and takes 0.90× its time (0.75–1.04), and it
+  ranks equally well (top-100 overlap 98–100, $\tau_b$ within 0.003).
+- **BRAVA-GNN reproduces the paper** after two fixes (finding 1): mean $\tau_b$ 87.3 against
+  the paper's 87.7 over three training seeds. Against KADABRA at $\varepsilon = 10^{-2}$,
+  BRAVA-GNN has the higher $\tau_b$ on all 9 graphs, KADABRA the higher top-100 overlap on
+  all 9.
+
+### Findings
+
+1. **BRAVA-GNN: two bugs that only mattered together.** Our first version scored mean
+   $\tau_b$ 73.5. It had a PageRank input channel the paper does not have, and it masked the
+   adjacency matrix differently at inference ($A'D$) than in training ($DA'$). Either fix
+   alone leaves `email-EuAll` at 0.460; both together give 0.991. Details:
+   `benchmark/results/brava_retrained/README.md`.
+2. **KADABRA's top-$k$ budget allocation: the paper, the C++ reference and NetworKit
+   disagree.** The reference swaps the lower and upper confidence budgets relative to the
+   paper, and NetworKit copies the reference. The tie-collapse guard also skips the one rank
+   pair $(v_k, v_{k+1})$ that the stopping test depends on. With both repaired (our default,
+   `topk_variant = :paper_bd`), top-$k$ mode needs on average 0.69× the samples of $k = 0$,
+   against 0.97–0.98× with the reference's allocation, and returns the same top-$k$ answer.
+   The $(\varepsilon,\delta)$ guarantee holds either way. Details: `KADABRA_TOPK_FINDINGS.md`.
+3. **A burn-in normalisation bias in the reference.** The reference discards the burn-in
+   samples but still divides by them, so every score comes out too low by the burn-in
+   fraction (2.9–7.7%). The maximum absolute error was 3.5–12.3 $\varepsilon$; after the fix
+   it is 0.19–0.44 $\varepsilon$. Rankings and stopping are unchanged.
+4. **Stopping coordination in the parallel port.** Threads kept sampling after the stop, and
+   checks ignored unfinished batches, costing 3–6% extra samples. Both are fixed, and every
+   KADABRA number in the report was re-measured afterwards.
 
 ---
 
-## Setup
+## Prerequisites
 
-Julia dependencies (CUDA and cuDNN are optional at runtime — BRAVA falls back to CPU):
+### Hardware
+
+- **Full reproduction:** a multi-core Linux machine with a CUDA GPU. Ours had 48 hardware
+  threads, 125 GB RAM and 2× RTX 2080 Ti (11 GB). The thread-scaling experiment goes up to
+  48 threads.
+- **Time:** about 4 days of exclusive use. The timed steps (`tight`, `threads`, `bvk`)
+  must have the machine to themselves.
+- **Quick check** (tables and figures from the committed runs): any machine with Python;
+  it takes seconds.
+
+### Software
+
+| what | version we used | for |
+| --- | --- | --- |
+| Julia | 1.12 (`Manifest.toml` pins 1.12.5) | `src/` and the Julia runner |
+| g++ with OpenMP | 11.4 on Linux; clang + Homebrew `libomp` on macOS | the C++ reference runner |
+| Python 3 with `numpy`, `scipy`, `matplotlib` | 3.10 | summarizers and plots |
+| CUDA + cuDNN | via `CUDA.jl` | BRAVA-GNN GPU runs and training (inference falls back to CPU) |
 
 ```bash
-julia --project=. -e 'using Pkg; Pkg.instantiate()'
+julia --project=. -e 'using Pkg; Pkg.instantiate()'   # Julia packages, pinned by Manifest.toml
+make -C benchmark/simexpal_runners build              # C++ runner; the reference and nlohmann/json are vendored in cpp_reference/
 ```
 
-Python, for the dataset and training-data scripts:
+For the dataset and training-data scripts, a Python environment with the authors'
+requirements:
 
 ```bash
 python3 -m venv venv && source venv/bin/activate && pip install -r BRAVA-GNN-A0BD/requirements.txt
 ```
 
-The C++ reference runner, needed for the `tight` benchmark stage:
+### Data
+
+`Instances/` is not in git.
+
+- **Graphs.** `python3 scripts/download_datasets.py --calibration` fetches the SNAP test
+  graphs into `Instances/TestInstances/` and the five ABCDE graphs (`amazon`, `dblp`,
+  `com-youtube`, `com-lj`, `cit-Patents`) into `Instances/ABCDE/`.
+- **Exact ground truth**, `Instances/ground_truth/test_instances/<graph>_bet.csv` with
+  columns `node,betweenness`, needed for every accuracy number. For the five ABCDE graphs it
+  was provided by the BRAVA-GNN authors. For `p2p-Gnutella31`, `soc-Epinions1`,
+  `soc-Slashdot0902` and `email-EuAll` we computed it with `Graphs.jl`'s exact
+  `betweenness_centrality`, which takes hours to days per graph (report, Appendix A.2).
+  These files are not distributed with the repository.
+- **BRAVA-GNN training graphs**, only for retraining:
+  `python3 scripts/generate_training_data.py --datasets SF_10_Dir SF_10_Sym --num_nodes 100000`.
+
+The three trained BRAVA-GNN checkpoints are committed in
+`benchmark/results/brava_retrained/weights/`, so retraining is optional.
+
+---
+
+## Reproducing the results
+
+Everything goes through one script, `benchmark/reproduce_all.sh`.
+
+### Quick check: tables and figures from the committed runs
 
 ```bash
-make -C benchmark/simexpal_runners
+./benchmark/reproduce_all.sh --from-archive --out /tmp/repro_check
 ```
 
-### Getting the graphs
+This rebuilds every table and figure, and every number quoted in the text, from the runs
+committed under `benchmark/results/`. With the Report repository checked out as `Report/`,
+the regenerated tables are identical to the report's
+(`diff -r /tmp/repro_check/report/tables Report/tables`), and so are the figures; the PDFs
+differ only in their embedded creation date.
 
-`Instances/` is gitignored; all of it is reproducible.
+### Full reproduction: every measurement from scratch
+
+On the benchmark machine, inside `tmux`:
 
 ```bash
-source venv/bin/activate
-python3 scripts/download_datasets.py --calibration
+tmux new-session -d -s repro './benchmark/reproduce_all.sh 2>&1 | tee -a ~/reproduce_all.log'
 ```
 
-fetches the SNAP test and calibration graphs into `Instances/TestInstances/`. The ABCDE
-graphs (`amazon`, `dblp`, `com-youtube`, `com-lj`, `cit-Patents`) land in
-`Instances/ABCDE/` with their `-score.txt` ground truth.
+| step | what | report | time |
+| --- | --- | --- | --- |
+| `build` | C++ runner, Julia environment | | minutes |
+| `weights` | install the committed BRAVA-GNN checkpoints (`--retrain` trains them) | 6.4 | 0 / ~50 min |
+| `tight` | C++ vs Julia at $\varepsilon = 10^{-4}$ — **timed** | Table 1 | ~6 h |
+| `threads` | thread scaling, C++ and Julia — **timed** | Figure 1 | ~4 h |
+| `bvk` | BRAVA-GNN vs KADABRA at $\varepsilon = 10^{-2}$ — **timed** | Table 2, Figure 3 | ~1 h |
+| `brava-seeds` | the three checkpoints against the paper's Table 2 | Table 2 | ~30 min |
+| `topk` | top-$k$ sweeps, and the C++ binary in top-$k$ mode | Figure 2, Table 6 | ~10 h |
+| `cpp-quality` | C++ per-vertex output scored against the ground truth | Table 8 | ~6 h |
+| `tightx` | KADABRA at $\varepsilon = 10^{-4}$ on the three largest graphs | Table 5 | ~18 h |
+| `kxl` | top-$k$ on `amazon` and `dblp` | Figure 2 | ~40 h |
+| `report` | tables, figures and quoted numbers | all | seconds |
 
-Synthetic BRAVA-GNN training graphs — scale-free only, matching the paper's `-HY`
-configuration:
+Options: `--out DIR` (default `~/reproduce_all`), `--from STEP` to resume from a step,
+`--only STEP` to run one step, `--retrain` to train BRAVA-GNN instead of using the committed
+checkpoints, `--dry-run` to print every command. Every step is incremental: existing run
+files are skipped, so an interrupted run resumes when relaunched.
 
-```bash
-python3 scripts/generate_training_data.py --datasets SF_10_Dir SF_10_Sym --num_nodes 100000
-```
+**Output.** One JSON per run under `DIR/rerun_fix/` (the layout of
+`benchmark/results/rerun_fix/`), tables and figures in `DIR/report/`, and the numbers the
+prose quotes in `DIR/claims/`, one file per report section. The script ends by listing every
+claim the fresh data no longer supports. One is expected: `6.4_tight_accuracy.txt` flags
+`email-EuAll`, where BRAVA-GNN beats KADABRA on $\tau_b$, which the report states.
+
+**What to expect.** KADABRA's multithreaded sampling and BRAVA-GNN's GPU training are not
+deterministic, so fresh numbers differ from the report's within the spread over seeds it
+gives. Timings depend on the machine.
+
+**Not re-run:** the exact ground truth (an input, see [Data](#data)), and the runs the report
+cites only as history (the single-seed top-$k$ sweep and the runs from before the fixes).
+
+### Individual stages and scripts
+
+`reproduce_all.sh` chains these, all in `benchmark/`; each can also be run on its own.
+
+| script | purpose |
+| --- | --- |
+| `reproduce_report.sh --stage {tight,tightx,bvk,kx,kxs,kxb,kxc,kxl}` | one measurement stage |
+| `update_report_from_rerun.py [--results DIR] [--report DIR]` | writes the table bodies and figures |
+| `summarize_reproduce.py {tight,tightx,bvk} <dir>` | table bodies and quoted ranges; `tightx` checks Section 6.4's claim |
+| `summarize_seeds.py`, `summarize_topk.py`, `summarize_topk_claims.py`, `summarize_threads.py`, `summarize_cpp_quality.py` | the other sections' tables and quoted numbers |
+| `make_plots.py {threads,bvk,topk} <dir> <outdir>` | the figures |
+| `eval_brava_paper.jl [checkpoint]` | scores a BRAVA-GNN checkpoint against the paper's Table 2 |
+| `diagnose_brava_mask.jl`, `diagnose_brava_nopr.jl` | the 2×2 diagnostic behind finding 1 |
+| `diagnose_topk_delta.jl <graph>` | why the top-$k$ allocations differ, per vertex |
 
 ---
 
@@ -103,8 +218,8 @@ res = kadabra_centrality(g, 10, 1e-2, 0.1)   # rank the top 10 correctly
 res.centralities, res.lower_bounds, res.upper_bounds, res.n_samples, res.omega, res.tau
 ```
 
-Signature: `kadabra_centrality(g, k, err, delta; kwargs...)`, with `k = 0` requesting the
-absolute-error guarantee and `k > 0` the top-$k$ ranking guarantee.
+`kadabra_centrality(g, k, err, delta; kwargs...)`; `kadabra_top_k(g, k, err, delta)`
+returns just the ranked vertices.
 
 | keyword | default | meaning |
 | --- | --- | --- |
@@ -113,12 +228,10 @@ absolute-error guarantee and `k > 0` the top-$k$ ranking guarantee.
 | `normalize` | `:graphs` | `:graphs`, `:kadabra` (raw paper scale), or `:none` |
 | `parallel` | `true` | sample with `Threads.nthreads()` tasks |
 | `rng` | `nothing` | seed source; bit-identical output only with `parallel=false` |
-| `topk_variant` | `:paper_bd` | which reading of the top-$k$ budget allocation to use (below) |
+| `topk_variant` | `:paper_bd` | top-$k$ budget allocation: `:paper_bd`, `:paper`, `:paper_ex`, `:cpp` (the reference verbatim), `:code` (the port's original hybrid) |
 
-The output matches `Graphs.jl`'s `betweenness_centrality` conventions by default, not the
-C++ reference's raw expected values. Weighted graphs are rejected.
-
-`kadabra_top_k(g, k, err, delta; kwargs...)` returns just the ranked vertices.
+Weighted graphs are rejected. Output follows `Graphs.jl`'s `betweenness_centrality`
+scaling by default.
 
 ### BRAVA-GNN
 
@@ -129,23 +242,16 @@ using .BRAVAGNN
 scores, nsamples = brava_centrality(g, 10, 1e-2, 0.1)
 ```
 
-> **Weights.** `brava_centrality` defaults to `benchmark/cache/bravagnn_weights.jld2`, and
-> if that file is missing it **falls back to a randomly initialised model with only a
-> warning** — a silently meaningless run. That path is gitignored; the trained checkpoints
-> live in `benchmark/results/brava_retrained/weights/` (three seeds, each with a
-> `.config.txt` recording how it was trained). Copy one in, or pass `weight_path=`.
+> **Weights.** `brava_centrality` loads `benchmark/cache/bravagnn_weights.jld2` and, if that
+> file is missing, **falls back to an untrained model with only a warning**. Copy a
+> checkpoint from `benchmark/results/brava_retrained/weights/` or pass `weight_path=`;
+> `reproduce_all.sh` does this for you.
 
-Training:
+Training (`--seed=1` is the canonical model; the defaults are the paper's configuration):
 
 ```bash
 julia --project=. --threads=auto src/train_bravagnn.jl --seed=1
 ```
-
-Defaults reproduce the paper's configuration: `degree_mix_mass_6` features, `nhid=12`,
-`L=2`, dropout 0.3, 10 epochs, Adam at 5e-3, over all 30 training graphs. `--pr` re-enables
-the PageRank channel (don't — see below), `--loss=drop-ties` swaps the pair sampling.
-Training is seeded but **not bit-reproducible**: cuDNN and the sparse matmul reduce in
-nondeterministic order.
 
 ### Tests
 
@@ -153,177 +259,51 @@ nondeterministic order.
 julia --project=. test/test_kadabra.jl
 ```
 
-`test/test_kadabra_graphs_style.jl` is the upstream-style suite and additionally needs the
-Graphs.jl clone checked out next to this repository, for its `testdata/` and
-`GenericGraph` helpers.
+`test/test_kadabra_graphs_style.jl` is the upstream-style suite; it needs the `Graphs.jl`
+fork checked out next to this repository.
 
 ---
 
-## Reproducing the report
-
-One command re-runs every measurement and regenerates every table, figure and quoted
-number (~4 days on the benchmark server, so run it inside tmux):
-
-```bash
-./benchmark/reproduce_all.sh                 # everything, into ~/reproduce_all
-./benchmark/reproduce_all.sh --dry-run       # print every command instead
-./benchmark/reproduce_all.sh --only report   # only rebuild tables/figures from existing runs
-```
-
-Tables and figures land in `~/reproduce_all/report/`, the numbers the prose quotes in
-`~/reproduce_all/claims/`. `benchmark/reproduce_all.sh --help` lists the steps, which report
-section each feeds, and what is deliberately not re-run (the exact ground truth). Run on the
-archived data in `benchmark/results/`, the `report` step reproduces the report's tables and
-figures exactly (the PDFs differ only in their embedded creation date).
-
-The individual stages it chains can also be run on their own:
-
-```bash
-cd benchmark
-./reproduce_report.sh --stage bvk          # BRAVA-GNN vs KADABRA, eps=1e-2, 9 graphs (~20 min)
-./reproduce_report.sh --stage tight        # C++ vs Julia KADABRA, eps=1e-4 (~6 h)
-./reproduce_report.sh --stage tightx       # eps=1e-4 on the three largest bvk graphs (~23 h)
-./reproduce_report.sh --stage k            # top-k runtime sweep, single seed (hours)
-./reproduce_report.sh --stage kx           # top-k x allocation variant, 3 seeds (~3 h)
-./reproduce_report.sh --stage kxs          # the same at k=3 and k=5 (~3 h)
-./reproduce_report.sh --stage kxl          # repaired allocation on amazon/dblp (~40 h)
-```
-
-One JSON per run lands in `results/reproduce/`. Re-runs are incremental — existing files
-are skipped, so delete one to recompute just that measurement.
-
-Turning runs into report artifacts:
-
-| script | purpose |
-| --- | --- |
-| `summarize_reproduce.py {tight,tightx,bvk,k} <dir>` | LaTeX table bodies plus the ranges quoted in the text |
-| `summarize_seeds.py <kad_dir> <brava_log> <bvk_dir>` | mean ± std bodies; flags gaps inside one std |
-| `summarize_topk.py <dir>` | pairs `kx`/`kxs`/`kxl` ratios per seed; flags top-$k$ runs dearer than $k=0$ |
-| `make_plots.py {threads,bvk,k,topk} <dir> <outdir>` | the report's figures |
-| `eval_brava_paper.jl [checkpoint]` | scores a checkpoint against the paper's Table 2 |
-| `diagnose_brava_mask.jl`, `diagnose_brava_nopr.jl` | the 2×2 diagnostic behind the BRAVA finding |
-| `diagnose_topk_delta.jl <graph> [-k …] [--epsilon E]` | why the allocations differ, deterministically, at ~1% of a real run's cost |
-| `archive_runs.py` | gathers scratch runs off the server into a committable directory |
-
-`summarize_reproduce.py tightx` doubles as the **claim checker** for the report's
-accuracy comparison; give it a directory holding both `tight_julia_*.json` and
-`bvk_*.json`. It currently reports KADABRA winning both metrics on 8 of 9 graphs, losing
-$\tau_b$ on `email-EuAll` — which is exactly what the report claims. **Re-run it before
-trusting that section after any BRAVA-GNN change.**
-
-### Committed run data
+## Repository layout
 
 | path | what |
 | --- | --- |
-| `benchmark/results/report_runs/` | 252 runs backing the main results sections |
-| `benchmark/results/brava_retrained/` | the retrained model: 27 `bvk` runs, 27 KADABRA repeats, 3 checkpoints, logs |
-| `benchmark/results/topk_variant/measured/` | 252 runs: 4 graphs × k ∈ {0,3,5,10,100} × 3 variants × 3 seeds at ε=1e-4 |
-| `benchmark/results/topk_variant/predicted/` | `diagnose_topk_delta.jl` output, 4 graphs × 3 seeds |
+| `src/` | `kadabra.jl`, `BRAVAGNN.jl`, `train_bravagnn.jl` |
+| `benchmark/` | runners, stage scripts, summarizers, plots, `reproduce_all.sh` |
+| `benchmark/results/` | the committed run data behind the report (below) |
+| `cpp_reference/` | Borassi & Natale's C++ KADABRA, the baseline |
+| `BRAVA-GNN-A0BD/` | the authors' Python BRAVA-GNN, the reference for the port |
+| `scripts/` | dataset download, training-data generation, instance tables |
+| `test/` | unit tests and the `Graphs.jl`-style suite |
+| `Instances/` | graphs and ground truth — not in git |
+| `KADABRA_TOPK_FINDINGS.md` | standalone write-up of finding 2 |
 
-Centrality arrays are stripped from the JSON on purpose; the metrics
-(`execution_time_seconds`, `num_samples`, `tau_overall`, `tau_topk`, `overlap_topk`,
-`mae`, `max_ae`, `ndcg_topk`, `parameters`) are what the summarizers read.
+### Committed run data
 
----
+| path | runs | what |
+| --- | --- | --- |
+| `benchmark/results/rerun_fix/` | 531 | **what the report uses**: every KADABRA measurement after the fixes, plus the reused C++ and BRAVA-GNN runs |
+| `benchmark/results/brava_retrained/` | 27 | the retrained BRAVA-GNN: runs, 3 checkpoints, evaluation logs |
+| `benchmark/results/cpp_quality/` | | the C++ reference's scored per-vertex output (Appendix A.7) |
+| `benchmark/results/topk_variant/measured/` | 333 | top-$k$ runs before the stopping fix, including the C++ binary in top-$k$ mode |
+| `benchmark/results/seed_check/` | 120 | the experiment that located the stopping overshoot (finding 4) |
+| `benchmark/results/report_runs/` | 252 | the original runs from before the fixes, cited as history |
 
-## The two findings
-
-### 1. BRAVA-GNN: two bugs that only mattered together
-
-The port scored mean Kendall $\tau_b$ **73.5 against the paper's 87.7**. It was not a bad
-implementation — it faithfully reproduced an ablation the authors ran once and abandoned,
-matching their `_pr` results to within 1.7 points.
-
-Two causes, and **neither alone moves `email-EuAll` at all**:
-
-| configuration | `email-EuAll` $\tau_b$ |
-| --- | --- |
-| PageRank on, `A_t` masked wrongly | 0.459 |
-| PageRank on, `A_t` fixed | 0.460 |
-| PageRank off, `A_t` masked wrongly | 0.460 |
-| **PageRank off, `A_t` fixed** | **0.991** |
-
-1. **A PageRank input channel the paper does not have.** `use_pr` defaulted to `true`; the
-   paper never mentions PageRank, and exactly 1 of the 846 configurations in the authors'
-   `all_results.csv` carries `_pr`. Costs ~12.6 points.
-2. **A train/inference mismatch in the clique mask.** Training and upstream build
-   $A_t = DA'$ (rows of $A'$ zeroed); inference built $(DA)' = A'D$ (columns zeroed).
-
-They interact because $\tau_b$ here is dominated by tie structure. The mask prunes 18–96%
-of vertices, all with true betweenness exactly zero. Fixed *and* without PageRank they get
-identically zero features and therefore one shared score, tying exactly where the ground
-truth ties them. PageRank is not zeroed by the mask, so it shatters that block.
-
-Retrained to the paper's configuration: **mean $\tau_b$ 87.3 against the paper's 87.7**
-over three seeds. Full write-up in `benchmark/results/brava_retrained/README.md`.
-
-> $\tau_b$ is stable across seeds (per-graph std 0.75); **top-100 overlap is not** — std
-> 13.2 on `p2p-Gnutella31`, which gave 43 / 52 / 26 on three seeds. Never quote an overlap
-> figure from a single seed.
-
-### 2. KADABRA: the paper, the reference, and NetworKit disagree on the top-$k$ budget
-
-In top-$k$ mode KADABRA sizes each vertex's confidence interval from its rank gaps *before*
-sampling. Paper Section 5.2 sets $\lambda_L(v_i)$ from the gap *below* $v_i$ and
-$\lambda_U(v_i)$ from the gap *above* — which is what Algorithm 2 goes on to consult. The
-authors' `Probabilistic.cpp` transposes them, leaves $\lambda_L(v_1)$ unconstrained (the one
-bound the top vertex's own test needs), and *adds* $\lambda_L(v_k)$ where the paper
-subtracts it outside the top $k$. NetworKit's `KadabraBetweenness.cpp` copies all of it
-verbatim.
-
-None of this breaks correctness — the allocation is a heuristic for *where* to spend the
-confidence budget, not part of the $(\varepsilon,\delta)$ guarantee, and $k = 0$ never
-enters the code path. It costs samples. Over 4 graphs × k ∈ {3,5,10,100} × 3 seeds at
-ε=1e-4, paired per seed, the paper's allocation needs **0.80 ± 0.17** as many samples as
-the reference's, at **identical top-$k$ accuracy** (same overlap, same `tau_topk` to three
-decimals).
-
-A third off-by-one turned up alongside it: the tie-collapse guard sweeps the pairs
-$(1,2)\ldots(k-1,k)$ and $(k+1,i)$ for $i \ge k+2$, so the boundary pair $(k, k+1)$ — the one
-gap the external exclusion test depends on — is never checked, in the reference, in
-NetworKit, or originally here. Collapsing it removes an anomaly where **asking for the top
-$k$ costs more samples than computing every centrality** (`email-EuAll` k=3: 1.83× → 0.81×;
-`soc-Epinions1` k=5: 1.85× → 0.92×), with the top-$k$ answer unchanged in 15 of 16 cells.
-
-Variants selectable via `topk_variant`:
-
-| value | what it is |
-| --- | --- |
-| `:paper_bd` | **shipped default** — the paper's allocation plus the boundary-pair collapse |
-| `:paper` | the paper's allocation, reference collapse loops |
-| `:paper_ex` | alternative repair, re-anchoring the guard on $v_k$; matches on the mean but unstable |
-| `:cpp` | the C++ reference verbatim |
-| `:code` | the hybrid this port carried before the comparison — reference allocation, paper external test |
-
-`:cpp` and `:code` exist only to reproduce the report's comparison. `KADABRA_TOPK_FINDINGS.md`
-is the standalone note; every figure in it was re-verified against the raw JSON.
+Per-vertex centralities are stripped from the stored JSON; the metrics are kept.
 
 ---
 
-## Traps that have already cost real time
+## Pitfalls
 
-- **`-t N` on `run_experiments.jl` configures nothing.** It is recorded into the JSON for
-  logging only. Julia's thread pool comes from `JULIA_NUM_THREADS`, which
-  `reproduce_report.sh` exports. A run started with only `-t 8` is single-threaded, emits
-  perfectly valid JSON, and draws ~30% fewer samples at 0.02–0.05 lower $\tau_b$ — which
-  reads exactly like a real effect. Check `parameters.threads`, which records the actual
-  count. One full set of repeats was discarded to this.
-- **Benchmark on the server, never the laptop**, and always inside `tmux`. Timed stages
-  need the machine to themselves — never run anything alongside `bvk`.
-- **`pkill -f run_experiments.jl` over SSH kills your own command.** `pkill -f` matches full
-  command lines and the remote `bash -c` wrapper contains the pattern, so the connection
-  dies with exit 255 and you cannot tell whether the kill worked. Anchor it:
-  `pkill -f "^julia --project"`.
-- **`grep` silently bails on TeX logs.** They contain binary bytes, so `grep -c` returns
-  *nothing* rather than 0 and every count reads as empty. Use `grep -a`, and measure from
-  `main.log`, not from redirected stdout.
-- **`pdftotext` scrambles stacked fractions.** Verify maths by rasterising:
-  `pdftoppm -f N -l N -r 100 -png main.pdf /tmp/pg`.
-- **Report underfull-vbox warnings are fixed by float placement, not by shortening prose.**
-  Trimming text has repeatedly made them worse. Sweep `[h] [ht] [htbp] [tbp] [!ht]` on the
-  floats near the offending page.
-- **`reproduce_report.sh`'s `k` stage is pinned to `--topk-variant code`** on purpose, so
-  the single-seed sweep still reproduces after the default moved. Not a leftover.
+- **Thread count.** `-t N` on `run_experiments.jl` is only recorded, not applied; Julia's
+  threads come from `JULIA_NUM_THREADS`, which the scripts set. A single-threaded run is
+  valid JSON with ~30% fewer samples, so check `parameters.threads` in the output.
+- **Directed graphs in the C++ runner.** Only `-d` works; `--directed` is silently ignored
+  and the graph is loaded undirected. The scripts translate this.
+- **Missing BRAVA-GNN weights** fall back to an untrained model (see above);
+  its `weights` step refuses to continue without them.
+- **Stopping runs over SSH.** `pkill -f run_experiments.jl` also kills your own SSH
+  command; anchor the pattern: `pkill -f "^julia --project"`.
 
 ---
 
