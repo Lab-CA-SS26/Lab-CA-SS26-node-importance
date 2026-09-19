@@ -45,6 +45,10 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     const auto seed = clp.value<int>("s", 0);
+    // -centralities 1: also write every nonzero score, keyed by the reference's vertex id.
+    // Written after the timer stops, so it cannot affect execution_time_seconds.
+    // score_cpp_centralities.py and check_burnin_bias.py (Appendix A.7) read this blob.
+    const auto dump_centralities = clp.value<bool>("centralities", false);
 
     // Set threads
     omp_set_num_threads(threads);
@@ -238,6 +242,17 @@ int main(int argc, char* argv[]) {
 
     if (!std::isnan(ndcg_topk)) j["ndcg_topk"] = ndcg_topk;
     else j["ndcg_topk"] = nullptr;
+
+    if (dump_centralities) {
+        json centralities = json::object();
+        for (uint32_t v = 0; v < nn; ++v) {
+            double cent = G.get_centrality(v);
+            if (cent > 0.0) {
+                centralities[to_string(v)] = cent;
+            }
+        }
+        j["centralities"] = centralities;
+    }
 
     // Write to output file
     ofstream o(output_file);
