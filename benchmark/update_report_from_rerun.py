@@ -17,8 +17,13 @@ are edited by hand from that output). Each figure is written by make_plots.py.
   Report/figures/topk_allocation.{pdf,png}     make_plots.py topk             rerun_fix/topk
   Report/figures/brava_vs_kadabra.{pdf,png}    make_plots.py bvk              rerun_fix/bvk (+ kadabra_seeds, BRAVA log)
 
-Usage:  python3 update_report_from_rerun.py [--check]
-        --check  only report which files would change
+Usage:  python3 update_report_from_rerun.py [--check] [--results DIR] [--report DIR]
+        --check    only report which files would change
+        --results  a results tree laid out like benchmark/results/ (rerun_fix/, cpp_quality/,
+                   brava_retrained/logs/eval_seeds.log); default benchmark/results
+        --report   where tables/ and figures/ go; default ../Report. A table whose .tex does
+                   not exist there is written as its bare body (reproduce_all.sh on a checkout
+                   without the Report repo)
 """
 import glob
 import os
@@ -29,9 +34,17 @@ import sys
 import tempfile
 
 B = os.path.dirname(os.path.abspath(__file__))
-R = os.path.join(B, "results")
+
+
+def opt(name, default):
+    if name in sys.argv:
+        return os.path.abspath(sys.argv[sys.argv.index(name) + 1])
+    return default
+
+
+R = opt("--results", os.path.join(B, "results"))
 RF = os.path.join(R, "rerun_fix")
-REPORT = os.path.join(B, "..", "Report")
+REPORT = opt("--report", os.path.join(B, "..", "Report"))
 BRAVA_LOG = os.path.join(R, "brava_retrained", "logs", "eval_seeds.log")
 
 
@@ -57,6 +70,12 @@ def body_after(text, marker):
 
 def splice(table, rows, check):
     path = os.path.join(REPORT, "tables", table)
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        if not check:
+            open(path, "w").write("\n".join(rows) + "\n")
+        print(f"  {'would write' if check else 'wrote'} body only: tables/{table}")
+        return
     src = open(path).read()
     m = re.search(r"(\\midrule\n)(.*?)(\n\s*\\bottomrule)", src, re.S)
     new = src[:m.start(2)] + "\n".join(rows) + src[m.end(2):]
@@ -112,7 +131,7 @@ def main():
             rows += b + (["            \\midrule"] if n < len(keep) - 1 else [])
         splice("topk_allocation_table.tex", rows, check)
 
-        out = run("summarize_cpp_quality.py", "--julia-from", "rerun_fix")
+        out = run("summarize_cpp_quality.py", R, "--julia-from", "rerun_fix")
         splice("cpp_julia_quality_table.tex", body_after(out, "cpp_julia_quality_table"), check)
 
         # --- figures ---
@@ -124,6 +143,7 @@ def main():
         os.symlink(BRAVA_LOG, os.path.join(bvk, "logs", "eval_seeds.log"))
         run("make_plots.py", "bvk", bvk, figdir)
         run("make_plots.py", "topk", os.path.join(RF, "topk"), figdir)
+        os.makedirs(os.path.join(REPORT, "figures"), exist_ok=True)
         for f in sorted(os.listdir(figdir)):
             dst = os.path.join(REPORT, "figures", f)
             if check:
