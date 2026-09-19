@@ -11,7 +11,8 @@ against the authors' C++ reference, and against exact betweenness:
 
 This README covers [what we did](#what-we-did), [what you need](#prerequisites) to
 reproduce it, and [how to reproduce it](#reproducing-the-results). Every number in the
-report is produced by the scripts in `benchmark/`; none is typed in by hand.
+report comes from the output of the scripts in `benchmark/`: tables and figures are written
+by them directly, and the numbers in the prose are taken from what they print.
 
 ---
 
