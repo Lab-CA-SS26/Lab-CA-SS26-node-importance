@@ -9,7 +9,7 @@
 #
 #   step         what                                              report          time (8 thr)
 #   build        C++ runner, Julia environment                                     minutes
-#   weights      BRAVA-GNN checkpoints (committed, or --retrain)   A.4             0 / ~50 min GPU
+#   weights      BRAVA-GNN checkpoints (committed, or --retrain)   6.4             0 / ~50 min GPU
 #   tight        C++ vs Julia KADABRA, eps=1e-4, 6 graphs    TIMED 6.1, Table 1    ~6 h
 #   threads      thread scaling, C++ and Julia, 1..48 thr    TIMED 6.1, Figure 1   ~4 h
 #   bvk          BRAVA-GNN vs KADABRA, eps=1e-2, 9 graphs    TIMED 6.4, Table 2    ~1 h
@@ -17,7 +17,7 @@
 #   topk         top-k sweeps (4 graphs x k x allocation x 3 seeds),  6.3, Fig 2, T 6 ~10 h
 #                and the C++ binary in top-k mode
 #   cpp-quality  C++ per-vertex output, scored against ground truth   A.7, Table 8   ~6 h
-#   tightx       KADABRA eps=1e-4 on the three largest graphs         6.4, Table 5   ~18 h
+#   tightx       KADABRA eps=1e-4 on the three largest graphs         6.4, A.4 (T 5) ~18 h
 #   kxl          top-k on amazon and dblp, 3 seeds                    6.3, Figure 2   ~40 h
 #   report       tables, figures, and the numbers quoted in the prose
 #
