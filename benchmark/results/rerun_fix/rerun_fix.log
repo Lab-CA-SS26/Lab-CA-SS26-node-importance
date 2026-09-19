@@ -1,0 +1,1462 @@
+[2026-09-16 16:42:47] waiting for tmux session 'seedcheck' to finish
+[2026-09-16 22:43:49] seed sweep finished cleanly
+[2026-09-16 22:43:49] deployed src/kadabra.jl
+[2026-09-16 22:43:49] deployed benchmark/simexpal_runners/run_experiments.jl
+[2026-09-16 22:43:49] deployed benchmark/run_seed_check.sh
+  verified 1 Julia KADABRA runs in /tmp/tmp.qajbYv8sJM (smoke.json), 0 with problems
+[2026-09-16 22:44:09] smoke run carries the fix
+[2026-09-16 22:44:09] === stage A-tight: start ===
+reproduce_report.sh: threads=8 outdir=/home/stud/schlaierm0/rerun_fix/tight stage=tight
+
+=== Stage 'tight': C++ vs Julia KADABRA, eps=1e-4 ===
+[22:44:09] p2p-Gnutella31 (cpp)
+  skip (exists): tight_cpp_p2p-Gnutella31.json
+[22:44:09] p2p-Gnutella31 (julia)
+[22:46:18] soc-Epinions1 (cpp)
+  skip (exists): tight_cpp_soc-Epinions1.json
+[22:46:18] soc-Epinions1 (julia)
+[22:48:10] soc-Slashdot0902 (cpp)
+  skip (exists): tight_cpp_soc-Slashdot0902.json
+[22:48:10] soc-Slashdot0902 (julia)
+[22:53:08] email-EuAll (cpp)
+  skip (exists): tight_cpp_email-EuAll.json
+[22:53:08] email-EuAll (julia)
+[22:54:27] amazon (cpp)
+  skip (exists): tight_cpp_amazon.json
+[22:54:27] amazon (julia)
+[00:53:44] dblp (cpp)
+  skip (exists): tight_cpp_dblp.json
+[00:53:44] dblp (julia)
+
+% ---- Report/tables/cpp_vs_julia_tight_table.tex (body) ----
+            p2p-Gnutella31    & 91.78\,s & 93.62\,s & $1.02\times$ & $51\,145\,729$ & $51\,738\,273$ & $1.01\times$ \\
+            soc-Epinions1     & 95.19\,s & 74.79\,s & $0.79\times$ & $82\,899\,916$ & $83\,060\,256$ & $1.00\times$ \\
+            soc-Slashdot0902  & 309.1\,s & 262.0\,s & $0.85\times$ & $118\,156\,834$ & $118\,342\,387$ & $1.00\times$ \\
+            email-EuAll       & 55.85\,s & 42.14\,s & $0.75\times$ & $54\,335\,686$ & $54\,140\,873$ & $1.00\times$ \\
+            amazon            & 7\,451.7\,s & 7\,112.5\,s & $0.95\times$ & $109\,428\,589$ & $109\,780\,185$ & $1.00\times$ \\
+            dblp              & 8\,479.9\,s & 8\,807.6\,s & $1.04\times$ & $44\,507\,467$ & $44\,668\,275$ & $1.00\times$ \\
+
+% ---- figures quoted in Section 6.1 / Appendix A.2 ----
+  time ratio (Julia/C++): mean 0.900x, median 0.901x, range 0.755--1.039x
+  sample ratio (Julia/C++): mean 1.003x, median 1.003x, range 0.996--1.012x
+  samples_over_omega: range 0.13--0.35
+  Kendall tau_b vs ground truth: range 0.896--0.995
+  top-100 overlap: range 98--100 out of 100
+
+Done. Raw per-run JSON is in /home/stud/schlaierm0/rerun_fix/tight
+Re-running is incremental: existing .json files are skipped, so delete a
+file (or the whole directory) to force that measurement to be recomputed.
+  verified 6 Julia KADABRA runs in /home/stud/schlaierm0/rerun_fix/tight (tight_julia_*.json), 0 with problems
+[2026-09-17 03:21:24] === stage A-tight: done ===
+[2026-09-17 03:21:24] === stage B-thread-scaling: start ===
+[2026-09-17 03:21:24] ts julia soc-Slashdot0902 t=1 s=0
+[2026-09-17 03:21:46] ts julia soc-Slashdot0902 t=1 s=1
+[2026-09-17 03:22:07] ts julia soc-Slashdot0902 t=1 s=2
+[2026-09-17 03:22:28] ts julia soc-Slashdot0902 t=2 s=0
+[2026-09-17 03:22:49] ts julia soc-Slashdot0902 t=2 s=1
+[2026-09-17 03:23:10] ts julia soc-Slashdot0902 t=2 s=2
+[2026-09-17 03:23:30] ts julia soc-Slashdot0902 t=4 s=0
+[2026-09-17 03:23:51] ts julia soc-Slashdot0902 t=4 s=1
+[2026-09-17 03:24:11] ts julia soc-Slashdot0902 t=4 s=2
+[2026-09-17 03:24:31] ts julia soc-Slashdot0902 t=8 s=0
+[2026-09-17 03:24:52] ts julia soc-Slashdot0902 t=8 s=1
+[2026-09-17 03:25:12] ts julia soc-Slashdot0902 t=8 s=2
+[2026-09-17 03:25:33] ts julia soc-Slashdot0902 t=16 s=0
+[2026-09-17 03:25:53] ts julia soc-Slashdot0902 t=16 s=1
+[2026-09-17 03:26:14] ts julia soc-Slashdot0902 t=16 s=2
+[2026-09-17 03:26:34] ts julia soc-Slashdot0902 t=24 s=0
+[2026-09-17 03:26:55] ts julia soc-Slashdot0902 t=24 s=1
+[2026-09-17 03:27:15] ts julia soc-Slashdot0902 t=24 s=2
+[2026-09-17 03:27:36] ts julia soc-Slashdot0902 t=32 s=0
+[2026-09-17 03:27:57] ts julia soc-Slashdot0902 t=32 s=1
+[2026-09-17 03:28:17] ts julia soc-Slashdot0902 t=32 s=2
+[2026-09-17 03:28:38] ts julia soc-Slashdot0902 t=48 s=0
+[2026-09-17 03:28:59] ts julia soc-Slashdot0902 t=48 s=1
+[2026-09-17 03:29:19] ts julia soc-Slashdot0902 t=48 s=2
+[2026-09-17 03:29:40] ts julia amazon t=1 s=0
+[2026-09-17 03:30:22] ts julia amazon t=1 s=1
+[2026-09-17 03:31:03] ts julia amazon t=1 s=2
+[2026-09-17 03:31:45] ts julia amazon t=2 s=0
+[2026-09-17 03:32:22] ts julia amazon t=2 s=1
+[2026-09-17 03:32:58] ts julia amazon t=2 s=2
+[2026-09-17 03:33:34] ts julia amazon t=4 s=0
+[2026-09-17 03:34:08] ts julia amazon t=4 s=1
+[2026-09-17 03:34:41] ts julia amazon t=4 s=2
+[2026-09-17 03:35:14] ts julia amazon t=8 s=0
+[2026-09-17 03:35:48] ts julia amazon t=8 s=1
+[2026-09-17 03:36:20] ts julia amazon t=8 s=2
+[2026-09-17 03:36:52] ts julia amazon t=16 s=0
+[2026-09-17 03:37:25] ts julia amazon t=16 s=1
+[2026-09-17 03:37:57] ts julia amazon t=16 s=2
+[2026-09-17 03:38:29] ts julia amazon t=24 s=0
+[2026-09-17 03:39:03] ts julia amazon t=24 s=1
+[2026-09-17 03:39:35] ts julia amazon t=24 s=2
+[2026-09-17 03:40:08] ts julia amazon t=32 s=0
+[2026-09-17 03:40:41] ts julia amazon t=32 s=1
+[2026-09-17 03:41:15] ts julia amazon t=32 s=2
+[2026-09-17 03:41:49] ts julia amazon t=48 s=0
+[2026-09-17 03:42:26] ts julia amazon t=48 s=1
+[2026-09-17 03:43:02] ts julia amazon t=48 s=2
+[2026-09-17 03:43:39] ts julia cit-Patents t=1 s=0
+[2026-09-17 03:45:14] ts julia cit-Patents t=1 s=1
+[2026-09-17 03:46:50] ts julia cit-Patents t=1 s=2
+[2026-09-17 03:48:22] ts julia cit-Patents t=2 s=0
+[2026-09-17 03:49:37] ts julia cit-Patents t=2 s=1
+[2026-09-17 03:50:51] ts julia cit-Patents t=2 s=2
+[2026-09-17 03:52:03] ts julia cit-Patents t=4 s=0
+[2026-09-17 03:53:04] ts julia cit-Patents t=4 s=1
+[2026-09-17 03:54:04] ts julia cit-Patents t=4 s=2
+[2026-09-17 03:55:02] ts julia cit-Patents t=8 s=0
+[2026-09-17 03:55:58] ts julia cit-Patents t=8 s=1
+[2026-09-17 03:56:52] ts julia cit-Patents t=8 s=2
+[2026-09-17 03:57:46] ts julia cit-Patents t=16 s=0
+[2026-09-17 03:58:41] ts julia cit-Patents t=16 s=1
+[2026-09-17 03:59:34] ts julia cit-Patents t=16 s=2
+[2026-09-17 04:00:28] ts julia cit-Patents t=24 s=0
+[2026-09-17 04:01:25] ts julia cit-Patents t=24 s=1
+[2026-09-17 04:02:21] ts julia cit-Patents t=24 s=2
+[2026-09-17 04:03:17] ts julia cit-Patents t=32 s=0
+[2026-09-17 04:04:16] ts julia cit-Patents t=32 s=1
+[2026-09-17 04:05:14] ts julia cit-Patents t=32 s=2
+[2026-09-17 04:06:12] ts julia cit-Patents t=48 s=0
+[2026-09-17 04:07:31] ts julia cit-Patents t=48 s=1
+[2026-09-17 04:08:50] ts julia cit-Patents t=48 s=2
+[2026-09-17 04:10:07] ts julia com-lj t=1 s=0
+[2026-09-17 04:11:52] ts julia com-lj t=1 s=1
+[2026-09-17 04:13:34] ts julia com-lj t=1 s=2
+[2026-09-17 04:15:13] ts julia com-lj t=2 s=0
+[2026-09-17 04:16:41] ts julia com-lj t=2 s=1
+[2026-09-17 04:18:08] ts julia com-lj t=2 s=2
+[2026-09-17 04:19:34] ts julia com-lj t=4 s=0
+[2026-09-17 04:20:49] ts julia com-lj t=4 s=1
+[2026-09-17 04:22:02] ts julia com-lj t=4 s=2
+[2026-09-17 04:23:18] ts julia com-lj t=8 s=0
+[2026-09-17 04:24:30] ts julia com-lj t=8 s=1
+[2026-09-17 04:25:41] ts julia com-lj t=8 s=2
+[2026-09-17 04:26:52] ts julia com-lj t=16 s=0
+[2026-09-17 04:28:03] ts julia com-lj t=16 s=1
+[2026-09-17 04:29:14] ts julia com-lj t=16 s=2
+[2026-09-17 04:30:26] ts julia com-lj t=24 s=0
+[2026-09-17 04:31:38] ts julia com-lj t=24 s=1
+[2026-09-17 04:32:50] ts julia com-lj t=24 s=2
+[2026-09-17 04:34:02] ts julia com-lj t=32 s=0
+[2026-09-17 04:35:18] ts julia com-lj t=32 s=1
+[2026-09-17 04:36:31] ts julia com-lj t=32 s=2
+[2026-09-17 04:37:46] ts julia com-lj t=48 s=0
+[2026-09-17 04:39:08] ts julia com-lj t=48 s=1
+[2026-09-17 04:40:31] ts julia com-lj t=48 s=2
+  verified 96 Julia KADABRA runs in /home/stud/schlaierm0/rerun_fix/ts (julia_*.json), 0 with problems
+  thread-count mismatches: none
+[2026-09-17 04:41:53] === stage com-lj: done ===
+[2026-09-17 04:41:53] === stage C-bvk: start ===
+reproduce_report.sh: threads=8 outdir=/home/stud/schlaierm0/rerun_fix/bvk stage=bvk
+
+=== Stage 'bvk': BRAVA-GNN vs KADABRA, eps=1e-2 ===
+[04:41:54] p2p-Gnutella31
+  skip (exists): bvk_brava_cpu_p2p-Gnutella31.json
+  skip (exists): bvk_brava_gpu_p2p-Gnutella31.json
+[04:42:14] soc-Epinions1
+  skip (exists): bvk_brava_cpu_soc-Epinions1.json
+  skip (exists): bvk_brava_gpu_soc-Epinions1.json
+[04:42:34] soc-Slashdot0902
+  skip (exists): bvk_brava_cpu_soc-Slashdot0902.json
+  skip (exists): bvk_brava_gpu_soc-Slashdot0902.json
+[04:42:54] email-EuAll
+  skip (exists): bvk_brava_cpu_email-EuAll.json
+  skip (exists): bvk_brava_gpu_email-EuAll.json
+[04:43:26] com-youtube
+  skip (exists): bvk_brava_cpu_com-youtube.json
+  skip (exists): bvk_brava_gpu_com-youtube.json
+[04:43:52] amazon
+  skip (exists): bvk_brava_cpu_amazon.json
+  skip (exists): bvk_brava_gpu_amazon.json
+[04:44:26] dblp
+  skip (exists): bvk_brava_cpu_dblp.json
+  skip (exists): bvk_brava_gpu_dblp.json
+[04:45:08] cit-Patents
+  skip (exists): bvk_brava_cpu_cit-Patents.json
+  skip (exists): bvk_brava_gpu_cit-Patents.json
+[04:46:03] com-lj
+  skip (exists): bvk_brava_cpu_com-lj.json
+  skip (exists): bvk_brava_gpu_com-lj.json
+
+% ---- Report/tables/brava_vs_kadabra_table.tex (body) ----
+            p2p-Gnutella31    & 0.58\,s & 0.29\,s & 1.43\,s & 0.920 & 0.715 & 43/100 & 74/100 \\
+            soc-Epinions1     & 0.59\,s & 0.58\,s & 1.95\,s & 0.916 & 0.547 & 73/100 & 91/100 \\
+            soc-Slashdot0902  & 0.74\,s & 0.57\,s & 1.60\,s & 0.887 & 0.531 & 92/100 & 91/100 \\
+            email-EuAll       & 1.19\,s & 0.66\,s & 12.74\,s & 0.991 & 0.340 & 70/100 & 84/100 \\
+            com-youtube       & 5.89\,s & 3.17\,s & 3.55\,s & 0.901 & 0.329 & 58/100 & 94/100 \\
+            amazon            & 14.06\,s & 9.14\,s & 5.78\,s & 0.836 & 0.209 & 54/100 & 87/100 \\
+            dblp              & 24.32\,s & 14.75\,s & 9.93\,s & 0.875 & 0.178 & 54/100 & 77/100 \\
+            cit-Patents       & 44.66\,s & 31.81\,s & 14.53\,s & 0.750 & 0.189 & 35/100 & 53/100 \\
+            com-lj            & 52.27\,s & 38.40\,s & 15.49\,s & 0.780 & 0.175 & 53/100 & 89/100 \\
+
+% ---- figures quoted in Section 6.2 ----
+  BRAVA GPU speedup over CPU: mean 1.548x, median 1.538x, range 1.005--1.998x
+  BRAVA-CPU faster than KADABRA on: p2p-Gnutella31, soc-Epinions1, soc-Slashdot0902, email-EuAll
+  KADABRA faster than BRAVA-GPU on: amazon, dblp, cit-Patents, com-lj
+  BRAVA higher overall tau_b on 9/9 graphs
+  KADABRA higher top-100 overlap on 8/9 graphs
+
+Done. Raw per-run JSON is in /home/stud/schlaierm0/rerun_fix/bvk
+Re-running is incremental: existing .json files are skipped, so delete a
+file (or the whole directory) to force that measurement to be recomputed.
+[2026-09-17 04:47:16] bvk kadabra p2p-Gnutella31 s=1
+[2026-09-17 04:47:36] bvk kadabra soc-Epinions1 s=1
+[2026-09-17 04:47:55] bvk kadabra soc-Slashdot0902 s=1
+[2026-09-17 04:48:16] bvk kadabra email-EuAll s=1
+[2026-09-17 04:49:43] bvk kadabra com-youtube s=1
+[2026-09-17 04:50:09] bvk kadabra amazon s=1
+[2026-09-17 04:50:40] bvk kadabra dblp s=1
+[2026-09-17 04:51:21] bvk kadabra cit-Patents s=1
+[2026-09-17 04:52:16] bvk kadabra com-lj s=1
+[2026-09-17 04:53:27] bvk kadabra p2p-Gnutella31 s=2
+[2026-09-17 04:53:46] bvk kadabra soc-Epinions1 s=2
+[2026-09-17 04:54:06] bvk kadabra soc-Slashdot0902 s=2
+[2026-09-17 04:54:26] bvk kadabra email-EuAll s=2
+[2026-09-17 04:54:57] bvk kadabra com-youtube s=2
+[2026-09-17 04:55:23] bvk kadabra amazon s=2
+[2026-09-17 04:55:55] bvk kadabra dblp s=2
+[2026-09-17 04:56:35] bvk kadabra cit-Patents s=2
+[2026-09-17 04:57:31] bvk kadabra com-lj s=2
+[2026-09-17 04:58:41] bvk kadabra p2p-Gnutella31 s=3
+[2026-09-17 04:59:01] bvk kadabra soc-Epinions1 s=3
+[2026-09-17 04:59:21] bvk kadabra soc-Slashdot0902 s=3
+[2026-09-17 04:59:41] bvk kadabra email-EuAll s=3
+[2026-09-17 05:00:12] bvk kadabra com-youtube s=3
+[2026-09-17 05:00:37] bvk kadabra amazon s=3
+[2026-09-17 05:01:09] bvk kadabra dblp s=3
+[2026-09-17 05:01:51] bvk kadabra cit-Patents s=3
+[2026-09-17 05:02:45] bvk kadabra com-lj s=3
+  verified 9 Julia KADABRA runs in /home/stud/schlaierm0/rerun_fix/bvk (bvk_kadabra_*.json), 0 with problems
+  verified 27 Julia KADABRA runs in /home/stud/schlaierm0/rerun_fix/bvk/kadabra_seeds (bvk_kadabra_*.json), 0 with problems
+[2026-09-17 05:03:55] === stage com-lj: done ===
+[2026-09-17 05:03:55] === stage D-topk: start ===
+reproduce_report.sh: threads=8 outdir=/home/stud/schlaierm0/rerun_fix/topk stage=kx
+
+=== Stage 'kx': multi-seed top-k sweep x budget-allocation variant, eps=1e-4 ===
+[05:03:55] kx_email-EuAll_k0_code_s1.json
+[05:05:14] kx_email-EuAll_k10_code_s1.json
+[05:06:28] kx_email-EuAll_k10_paper_s1.json
+[05:07:34] kx_email-EuAll_k10_cpp_s1.json
+[05:08:50] kx_email-EuAll_k100_code_s1.json
+[05:10:01] kx_email-EuAll_k100_paper_s1.json
+[05:11:11] kx_email-EuAll_k100_cpp_s1.json
+[05:12:20] kx_p2p-Gnutella31_k0_code_s1.json
+[05:14:28] kx_p2p-Gnutella31_k10_code_s1.json
+[05:16:11] kx_p2p-Gnutella31_k10_paper_s1.json
+[05:17:51] kx_p2p-Gnutella31_k10_cpp_s1.json
+[05:19:35] kx_p2p-Gnutella31_k100_code_s1.json
+[05:21:19] kx_p2p-Gnutella31_k100_paper_s1.json
+[05:23:02] kx_p2p-Gnutella31_k100_cpp_s1.json
+[05:24:49] kx_soc-Epinions1_k0_code_s1.json
+[05:26:42] kx_soc-Epinions1_k10_code_s1.json
+[05:28:29] kx_soc-Epinions1_k10_paper_s1.json
+[05:30:05] kx_soc-Epinions1_k10_cpp_s1.json
+[05:31:42] kx_soc-Epinions1_k100_code_s1.json
+[05:33:24] kx_soc-Epinions1_k100_paper_s1.json
+[05:35:11] kx_soc-Epinions1_k100_cpp_s1.json
+[05:36:52] kx_soc-Slashdot0902_k0_code_s1.json
+[05:42:04] kx_soc-Slashdot0902_k10_code_s1.json
+[05:46:15] kx_soc-Slashdot0902_k10_paper_s1.json
+[05:48:46] kx_soc-Slashdot0902_k10_cpp_s1.json
+[05:53:17] kx_soc-Slashdot0902_k100_code_s1.json
+[05:57:30] kx_soc-Slashdot0902_k100_paper_s1.json
+[06:00:20] kx_soc-Slashdot0902_k100_cpp_s1.json
+[06:04:36] kx_email-EuAll_k0_code_s2.json
+[06:05:55] kx_email-EuAll_k10_code_s2.json
+[06:07:18] kx_email-EuAll_k10_paper_s2.json
+[06:08:28] kx_email-EuAll_k10_cpp_s2.json
+[06:09:45] kx_email-EuAll_k100_code_s2.json
+[06:10:58] kx_email-EuAll_k100_paper_s2.json
+[06:12:10] kx_email-EuAll_k100_cpp_s2.json
+[06:13:26] kx_p2p-Gnutella31_k0_code_s2.json
+[06:15:36] kx_p2p-Gnutella31_k10_code_s2.json
+[06:17:16] kx_p2p-Gnutella31_k10_paper_s2.json
+[06:18:59] kx_p2p-Gnutella31_k10_cpp_s2.json
+[06:20:43] kx_p2p-Gnutella31_k100_code_s2.json
+[06:22:28] kx_p2p-Gnutella31_k100_paper_s2.json
+[06:24:13] kx_p2p-Gnutella31_k100_cpp_s2.json
+[06:25:58] kx_soc-Epinions1_k0_code_s2.json
+[06:27:51] kx_soc-Epinions1_k10_code_s2.json
+[06:30:13] kx_soc-Epinions1_k10_paper_s2.json
+[06:31:58] kx_soc-Epinions1_k10_cpp_s2.json
+[06:34:27] kx_soc-Epinions1_k100_code_s2.json
+[06:36:47] kx_soc-Epinions1_k100_paper_s2.json
+[06:38:41] kx_soc-Epinions1_k100_cpp_s2.json
+[06:40:59] kx_soc-Slashdot0902_k0_code_s2.json
+[06:46:00] kx_soc-Slashdot0902_k10_code_s2.json
+[06:49:40] kx_soc-Slashdot0902_k10_paper_s2.json
+[06:51:51] kx_soc-Slashdot0902_k10_cpp_s2.json
+[06:55:36] kx_soc-Slashdot0902_k100_code_s2.json
+[06:59:21] kx_soc-Slashdot0902_k100_paper_s2.json
+[07:02:05] kx_soc-Slashdot0902_k100_cpp_s2.json
+[07:05:48] kx_email-EuAll_k0_code_s3.json
+[07:07:07] kx_email-EuAll_k10_code_s3.json
+[07:08:24] kx_email-EuAll_k10_paper_s3.json
+[07:09:37] kx_email-EuAll_k10_cpp_s3.json
+[07:10:59] kx_email-EuAll_k100_code_s3.json
+[07:12:13] kx_email-EuAll_k100_paper_s3.json
+[07:13:26] kx_email-EuAll_k100_cpp_s3.json
+[07:14:38] kx_p2p-Gnutella31_k0_code_s3.json
+[07:16:46] kx_p2p-Gnutella31_k10_code_s3.json
+[07:18:27] kx_p2p-Gnutella31_k10_paper_s3.json
+[07:20:09] kx_p2p-Gnutella31_k10_cpp_s3.json
+[07:21:51] kx_p2p-Gnutella31_k100_code_s3.json
+[07:23:38] kx_p2p-Gnutella31_k100_paper_s3.json
+[07:25:23] kx_p2p-Gnutella31_k100_cpp_s3.json
+[07:27:09] kx_soc-Epinions1_k0_code_s3.json
+[07:29:02] kx_soc-Epinions1_k10_code_s3.json
+[07:31:29] kx_soc-Epinions1_k10_paper_s3.json
+[07:33:13] kx_soc-Epinions1_k10_cpp_s3.json
+[07:35:40] kx_soc-Epinions1_k100_code_s3.json
+[07:38:05] kx_soc-Epinions1_k100_paper_s3.json
+[07:39:50] kx_soc-Epinions1_k100_cpp_s3.json
+[07:42:16] kx_soc-Slashdot0902_k0_code_s3.json
+[07:47:24] kx_soc-Slashdot0902_k10_code_s3.json
+[07:51:18] kx_soc-Slashdot0902_k10_paper_s3.json
+[07:54:10] kx_soc-Slashdot0902_k10_cpp_s3.json
+[07:58:02] kx_soc-Slashdot0902_k100_code_s3.json
+[08:01:46] kx_soc-Slashdot0902_k100_paper_s3.json
+[08:04:40] kx_soc-Slashdot0902_k100_cpp_s3.json
+
+runs: 84   graphs: 4   seeds: [1, 2, 3]   threads: [8]
+
+=== raw (mean +- std over seeds) ===
+graph                k variant       samples/1e6          time [s]     tau_b
+----------------------------------------------------------------------------
+email-EuAll          0 --        54.562 +- 0.332   42.158 +- 0.7600.896 +- 0.001
+                    10 code      53.739 +- 3.283   41.174 +- 1.3620.895 +- 0.003
+                    10 paper     49.708 +- 2.975   39.518 +- 1.0440.891 +- 0.003
+                    10 cpp       53.652 +- 2.600   42.238 +- 1.8960.895 +- 0.003
+                   100 code      53.763 +- 2.470   41.846 +- 0.8050.895 +- 0.002
+                   100 paper     51.045 +- 2.221   40.030 +- 1.6970.893 +- 0.001
+                   100 cpp       53.651 +- 2.564   41.433 +- 1.1810.895 +- 0.002
+
+p2p-Gnutella31       0 --        51.595 +- 0.264   93.303 +- 0.7660.995 +- 0.000
+                    10 code      39.493 +- 0.019   70.499 +- 0.1970.994 +- 0.000
+                    10 paper     39.463 +- 0.134   70.759 +- 0.4100.994 +- 0.000
+                    10 cpp       39.166 +- 0.636   70.818 +- 0.5110.994 +- 0.000
+                   100 code      42.408 +- 0.374   76.539 +- 0.8670.995 +- 0.000
+                   100 paper     42.195 +- 0.096   75.811 +- 0.2210.995 +- 0.000
+                   100 cpp       42.630 +- 0.434   77.270 +- 1.3710.995 +- 0.000
+
+soc-Epinions1        0 --        83.438 +- 0.409   74.182 +- 0.2900.969 +- 0.000
+                    10 code    109.732 +- 28.338  98.116 +- 24.8040.972 +- 0.004
+                    10 paper     84.306 +- 7.940   74.768 +- 6.9810.969 +- 0.001
+                    10 cpp     109.128 +- 27.383  97.494 +- 24.7770.972 +- 0.003
+                   100 code    109.102 +- 27.260  98.359 +- 24.2070.972 +- 0.003
+                   100 paper     84.702 +- 7.865   76.537 +- 5.0680.969 +- 0.001
+                   100 cpp     109.373 +- 27.448  97.033 +- 23.8000.972 +- 0.003
+
+soc-Slashdot0902     0 --       119.233 +- 0.589  269.853 +- 4.6460.975 +- 0.000
+                    10 code      90.254 +- 8.218 200.649 +- 17.9410.971 +- 0.002
+                    10 paper     53.242 +- 6.872 118.798 +- 16.1260.960 +- 0.003
+                    10 cpp       90.625 +- 9.692 205.432 +- 22.6040.971 +- 0.002
+                   100 code      90.596 +- 7.789 203.179 +- 16.6250.971 +- 0.001
+                   100 paper     61.761 +- 1.650  138.124 +- 5.1340.964 +- 0.001
+                   100 cpp       90.227 +- 7.192 201.531 +- 19.0340.971 +- 0.001
+
+=== (a) samples relative to k=0, paired per seed ===
+    ratio > 1 means the top-k run drew MORE samples than computing all centralities.
+graph                k variant        sample ratio          time ratio  verdict
+-----------------------------------------------------------------------------------------
+email-EuAll         10 code         0.985 +- 0.055      0.977 +- 0.044  
+email-EuAll         10 paper        0.911 +- 0.053      0.937 +- 0.014  
+email-EuAll         10 cpp          0.983 +- 0.042      1.002 +- 0.052  
+email-EuAll        100 code         0.985 +- 0.040      0.993 +- 0.034  
+email-EuAll        100 paper        0.935 +- 0.038      0.949 +- 0.035  
+email-EuAll        100 cpp          0.983 +- 0.042      0.983 +- 0.037  
+
+p2p-Gnutella31      10 code         0.765 +- 0.004      0.756 +- 0.007  
+p2p-Gnutella31      10 paper        0.765 +- 0.002      0.758 +- 0.010  
+p2p-Gnutella31      10 cpp          0.759 +- 0.013      0.759 +- 0.011  
+p2p-Gnutella31     100 code         0.822 +- 0.008      0.820 +- 0.004  
+p2p-Gnutella31     100 paper        0.818 +- 0.003      0.813 +- 0.006  
+p2p-Gnutella31     100 cpp          0.826 +- 0.012      0.828 +- 0.016  
+
+soc-Epinions1       10 code         1.315 +- 0.341      1.323 +- 0.338  dearer on average, within 1 std of 1
+soc-Epinions1       10 paper        1.010 +- 0.092      1.008 +- 0.098  dearer on average, within 1 std of 1
+soc-Epinions1       10 cpp          1.308 +- 0.329      1.315 +- 0.337  dearer on average, within 1 std of 1
+soc-Epinions1      100 code         1.308 +- 0.328      1.327 +- 0.330  dearer on average, within 1 std of 1
+soc-Epinions1      100 paper        1.015 +- 0.091      1.032 +- 0.072  dearer on average, within 1 std of 1
+soc-Epinions1      100 cpp          1.311 +- 0.330      1.309 +- 0.324  dearer on average, within 1 std of 1
+
+soc-Slashdot0902    10 code         0.757 +- 0.065      0.743 +- 0.060  
+soc-Slashdot0902    10 paper        0.447 +- 0.059      0.440 +- 0.054  
+soc-Slashdot0902    10 cpp          0.760 +- 0.078      0.761 +- 0.076  
+soc-Slashdot0902   100 code         0.760 +- 0.062      0.753 +- 0.056  
+soc-Slashdot0902   100 paper        0.518 +- 0.014      0.512 +- 0.013  
+soc-Slashdot0902   100 cpp          0.757 +- 0.057      0.746 +- 0.063  
+
+  no configuration is dearer than k=0 by more than one std.
+
+=== (b) budget-allocation variant, paired per seed against 'code' ===
+    ratio < 1 means that variant needed FEWER samples than the C++ reference's allocation.
+graph                k variant     samples vs code        time vs code   tau_b delta
+------------------------------------------------------------------------------------
+email-EuAll         10 paper        0.927 +- 0.077      0.960 +- 0.039-0.004 +- 0.005
+email-EuAll         10 cpp          0.999 +- 0.013      1.026 +- 0.017-0.000 +- 0.000
+email-EuAll        100 paper        0.951 +- 0.054      0.957 +- 0.039-0.002 +- 0.003
+email-EuAll        100 cpp          0.998 +- 0.002      0.990 +- 0.014-0.000 +- 0.001
+
+p2p-Gnutella31      10 paper        0.999 +- 0.003      1.004 +- 0.007-0.000 +- 0.000
+p2p-Gnutella31      10 cpp          0.992 +- 0.016      1.005 +- 0.009-0.000 +- 0.000
+p2p-Gnutella31     100 paper        0.995 +- 0.011      0.991 +- 0.011-0.000 +- 0.000
+p2p-Gnutella31     100 cpp          1.005 +- 0.016      1.010 +- 0.0170.000 +- 0.000
+
+soc-Epinions1       10 paper        0.800 +- 0.189      0.790 +- 0.171-0.003 +- 0.003
+soc-Epinions1       10 cpp          0.996 +- 0.009      0.994 +- 0.0200.000 +- 0.000
+soc-Epinions1      100 paper        0.807 +- 0.186      0.811 +- 0.205-0.003 +- 0.003
+soc-Epinions1      100 cpp          1.002 +- 0.002      0.987 +- 0.0220.000 +- 0.000
+
+soc-Slashdot0902    10 paper        0.592 +- 0.087      0.595 +- 0.097-0.010 +- 0.003
+soc-Slashdot0902    10 cpp          1.003 +- 0.016      1.023 +- 0.0210.000 +- 0.000
+soc-Slashdot0902   100 paper        0.685 +- 0.052      0.683 +- 0.061-0.007 +- 0.001
+soc-Slashdot0902   100 cpp          0.996 +- 0.009      0.991 +- 0.017-0.000 +- 0.000
+
+  pooled over all (graph, k): paper/code samples = 0.844 +- 0.168   [min 0.528, max 1.007, n=24]
+  pooled over all (graph, k): cpp/code samples = 0.999 +- 0.011   [min 0.973, max 1.024, n=24]
+
+=== LaTeX table body (tables/topk_allocation_table.tex) ===
+            \texttt{email-EuAll} & $10$ & $0.98 \pm 0.05$ & $0.91 \pm 0.05$ & $0.93 \pm 0.08$ \\
+             & $100$ & $0.99 \pm 0.04$ & $0.94 \pm 0.04$ & $0.95 \pm 0.05$ \\
+            \midrule
+            \texttt{p2p-Gnutella31} & $10$ & $0.77 \pm 0.00$ & $0.76 \pm 0.00$ & $1.00 \pm 0.00$ \\
+             & $100$ & $0.82 \pm 0.01$ & $0.82 \pm 0.00$ & $1.00 \pm 0.01$ \\
+            \midrule
+            \texttt{soc-Epinions1} & $10$ & $1.32 \pm 0.34$ & $1.01 \pm 0.09$ & $0.80 \pm 0.19$ \\
+             & $100$ & $1.31 \pm 0.33$ & $1.01 \pm 0.09$ & $0.81 \pm 0.19$ \\
+            \midrule
+            \texttt{soc-Slashdot0902} & $10$ & $0.76 \pm 0.07$ & $0.45 \pm 0.06$ & $0.59 \pm 0.09$ \\
+             & $100$ & $0.76 \pm 0.06$ & $0.52 \pm 0.01$ & $0.68 \pm 0.05$ \\
+
+Done. Raw per-run JSON is in /home/stud/schlaierm0/rerun_fix/topk
+Re-running is incremental: existing .json files are skipped, so delete a
+file (or the whole directory) to force that measurement to be recomputed.
+reproduce_report.sh: threads=8 outdir=/home/stud/schlaierm0/rerun_fix/topk stage=kxs
+
+=== Stage 'kxs': small-k budget-allocation variants, eps=1e-4 ===
+[08:08:24] kx_email-EuAll_k3_code_s1.json
+[08:09:53] kx_email-EuAll_k3_paper_s1.json
+[08:11:03] kx_email-EuAll_k3_cpp_s1.json
+[08:12:30] kx_email-EuAll_k5_code_s1.json
+[08:14:05] kx_email-EuAll_k5_paper_s1.json
+[08:15:31] kx_email-EuAll_k5_cpp_s1.json
+[08:17:08] kx_p2p-Gnutella31_k3_code_s1.json
+[08:18:16] kx_p2p-Gnutella31_k3_paper_s1.json
+[08:19:18] kx_p2p-Gnutella31_k3_cpp_s1.json
+[08:20:24] kx_p2p-Gnutella31_k5_code_s1.json
+[08:22:07] kx_p2p-Gnutella31_k5_paper_s1.json
+[08:23:35] kx_p2p-Gnutella31_k5_cpp_s1.json
+[08:25:15] kx_soc-Epinions1_k3_code_s1.json
+[08:26:42] kx_soc-Epinions1_k3_paper_s1.json
+[08:27:57] kx_soc-Epinions1_k3_cpp_s1.json
+[08:29:14] kx_soc-Epinions1_k5_code_s1.json
+[08:32:07] kx_soc-Epinions1_k5_paper_s1.json
+[08:34:24] kx_soc-Epinions1_k5_cpp_s1.json
+[08:37:16] kx_soc-Slashdot0902_k3_code_s1.json
+[08:38:35] kx_soc-Slashdot0902_k3_paper_s1.json
+[08:39:29] kx_soc-Slashdot0902_k3_cpp_s1.json
+[08:40:44] kx_soc-Slashdot0902_k5_code_s1.json
+[08:42:01] kx_soc-Slashdot0902_k5_paper_s1.json
+[08:43:10] kx_soc-Slashdot0902_k5_cpp_s1.json
+[08:44:35] kx_email-EuAll_k3_code_s2.json
+[08:46:06] kx_email-EuAll_k3_paper_s2.json
+[08:47:23] kx_email-EuAll_k3_cpp_s2.json
+[08:48:49] kx_email-EuAll_k5_code_s2.json
+[08:50:25] kx_email-EuAll_k5_paper_s2.json
+[08:52:02] kx_email-EuAll_k5_cpp_s2.json
+[08:53:38] kx_p2p-Gnutella31_k3_code_s2.json
+[08:54:54] kx_p2p-Gnutella31_k3_paper_s2.json
+[08:55:47] kx_p2p-Gnutella31_k3_cpp_s2.json
+[08:57:06] kx_p2p-Gnutella31_k5_code_s2.json
+[08:58:44] kx_p2p-Gnutella31_k5_paper_s2.json
+[09:00:06] kx_p2p-Gnutella31_k5_cpp_s2.json
+[09:01:45] kx_soc-Epinions1_k3_code_s2.json
+[09:03:37] kx_soc-Epinions1_k3_paper_s2.json
+[09:04:47] kx_soc-Epinions1_k3_cpp_s2.json
+[09:06:40] kx_soc-Epinions1_k5_code_s2.json
+[09:09:32] kx_soc-Epinions1_k5_paper_s2.json
+[09:11:54] kx_soc-Epinions1_k5_cpp_s2.json
+[09:14:31] kx_soc-Slashdot0902_k3_code_s2.json
+[09:15:38] kx_soc-Slashdot0902_k3_paper_s2.json
+[09:16:33] kx_soc-Slashdot0902_k3_cpp_s2.json
+[09:17:39] kx_soc-Slashdot0902_k5_code_s2.json
+[09:18:47] kx_soc-Slashdot0902_k5_paper_s2.json
+[09:19:52] kx_soc-Slashdot0902_k5_cpp_s2.json
+[09:21:13] kx_email-EuAll_k3_code_s3.json
+[09:22:47] kx_email-EuAll_k3_paper_s3.json
+[09:23:58] kx_email-EuAll_k3_cpp_s3.json
+[09:25:26] kx_email-EuAll_k5_code_s3.json
+[09:26:49] kx_email-EuAll_k5_paper_s3.json
+[09:28:14] kx_email-EuAll_k5_cpp_s3.json
+[09:29:48] kx_p2p-Gnutella31_k3_code_s3.json
+[09:31:02] kx_p2p-Gnutella31_k3_paper_s3.json
+[09:31:56] kx_p2p-Gnutella31_k3_cpp_s3.json
+[09:33:12] kx_p2p-Gnutella31_k5_code_s3.json
+[09:34:50] kx_p2p-Gnutella31_k5_paper_s3.json
+[09:36:22] kx_p2p-Gnutella31_k5_cpp_s3.json
+[09:38:07] kx_soc-Epinions1_k3_code_s3.json
+[09:40:25] kx_soc-Epinions1_k3_paper_s3.json
+[09:41:36] kx_soc-Epinions1_k3_cpp_s3.json
+[09:43:45] kx_soc-Epinions1_k5_code_s3.json
+[09:46:29] kx_soc-Epinions1_k5_paper_s3.json
+[09:48:38] kx_soc-Epinions1_k5_cpp_s3.json
+[09:51:18] kx_soc-Slashdot0902_k3_code_s3.json
+[09:52:32] kx_soc-Slashdot0902_k3_paper_s3.json
+[09:53:27] kx_soc-Slashdot0902_k3_cpp_s3.json
+[09:54:38] kx_soc-Slashdot0902_k5_code_s3.json
+[09:55:46] kx_soc-Slashdot0902_k5_paper_s3.json
+[09:56:44] kx_soc-Slashdot0902_k5_cpp_s3.json
+
+runs: 156   graphs: 4   seeds: [1, 2, 3]   threads: [8]
+
+=== raw (mean +- std over seeds) ===
+graph                k variant       samples/1e6          time [s]     tau_b
+----------------------------------------------------------------------------
+email-EuAll          0 --        54.562 +- 0.332   42.158 +- 0.7600.896 +- 0.001
+                     3 code      95.892 +- 0.748   63.810 +- 0.6690.919 +- 0.001
+                     3 paper     67.411 +- 2.973   48.881 +- 2.0460.905 +- 0.001
+                     3 cpp       95.986 +- 0.371   63.795 +- 1.2910.919 +- 0.001
+                     5 code      90.001 +- 0.301   60.181 +- 1.0490.916 +- 0.001
+                     5 paper     91.674 +- 0.188   62.177 +- 1.7480.917 +- 0.001
+                     5 cpp       89.940 +- 0.506   60.024 +- 1.9580.916 +- 0.000
+                    10 code      53.739 +- 3.283   41.174 +- 1.3620.895 +- 0.003
+                    10 paper     49.708 +- 2.975   39.518 +- 1.0440.891 +- 0.003
+                    10 cpp       53.652 +- 2.600   42.238 +- 1.8960.895 +- 0.003
+                   100 code      53.763 +- 2.470   41.846 +- 0.8050.895 +- 0.002
+                   100 paper     51.045 +- 2.221   40.030 +- 1.6970.893 +- 0.001
+                   100 cpp       53.651 +- 2.564   41.433 +- 1.1810.895 +- 0.002
+
+p2p-Gnutella31       0 --        51.595 +- 0.264   93.303 +- 0.7660.995 +- 0.000
+                     3 code      26.924 +- 2.727   49.623 +- 5.0240.993 +- 0.000
+                     3 paper     16.187 +- 0.006   29.933 +- 0.3380.991 +- 0.000
+                     3 cpp       26.449 +- 2.821   48.384 +- 4.5510.993 +- 0.000
+                     5 code      39.289 +- 0.243   70.672 +- 0.0870.994 +- 0.000
+                     5 paper     34.849 +- 2.950   63.016 +- 5.5070.994 +- 0.000
+                     5 cpp       39.423 +- 0.244   71.151 +- 0.4340.994 +- 0.000
+                    10 code      39.493 +- 0.019   70.499 +- 0.1970.994 +- 0.000
+                    10 paper     39.463 +- 0.134   70.759 +- 0.4100.994 +- 0.000
+                    10 cpp       39.166 +- 0.636   70.818 +- 0.5110.994 +- 0.000
+                   100 code      42.408 +- 0.374   76.539 +- 0.8670.995 +- 0.000
+                   100 paper     42.195 +- 0.096   75.811 +- 0.2210.995 +- 0.000
+                   100 cpp       42.630 +- 0.434   77.270 +- 1.3710.995 +- 0.000
+
+soc-Epinions1        0 --        83.438 +- 0.409   74.182 +- 0.2900.969 +- 0.000
+                     3 code     95.044 +- 32.067  83.447 +- 27.0920.970 +- 0.005
+                     3 paper     54.584 +- 4.583   48.866 +- 4.1240.963 +- 0.001
+                     3 cpp      95.071 +- 31.954  83.588 +- 27.3070.970 +- 0.005
+                     5 code     149.550 +- 0.678  131.365 +- 1.4010.976 +- 0.000
+                     5 paper   119.454 +- 14.324 106.788 +- 13.6840.973 +- 0.002
+                     5 cpp     144.114 +- 10.746  129.158 +- 7.4740.975 +- 0.001
+                    10 code    109.732 +- 28.338  98.116 +- 24.8040.972 +- 0.004
+                    10 paper     84.306 +- 7.940   74.768 +- 6.9810.969 +- 0.001
+                    10 cpp     109.128 +- 27.383  97.494 +- 24.7770.972 +- 0.003
+                   100 code    109.102 +- 27.260  98.359 +- 24.2070.972 +- 0.003
+                   100 paper     84.702 +- 7.865   76.537 +- 5.0680.969 +- 0.001
+                   100 cpp     109.373 +- 27.448  97.033 +- 23.8000.972 +- 0.003
+
+soc-Slashdot0902     0 --       119.233 +- 0.589  269.853 +- 4.6460.975 +- 0.000
+                     3 code      20.849 +- 1.033   47.559 +- 2.8740.934 +- 0.002
+                     3 paper     14.275 +- 0.039   32.378 +- 0.4660.919 +- 0.000
+                     3 cpp       20.572 +- 1.687   46.304 +- 3.2840.933 +- 0.003
+                     5 code      20.539 +- 1.578   45.855 +- 3.0440.933 +- 0.003
+                     5 paper     13.715 +- 0.888   31.322 +- 1.9250.918 +- 0.003
+                     5 cpp       20.628 +- 1.575   46.165 +- 3.0980.934 +- 0.003
+                    10 code      90.254 +- 8.218 200.649 +- 17.9410.971 +- 0.002
+                    10 paper     53.242 +- 6.872 118.798 +- 16.1260.960 +- 0.003
+                    10 cpp       90.625 +- 9.692 205.432 +- 22.6040.971 +- 0.002
+                   100 code      90.596 +- 7.789 203.179 +- 16.6250.971 +- 0.001
+                   100 paper     61.761 +- 1.650  138.124 +- 5.1340.964 +- 0.001
+                   100 cpp       90.227 +- 7.192 201.531 +- 19.0340.971 +- 0.001
+
+=== (a) samples relative to k=0, paired per seed ===
+    ratio > 1 means the top-k run drew MORE samples than computing all centralities.
+graph                k variant        sample ratio          time ratio  verdict
+-----------------------------------------------------------------------------------------
+email-EuAll          3 code         1.757 +- 0.011      1.514 +- 0.031  << DEARER than k=0 (>1 std)
+email-EuAll          3 paper        1.235 +- 0.048      1.159 +- 0.041  << DEARER than k=0 (>1 std)
+email-EuAll          3 cpp          1.759 +- 0.010      1.514 +- 0.046  << DEARER than k=0 (>1 std)
+email-EuAll          5 code         1.650 +- 0.014      1.428 +- 0.017  << DEARER than k=0 (>1 std)
+email-EuAll          5 paper        1.680 +- 0.009      1.475 +- 0.020  << DEARER than k=0 (>1 std)
+email-EuAll          5 cpp          1.648 +- 0.012      1.424 +- 0.023  << DEARER than k=0 (>1 std)
+email-EuAll         10 code         0.985 +- 0.055      0.977 +- 0.044  
+email-EuAll         10 paper        0.911 +- 0.053      0.937 +- 0.014  
+email-EuAll         10 cpp          0.983 +- 0.042      1.002 +- 0.052  
+email-EuAll        100 code         0.985 +- 0.040      0.993 +- 0.034  
+email-EuAll        100 paper        0.935 +- 0.038      0.949 +- 0.035  
+email-EuAll        100 cpp          0.983 +- 0.042      0.983 +- 0.037  
+
+p2p-Gnutella31       3 code         0.522 +- 0.051      0.532 +- 0.051  
+p2p-Gnutella31       3 paper        0.314 +- 0.002      0.321 +- 0.006  
+p2p-Gnutella31       3 cpp          0.512 +- 0.052      0.519 +- 0.048  
+p2p-Gnutella31       5 code         0.761 +- 0.007      0.757 +- 0.007  
+p2p-Gnutella31       5 paper        0.676 +- 0.060      0.675 +- 0.058  
+p2p-Gnutella31       5 cpp          0.764 +- 0.004      0.763 +- 0.009  
+p2p-Gnutella31      10 code         0.765 +- 0.004      0.756 +- 0.007  
+p2p-Gnutella31      10 paper        0.765 +- 0.002      0.758 +- 0.010  
+p2p-Gnutella31      10 cpp          0.759 +- 0.013      0.759 +- 0.011  
+p2p-Gnutella31     100 code         0.822 +- 0.008      0.820 +- 0.004  
+p2p-Gnutella31     100 paper        0.818 +- 0.003      0.813 +- 0.006  
+p2p-Gnutella31     100 cpp          0.826 +- 0.012      0.828 +- 0.016  
+
+soc-Epinions1        3 code         1.140 +- 0.387      1.125 +- 0.367  dearer on average, within 1 std of 1
+soc-Epinions1        3 paper        0.654 +- 0.056      0.659 +- 0.053  
+soc-Epinions1        3 cpp          1.140 +- 0.386      1.127 +- 0.370  dearer on average, within 1 std of 1
+soc-Epinions1        5 code         1.792 +- 0.011      1.771 +- 0.013  << DEARER than k=0 (>1 std)
+soc-Epinions1        5 paper        1.431 +- 0.165      1.440 +- 0.188  << DEARER than k=0 (>1 std)
+soc-Epinions1        5 cpp          1.728 +- 0.135      1.741 +- 0.094  << DEARER than k=0 (>1 std)
+soc-Epinions1       10 code         1.315 +- 0.341      1.323 +- 0.338  dearer on average, within 1 std of 1
+soc-Epinions1       10 paper        1.010 +- 0.092      1.008 +- 0.098  dearer on average, within 1 std of 1
+soc-Epinions1       10 cpp          1.308 +- 0.329      1.315 +- 0.337  dearer on average, within 1 std of 1
+soc-Epinions1      100 code         1.308 +- 0.328      1.327 +- 0.330  dearer on average, within 1 std of 1
+soc-Epinions1      100 paper        1.015 +- 0.091      1.032 +- 0.072  dearer on average, within 1 std of 1
+soc-Epinions1      100 cpp          1.311 +- 0.330      1.309 +- 0.324  dearer on average, within 1 std of 1
+
+soc-Slashdot0902     3 code         0.175 +- 0.008      0.176 +- 0.008  
+soc-Slashdot0902     3 paper        0.120 +- 0.001      0.120 +- 0.002  
+soc-Slashdot0902     3 cpp          0.172 +- 0.013      0.172 +- 0.011  
+soc-Slashdot0902     5 code         0.172 +- 0.012      0.170 +- 0.010  
+soc-Slashdot0902     5 paper        0.115 +- 0.007      0.116 +- 0.005  
+soc-Slashdot0902     5 cpp          0.173 +- 0.012      0.171 +- 0.010  
+soc-Slashdot0902    10 code         0.757 +- 0.065      0.743 +- 0.060  
+soc-Slashdot0902    10 paper        0.447 +- 0.059      0.440 +- 0.054  
+soc-Slashdot0902    10 cpp          0.760 +- 0.078      0.761 +- 0.076  
+soc-Slashdot0902   100 code         0.760 +- 0.062      0.753 +- 0.056  
+soc-Slashdot0902   100 paper        0.518 +- 0.014      0.512 +- 0.013  
+soc-Slashdot0902   100 cpp          0.757 +- 0.057      0.746 +- 0.063  
+
+  top-k costs MORE than k=0, beyond one std, on:
+    email-EuAll k=3 (code): 1.757x
+    email-EuAll k=3 (paper): 1.235x
+    email-EuAll k=3 (cpp): 1.759x
+    email-EuAll k=5 (code): 1.650x
+    email-EuAll k=5 (paper): 1.680x
+    email-EuAll k=5 (cpp): 1.648x
+    soc-Epinions1 k=5 (code): 1.792x
+    soc-Epinions1 k=5 (paper): 1.431x
+    soc-Epinions1 k=5 (cpp): 1.728x
+
+=== (b) budget-allocation variant, paired per seed against 'code' ===
+    ratio < 1 means that variant needed FEWER samples than the C++ reference's allocation.
+graph                k variant     samples vs code        time vs code   tau_b delta
+------------------------------------------------------------------------------------
+email-EuAll          3 paper        0.703 +- 0.030      0.766 +- 0.039-0.013 +- 0.002
+email-EuAll          3 cpp          1.001 +- 0.004      1.000 +- 0.0110.000 +- 0.000
+email-EuAll          5 paper        1.019 +- 0.004      1.033 +- 0.0120.001 +- 0.000
+email-EuAll          5 cpp          0.999 +- 0.005      0.997 +- 0.027-0.000 +- 0.001
+email-EuAll         10 paper        0.927 +- 0.077      0.960 +- 0.039-0.004 +- 0.005
+email-EuAll         10 cpp          0.999 +- 0.013      1.026 +- 0.017-0.000 +- 0.000
+email-EuAll        100 paper        0.951 +- 0.054      0.957 +- 0.039-0.002 +- 0.003
+email-EuAll        100 cpp          0.998 +- 0.002      0.990 +- 0.014-0.000 +- 0.001
+
+p2p-Gnutella31       3 paper        0.606 +- 0.065      0.608 +- 0.067-0.002 +- 0.000
+p2p-Gnutella31       3 cpp          0.982 +- 0.035      0.976 +- 0.046-0.000 +- 0.000
+p2p-Gnutella31       5 paper        0.887 +- 0.075      0.892 +- 0.079-0.000 +- 0.000
+p2p-Gnutella31       5 cpp          1.003 +- 0.012      1.007 +- 0.0070.000 +- 0.000
+p2p-Gnutella31      10 paper        0.999 +- 0.003      1.004 +- 0.007-0.000 +- 0.000
+p2p-Gnutella31      10 cpp          0.992 +- 0.016      1.005 +- 0.009-0.000 +- 0.000
+p2p-Gnutella31     100 paper        0.995 +- 0.011      0.991 +- 0.011-0.000 +- 0.000
+p2p-Gnutella31     100 cpp          1.005 +- 0.016      1.010 +- 0.0170.000 +- 0.000
+
+soc-Epinions1        3 paper        0.641 +- 0.307      0.649 +- 0.302-0.007 +- 0.006
+soc-Epinions1        3 cpp          1.001 +- 0.002      1.001 +- 0.004-0.000 +- 0.000
+soc-Epinions1        5 paper        0.799 +- 0.095      0.813 +- 0.106-0.002 +- 0.001
+soc-Epinions1        5 cpp          0.964 +- 0.070      0.983 +- 0.048-0.000 +- 0.001
+soc-Epinions1       10 paper        0.800 +- 0.189      0.790 +- 0.171-0.003 +- 0.003
+soc-Epinions1       10 cpp          0.996 +- 0.009      0.994 +- 0.0200.000 +- 0.000
+soc-Epinions1      100 paper        0.807 +- 0.186      0.811 +- 0.205-0.003 +- 0.003
+soc-Epinions1      100 cpp          1.002 +- 0.002      0.987 +- 0.0220.000 +- 0.000
+
+soc-Slashdot0902     3 paper        0.686 +- 0.034      0.682 +- 0.038-0.015 +- 0.002
+soc-Slashdot0902     3 cpp          0.986 +- 0.047      0.974 +- 0.047-0.000 +- 0.002
+soc-Slashdot0902     5 paper        0.669 +- 0.050      0.685 +- 0.054-0.016 +- 0.003
+soc-Slashdot0902     5 cpp          1.004 +- 0.001      1.007 +- 0.0070.000 +- 0.000
+soc-Slashdot0902    10 paper        0.592 +- 0.087      0.595 +- 0.097-0.010 +- 0.003
+soc-Slashdot0902    10 cpp          1.003 +- 0.016      1.023 +- 0.0210.000 +- 0.000
+soc-Slashdot0902   100 paper        0.685 +- 0.052      0.683 +- 0.061-0.007 +- 0.001
+soc-Slashdot0902   100 cpp          0.996 +- 0.009      0.991 +- 0.017-0.000 +- 0.000
+
+  pooled over all (graph, k): paper/code samples = 0.798 +- 0.173   [min 0.441, max 1.022, n=48]
+  pooled over all (graph, k): cpp/code samples = 0.996 +- 0.023   [min 0.883, max 1.033, n=48]
+
+=== LaTeX table body (tables/topk_allocation_table.tex) ===
+            \texttt{email-EuAll} & $3$ & $1.76 \pm 0.01$ & $1.24 \pm 0.05$ & $0.70 \pm 0.03$ \\
+             & $5$ & $1.65 \pm 0.01$ & $1.68 \pm 0.01$ & $1.02 \pm 0.00$ \\
+             & $10$ & $0.98 \pm 0.05$ & $0.91 \pm 0.05$ & $0.93 \pm 0.08$ \\
+             & $100$ & $0.99 \pm 0.04$ & $0.94 \pm 0.04$ & $0.95 \pm 0.05$ \\
+            \midrule
+            \texttt{p2p-Gnutella31} & $3$ & $0.52 \pm 0.05$ & $0.31 \pm 0.00$ & $0.61 \pm 0.07$ \\
+             & $5$ & $0.76 \pm 0.01$ & $0.68 \pm 0.06$ & $0.89 \pm 0.08$ \\
+             & $10$ & $0.77 \pm 0.00$ & $0.76 \pm 0.00$ & $1.00 \pm 0.00$ \\
+             & $100$ & $0.82 \pm 0.01$ & $0.82 \pm 0.00$ & $1.00 \pm 0.01$ \\
+            \midrule
+            \texttt{soc-Epinions1} & $3$ & $1.14 \pm 0.39$ & $0.65 \pm 0.06$ & $0.64 \pm 0.31$ \\
+             & $5$ & $1.79 \pm 0.01$ & $1.43 \pm 0.16$ & $0.80 \pm 0.10$ \\
+             & $10$ & $1.32 \pm 0.34$ & $1.01 \pm 0.09$ & $0.80 \pm 0.19$ \\
+             & $100$ & $1.31 \pm 0.33$ & $1.01 \pm 0.09$ & $0.81 \pm 0.19$ \\
+            \midrule
+            \texttt{soc-Slashdot0902} & $3$ & $0.17 \pm 0.01$ & $0.12 \pm 0.00$ & $0.69 \pm 0.03$ \\
+             & $5$ & $0.17 \pm 0.01$ & $0.12 \pm 0.01$ & $0.67 \pm 0.05$ \\
+             & $10$ & $0.76 \pm 0.07$ & $0.45 \pm 0.06$ & $0.59 \pm 0.09$ \\
+             & $100$ & $0.76 \pm 0.06$ & $0.52 \pm 0.01$ & $0.68 \pm 0.05$ \\
+
+Done. Raw per-run JSON is in /home/stud/schlaierm0/rerun_fix/topk
+Re-running is incremental: existing .json files are skipped, so delete a
+file (or the whole directory) to force that measurement to be recomputed.
+reproduce_report.sh: threads=8 outdir=/home/stud/schlaierm0/rerun_fix/topk stage=kxb
+
+=== Stage 'kxb': boundary-pair collapse, eps=1e-4, 3 seeds ===
+[09:57:58] kx_email-EuAll_k3_paper_bd_s1.json
+[09:59:07] kx_email-EuAll_k3_paper_ex_s1.json
+[10:00:06] kx_email-EuAll_k5_paper_bd_s1.json
+[10:01:08] kx_email-EuAll_k5_paper_ex_s1.json
+[10:02:10] kx_email-EuAll_k10_paper_bd_s1.json
+[10:03:19] kx_email-EuAll_k10_paper_ex_s1.json
+[10:04:27] kx_email-EuAll_k100_paper_bd_s1.json
+[10:05:38] kx_email-EuAll_k100_paper_ex_s1.json
+[10:06:47] kx_p2p-Gnutella31_k3_paper_bd_s1.json
+[10:07:39] kx_p2p-Gnutella31_k3_paper_ex_s1.json
+[10:08:28] kx_p2p-Gnutella31_k5_paper_bd_s1.json
+[10:09:56] kx_p2p-Gnutella31_k5_paper_ex_s1.json
+[10:11:00] kx_p2p-Gnutella31_k10_paper_bd_s1.json
+[10:12:40] kx_p2p-Gnutella31_k10_paper_ex_s1.json
+[10:14:46] kx_p2p-Gnutella31_k100_paper_bd_s1.json
+[10:16:33] kx_p2p-Gnutella31_k100_paper_ex_s1.json
+[10:18:18] kx_soc-Epinions1_k3_paper_bd_s1.json
+[10:19:36] kx_soc-Epinions1_k3_paper_ex_s1.json
+[10:21:04] kx_soc-Epinions1_k5_paper_bd_s1.json
+[10:22:49] kx_soc-Epinions1_k5_paper_ex_s1.json
+[10:24:22] kx_soc-Epinions1_k10_paper_bd_s1.json
+[10:26:06] kx_soc-Epinions1_k10_paper_ex_s1.json
+[10:27:41] kx_soc-Epinions1_k100_paper_bd_s1.json
+[10:29:24] kx_soc-Epinions1_k100_paper_ex_s1.json
+[10:31:03] kx_soc-Slashdot0902_k3_paper_bd_s1.json
+[10:32:02] kx_soc-Slashdot0902_k3_paper_ex_s1.json
+[10:32:58] kx_soc-Slashdot0902_k5_paper_bd_s1.json
+[10:34:00] kx_soc-Slashdot0902_k5_paper_ex_s1.json
+[10:34:57] kx_soc-Slashdot0902_k10_paper_bd_s1.json
+[10:37:17] kx_soc-Slashdot0902_k10_paper_ex_s1.json
+[10:39:37] kx_soc-Slashdot0902_k100_paper_bd_s1.json
+[10:42:25] kx_soc-Slashdot0902_k100_paper_ex_s1.json
+[10:45:11] kx_email-EuAll_k3_paper_bd_s2.json
+[10:46:17] kx_email-EuAll_k3_paper_ex_s2.json
+[10:47:21] kx_email-EuAll_k5_paper_bd_s2.json
+[10:48:32] kx_email-EuAll_k5_paper_ex_s2.json
+[10:49:34] kx_email-EuAll_k10_paper_bd_s2.json
+[10:50:56] kx_email-EuAll_k10_paper_ex_s2.json
+[10:52:01] kx_email-EuAll_k100_paper_bd_s2.json
+[10:53:15] kx_email-EuAll_k100_paper_ex_s2.json
+[10:54:31] kx_p2p-Gnutella31_k3_paper_bd_s2.json
+[10:55:22] kx_p2p-Gnutella31_k3_paper_ex_s2.json
+[10:56:13] kx_p2p-Gnutella31_k5_paper_bd_s2.json
+[10:57:37] kx_p2p-Gnutella31_k5_paper_ex_s2.json
+[10:58:46] kx_p2p-Gnutella31_k10_paper_bd_s2.json
+[11:00:29] kx_p2p-Gnutella31_k10_paper_ex_s2.json
+[11:02:08] kx_p2p-Gnutella31_k100_paper_bd_s2.json
+[11:03:53] kx_p2p-Gnutella31_k100_paper_ex_s2.json
+[11:05:41] kx_soc-Epinions1_k3_paper_bd_s2.json
+[11:06:51] kx_soc-Epinions1_k3_paper_ex_s2.json
+[11:08:02] kx_soc-Epinions1_k5_paper_bd_s2.json
+[11:09:48] kx_soc-Epinions1_k5_paper_ex_s2.json
+[11:11:31] kx_soc-Epinions1_k10_paper_bd_s2.json
+[11:13:19] kx_soc-Epinions1_k10_paper_ex_s2.json
+[11:15:10] kx_soc-Epinions1_k100_paper_bd_s2.json
+[11:17:03] kx_soc-Epinions1_k100_paper_ex_s2.json
+[11:18:58] kx_soc-Slashdot0902_k3_paper_bd_s2.json
+[11:19:54] kx_soc-Slashdot0902_k3_paper_ex_s2.json
+[11:20:58] kx_soc-Slashdot0902_k5_paper_bd_s2.json
+[11:21:51] kx_soc-Slashdot0902_k5_paper_ex_s2.json
+[11:22:47] kx_soc-Slashdot0902_k10_paper_bd_s2.json
+[11:25:02] kx_soc-Slashdot0902_k10_paper_ex_s2.json
+[11:27:13] kx_soc-Slashdot0902_k100_paper_bd_s2.json
+[11:30:05] kx_soc-Slashdot0902_k100_paper_ex_s2.json
+[11:32:50] kx_email-EuAll_k3_paper_bd_s3.json
+[11:33:58] kx_email-EuAll_k3_paper_ex_s3.json
+[11:34:58] kx_email-EuAll_k5_paper_bd_s3.json
+[11:35:58] kx_email-EuAll_k5_paper_ex_s3.json
+[11:37:00] kx_email-EuAll_k10_paper_bd_s3.json
+[11:38:11] kx_email-EuAll_k10_paper_ex_s3.json
+[11:39:17] kx_email-EuAll_k100_paper_bd_s3.json
+[11:40:27] kx_email-EuAll_k100_paper_ex_s3.json
+[11:41:36] kx_p2p-Gnutella31_k3_paper_bd_s3.json
+[11:42:28] kx_p2p-Gnutella31_k3_paper_ex_s3.json
+[11:43:20] kx_p2p-Gnutella31_k5_paper_bd_s3.json
+[11:44:53] kx_p2p-Gnutella31_k5_paper_ex_s3.json
+[11:46:00] kx_p2p-Gnutella31_k10_paper_bd_s3.json
+[11:47:38] kx_p2p-Gnutella31_k10_paper_ex_s3.json
+[11:49:23] kx_p2p-Gnutella31_k100_paper_bd_s3.json
+[11:51:09] kx_p2p-Gnutella31_k100_paper_ex_s3.json
+[11:52:52] kx_soc-Epinions1_k3_paper_bd_s3.json
+[11:54:04] kx_soc-Epinions1_k3_paper_ex_s3.json
+[11:55:22] kx_soc-Epinions1_k5_paper_bd_s3.json
+[11:57:06] kx_soc-Epinions1_k5_paper_ex_s3.json
+[11:58:43] kx_soc-Epinions1_k10_paper_bd_s3.json
+[12:00:21] kx_soc-Epinions1_k10_paper_ex_s3.json
+[12:01:58] kx_soc-Epinions1_k100_paper_bd_s3.json
+[12:03:41] kx_soc-Epinions1_k100_paper_ex_s3.json
+[12:05:27] kx_soc-Slashdot0902_k3_paper_bd_s3.json
+[12:06:21] kx_soc-Slashdot0902_k3_paper_ex_s3.json
+[12:07:21] kx_soc-Slashdot0902_k5_paper_bd_s3.json
+[12:08:16] kx_soc-Slashdot0902_k5_paper_ex_s3.json
+[12:09:22] kx_soc-Slashdot0902_k10_paper_bd_s3.json
+[12:11:57] kx_soc-Slashdot0902_k10_paper_ex_s3.json
+[12:14:41] kx_soc-Slashdot0902_k100_paper_bd_s3.json
+[12:17:34] kx_soc-Slashdot0902_k100_paper_ex_s3.json
+
+runs: 252   graphs: 4   seeds: [1, 2, 3]   threads: [8]
+
+=== raw (mean +- std over seeds) ===
+graph                k variant       samples/1e6          time [s]     tau_b
+----------------------------------------------------------------------------
+email-EuAll          0 --        54.562 +- 0.332   42.158 +- 0.7600.896 +- 0.001
+                     3 code      95.892 +- 0.748   63.810 +- 0.6690.919 +- 0.001
+                     3 paper     67.411 +- 2.973   48.881 +- 2.0460.905 +- 0.001
+                     3 cpp       95.986 +- 0.371   63.795 +- 1.2910.919 +- 0.001
+                     3 paper_bd   46.539 +- 3.801   37.197 +- 2.3850.887 +- 0.004
+                     3 paper_ex   46.917 +- 4.006   37.670 +- 2.0180.887 +- 0.004
+                     5 code      90.001 +- 0.301   60.181 +- 1.0490.916 +- 0.001
+                     5 paper     91.674 +- 0.188   62.177 +- 1.7480.917 +- 0.001
+                     5 cpp       89.940 +- 0.506   60.024 +- 1.9580.916 +- 0.000
+                     5 paper_bd   50.140 +- 2.671   39.666 +- 2.5640.891 +- 0.002
+                     5 paper_ex   50.455 +- 2.917   39.136 +- 1.2280.891 +- 0.003
+                    10 code      53.739 +- 3.283   41.174 +- 1.3620.895 +- 0.003
+                    10 paper     49.708 +- 2.975   39.518 +- 1.0440.891 +- 0.003
+                    10 cpp       53.652 +- 2.600   42.238 +- 1.8960.895 +- 0.003
+                    10 paper_bd   50.021 +- 3.458   39.230 +- 1.3150.891 +- 0.003
+                    10 paper_ex   49.686 +- 3.367   39.100 +- 2.0810.891 +- 0.003
+                   100 code      53.763 +- 2.470   41.846 +- 0.8050.895 +- 0.002
+                   100 paper     51.045 +- 2.221   40.030 +- 1.6970.893 +- 0.001
+                   100 cpp       53.651 +- 2.564   41.433 +- 1.1810.895 +- 0.002
+                   100 paper_bd   51.564 +- 1.952   40.272 +- 0.7420.893 +- 0.001
+                   100 paper_ex   50.883 +- 2.411   39.520 +- 1.5830.892 +- 0.001
+
+p2p-Gnutella31       0 --        51.595 +- 0.264   93.303 +- 0.7660.995 +- 0.000
+                     3 code      26.924 +- 2.727   49.623 +- 5.0240.993 +- 0.000
+                     3 paper     16.187 +- 0.006   29.933 +- 0.3380.991 +- 0.000
+                     3 cpp       26.449 +- 2.821   48.384 +- 4.5510.993 +- 0.000
+                     3 paper_bd   15.254 +- 1.286   28.624 +- 2.3140.991 +- 0.000
+                     3 paper_ex   15.601 +- 0.792   28.993 +- 1.5280.991 +- 0.000
+                     5 code      39.289 +- 0.243   70.672 +- 0.0870.994 +- 0.000
+                     5 paper     34.849 +- 2.950   63.016 +- 5.5070.994 +- 0.000
+                     5 cpp       39.423 +- 0.244   71.151 +- 0.4340.994 +- 0.000
+                     5 paper_bd   35.181 +- 2.894   63.071 +- 5.0810.994 +- 0.000
+                     5 paper_ex   20.026 +- 1.524   37.026 +- 2.7150.992 +- 0.000
+                    10 code      39.493 +- 0.019   70.499 +- 0.1970.994 +- 0.000
+                    10 paper     39.463 +- 0.134   70.759 +- 0.4100.994 +- 0.000
+                    10 cpp       39.166 +- 0.636   70.818 +- 0.5110.994 +- 0.000
+                    10 paper_bd   39.130 +- 0.247   70.441 +- 0.4220.994 +- 0.000
+                    10 paper_ex   44.247 +- 8.421  79.519 +- 15.0200.995 +- 0.001
+                   100 code      42.408 +- 0.374   76.539 +- 0.8670.995 +- 0.000
+                   100 paper     42.195 +- 0.096   75.811 +- 0.2210.995 +- 0.000
+                   100 cpp       42.630 +- 0.434   77.270 +- 1.3710.995 +- 0.000
+                   100 paper_bd   42.302 +- 0.022   76.725 +- 1.2200.995 +- 0.000
+                   100 paper_ex   42.379 +- 0.384   76.128 +- 1.1330.995 +- 0.000
+
+soc-Epinions1        0 --        83.438 +- 0.409   74.182 +- 0.2900.969 +- 0.000
+                     3 code     95.044 +- 32.067  83.447 +- 27.0920.970 +- 0.005
+                     3 paper     54.584 +- 4.583   48.866 +- 4.1240.963 +- 0.001
+                     3 cpp      95.071 +- 31.954  83.588 +- 27.3070.970 +- 0.005
+                     3 paper_bd   55.584 +- 3.441   50.176 +- 3.3920.963 +- 0.001
+                     3 paper_ex   56.486 +- 5.105   50.716 +- 4.1520.963 +- 0.001
+                     5 code     149.550 +- 0.678  131.365 +- 1.4010.976 +- 0.000
+                     5 paper   119.454 +- 14.324 106.788 +- 13.6840.973 +- 0.002
+                     5 cpp     144.114 +- 10.746  129.158 +- 7.4740.975 +- 0.001
+                     5 paper_bd   83.502 +- 8.163   74.885 +- 7.0440.969 +- 0.001
+                     5 paper_ex   83.476 +- 7.737   73.773 +- 6.0980.969 +- 0.001
+                    10 code    109.732 +- 28.338  98.116 +- 24.8040.972 +- 0.004
+                    10 paper     84.306 +- 7.940   74.768 +- 6.9810.969 +- 0.001
+                    10 cpp     109.128 +- 27.383  97.494 +- 24.7770.972 +- 0.003
+                    10 paper_bd   84.336 +- 8.152   75.149 +- 6.7510.969 +- 0.001
+                    10 paper_ex   83.798 +- 7.946   74.284 +- 6.8870.969 +- 0.001
+                   100 code    109.102 +- 27.260  98.359 +- 24.2070.972 +- 0.003
+                   100 paper     84.702 +- 7.865   76.537 +- 5.0680.969 +- 0.001
+                   100 cpp     109.373 +- 27.448  97.033 +- 23.8000.972 +- 0.003
+                   100 paper_bd   84.430 +- 8.012   74.447 +- 6.8900.969 +- 0.001
+                   100 paper_ex   84.132 +- 8.144   74.580 +- 7.4070.969 +- 0.001
+
+soc-Slashdot0902     0 --       119.233 +- 0.589  269.853 +- 4.6460.975 +- 0.000
+                     3 code      20.849 +- 1.033   47.559 +- 2.8740.934 +- 0.002
+                     3 paper     14.275 +- 0.039   32.378 +- 0.4660.919 +- 0.000
+                     3 cpp       20.572 +- 1.687   46.304 +- 3.2840.933 +- 0.003
+                     3 paper_bd   14.210 +- 0.226   32.366 +- 0.3740.919 +- 0.001
+                     3 paper_ex   13.704 +- 0.913   31.176 +- 1.6640.918 +- 0.003
+                     5 code      20.539 +- 1.578   45.855 +- 3.0440.933 +- 0.003
+                     5 paper     13.715 +- 0.888   31.322 +- 1.9250.918 +- 0.003
+                     5 cpp       20.628 +- 1.575   46.165 +- 3.0980.934 +- 0.003
+                     5 paper_bd   13.671 +- 0.771   31.718 +- 1.4910.918 +- 0.002
+                     5 paper_ex   14.252 +- 0.044   32.097 +- 0.1490.919 +- 0.000
+                    10 code      90.254 +- 8.218 200.649 +- 17.9410.971 +- 0.002
+                    10 paper     53.242 +- 6.872 118.798 +- 16.1260.960 +- 0.003
+                    10 cpp       90.625 +- 9.692 205.432 +- 22.6040.971 +- 0.002
+                    10 paper_bd   52.562 +- 7.356 116.093 +- 13.3860.960 +- 0.003
+                    10 paper_ex   52.019 +- 7.744 115.349 +- 14.4530.960 +- 0.003
+                   100 code      90.596 +- 7.789 203.179 +- 16.6250.971 +- 0.001
+                   100 paper     61.761 +- 1.650  138.124 +- 5.1340.964 +- 0.001
+                   100 cpp       90.227 +- 7.192 201.531 +- 19.0340.971 +- 0.001
+                   100 paper_bd   61.197 +- 2.013  137.273 +- 0.2170.964 +- 0.001
+                   100 paper_ex   61.660 +- 1.695  134.387 +- 3.7830.964 +- 0.001
+
+=== (a) samples relative to k=0, paired per seed ===
+    ratio > 1 means the top-k run drew MORE samples than computing all centralities.
+graph                k variant        sample ratio          time ratio  verdict
+-----------------------------------------------------------------------------------------
+email-EuAll          3 code         1.757 +- 0.011      1.514 +- 0.031  << DEARER than k=0 (>1 std)
+email-EuAll          3 paper        1.235 +- 0.048      1.159 +- 0.041  << DEARER than k=0 (>1 std)
+email-EuAll          3 cpp          1.759 +- 0.010      1.514 +- 0.046  << DEARER than k=0 (>1 std)
+email-EuAll          3 paper_bd      0.853 +- 0.068      0.882 +- 0.047  
+email-EuAll          3 paper_ex      0.860 +- 0.072      0.894 +- 0.043  
+email-EuAll          5 code         1.650 +- 0.014      1.428 +- 0.017  << DEARER than k=0 (>1 std)
+email-EuAll          5 paper        1.680 +- 0.009      1.475 +- 0.020  << DEARER than k=0 (>1 std)
+email-EuAll          5 cpp          1.648 +- 0.012      1.424 +- 0.023  << DEARER than k=0 (>1 std)
+email-EuAll          5 paper_bd      0.919 +- 0.049      0.940 +- 0.044  
+email-EuAll          5 paper_ex      0.925 +- 0.054      0.928 +- 0.020  
+email-EuAll         10 code         0.985 +- 0.055      0.977 +- 0.044  
+email-EuAll         10 paper        0.911 +- 0.053      0.937 +- 0.014  
+email-EuAll         10 cpp          0.983 +- 0.042      1.002 +- 0.052  
+email-EuAll         10 paper_bd      0.917 +- 0.061      0.930 +- 0.018  
+email-EuAll         10 paper_ex      0.911 +- 0.060      0.927 +- 0.045  
+email-EuAll        100 code         0.985 +- 0.040      0.993 +- 0.034  
+email-EuAll        100 paper        0.935 +- 0.038      0.949 +- 0.035  
+email-EuAll        100 cpp          0.983 +- 0.042      0.983 +- 0.037  
+email-EuAll        100 paper_bd      0.945 +- 0.034      0.955 +- 0.004  
+email-EuAll        100 paper_ex      0.933 +- 0.042      0.937 +- 0.025  
+
+p2p-Gnutella31       3 code         0.522 +- 0.051      0.532 +- 0.051  
+p2p-Gnutella31       3 paper        0.314 +- 0.002      0.321 +- 0.006  
+p2p-Gnutella31       3 cpp          0.512 +- 0.052      0.519 +- 0.048  
+p2p-Gnutella31       3 paper_bd      0.296 +- 0.024      0.307 +- 0.023  
+p2p-Gnutella31       3 paper_ex      0.302 +- 0.014      0.311 +- 0.014  
+p2p-Gnutella31       5 code         0.761 +- 0.007      0.757 +- 0.007  
+p2p-Gnutella31       5 paper        0.676 +- 0.060      0.675 +- 0.058  
+p2p-Gnutella31       5 cpp          0.764 +- 0.004      0.763 +- 0.009  
+p2p-Gnutella31       5 paper_bd      0.682 +- 0.059      0.676 +- 0.053  
+p2p-Gnutella31       5 paper_ex      0.388 +- 0.028      0.397 +- 0.028  
+p2p-Gnutella31      10 code         0.765 +- 0.004      0.756 +- 0.007  
+p2p-Gnutella31      10 paper        0.765 +- 0.002      0.758 +- 0.010  
+p2p-Gnutella31      10 cpp          0.759 +- 0.013      0.759 +- 0.011  
+p2p-Gnutella31      10 paper_bd      0.758 +- 0.005      0.755 +- 0.011  
+p2p-Gnutella31      10 paper_ex      0.858 +- 0.167      0.853 +- 0.166  
+p2p-Gnutella31     100 code         0.822 +- 0.008      0.820 +- 0.004  
+p2p-Gnutella31     100 paper        0.818 +- 0.003      0.813 +- 0.006  
+p2p-Gnutella31     100 cpp          0.826 +- 0.012      0.828 +- 0.016  
+p2p-Gnutella31     100 paper_bd      0.820 +- 0.005      0.822 +- 0.019  
+p2p-Gnutella31     100 paper_ex      0.821 +- 0.004      0.816 +- 0.018  
+
+soc-Epinions1        3 code         1.140 +- 0.387      1.125 +- 0.367  dearer on average, within 1 std of 1
+soc-Epinions1        3 paper        0.654 +- 0.056      0.659 +- 0.053  
+soc-Epinions1        3 cpp          1.140 +- 0.386      1.127 +- 0.370  dearer on average, within 1 std of 1
+soc-Epinions1        3 paper_bd      0.666 +- 0.042      0.676 +- 0.043  
+soc-Epinions1        3 paper_ex      0.677 +- 0.061      0.684 +- 0.054  
+soc-Epinions1        5 code         1.792 +- 0.011      1.771 +- 0.013  << DEARER than k=0 (>1 std)
+soc-Epinions1        5 paper        1.431 +- 0.165      1.440 +- 0.188  << DEARER than k=0 (>1 std)
+soc-Epinions1        5 cpp          1.728 +- 0.135      1.741 +- 0.094  << DEARER than k=0 (>1 std)
+soc-Epinions1        5 paper_bd      1.001 +- 0.094      1.010 +- 0.099  dearer on average, within 1 std of 1
+soc-Epinions1        5 paper_ex      1.000 +- 0.089      0.995 +- 0.086  dearer on average, within 1 std of 1
+soc-Epinions1       10 code         1.315 +- 0.341      1.323 +- 0.338  dearer on average, within 1 std of 1
+soc-Epinions1       10 paper        1.010 +- 0.092      1.008 +- 0.098  dearer on average, within 1 std of 1
+soc-Epinions1       10 cpp          1.308 +- 0.329      1.315 +- 0.337  dearer on average, within 1 std of 1
+soc-Epinions1       10 paper_bd      1.011 +- 0.095      1.013 +- 0.095  dearer on average, within 1 std of 1
+soc-Epinions1       10 paper_ex      1.004 +- 0.092      1.002 +- 0.097  dearer on average, within 1 std of 1
+soc-Epinions1      100 code         1.308 +- 0.328      1.327 +- 0.330  dearer on average, within 1 std of 1
+soc-Epinions1      100 paper        1.015 +- 0.091      1.032 +- 0.072  dearer on average, within 1 std of 1
+soc-Epinions1      100 cpp          1.311 +- 0.330      1.309 +- 0.324  dearer on average, within 1 std of 1
+soc-Epinions1      100 paper_bd      1.012 +- 0.092      1.004 +- 0.097  dearer on average, within 1 std of 1
+soc-Epinions1      100 paper_ex      1.008 +- 0.094      1.006 +- 0.104  dearer on average, within 1 std of 1
+
+soc-Slashdot0902     3 code         0.175 +- 0.008      0.176 +- 0.008  
+soc-Slashdot0902     3 paper        0.120 +- 0.001      0.120 +- 0.002  
+soc-Slashdot0902     3 cpp          0.172 +- 0.013      0.172 +- 0.011  
+soc-Slashdot0902     3 paper_bd      0.119 +- 0.002      0.120 +- 0.003  
+soc-Slashdot0902     3 paper_ex      0.115 +- 0.007      0.115 +- 0.004  
+soc-Slashdot0902     5 code         0.172 +- 0.012      0.170 +- 0.010  
+soc-Slashdot0902     5 paper        0.115 +- 0.007      0.116 +- 0.005  
+soc-Slashdot0902     5 cpp          0.173 +- 0.012      0.171 +- 0.010  
+soc-Slashdot0902     5 paper_bd      0.115 +- 0.006      0.117 +- 0.004  
+soc-Slashdot0902     5 paper_ex      0.120 +- 0.001      0.119 +- 0.003  
+soc-Slashdot0902    10 code         0.757 +- 0.065      0.743 +- 0.060  
+soc-Slashdot0902    10 paper        0.447 +- 0.059      0.440 +- 0.054  
+soc-Slashdot0902    10 cpp          0.760 +- 0.078      0.761 +- 0.076  
+soc-Slashdot0902    10 paper_bd      0.441 +- 0.063      0.430 +- 0.044  
+soc-Slashdot0902    10 paper_ex      0.436 +- 0.066      0.427 +- 0.048  
+soc-Slashdot0902   100 code         0.760 +- 0.062      0.753 +- 0.056  
+soc-Slashdot0902   100 paper        0.518 +- 0.014      0.512 +- 0.013  
+soc-Slashdot0902   100 cpp          0.757 +- 0.057      0.746 +- 0.063  
+soc-Slashdot0902   100 paper_bd      0.513 +- 0.019      0.509 +- 0.009  
+soc-Slashdot0902   100 paper_ex      0.517 +- 0.015      0.498 +- 0.007  
+
+  top-k costs MORE than k=0, beyond one std, on:
+    email-EuAll k=3 (code): 1.757x
+    email-EuAll k=3 (paper): 1.235x
+    email-EuAll k=3 (cpp): 1.759x
+    email-EuAll k=5 (code): 1.650x
+    email-EuAll k=5 (paper): 1.680x
+    email-EuAll k=5 (cpp): 1.648x
+    soc-Epinions1 k=5 (code): 1.792x
+    soc-Epinions1 k=5 (paper): 1.431x
+    soc-Epinions1 k=5 (cpp): 1.728x
+
+=== (b) budget-allocation variant, paired per seed against 'code' ===
+    ratio < 1 means that variant needed FEWER samples than the C++ reference's allocation.
+graph                k variant     samples vs code        time vs code   tau_b delta
+------------------------------------------------------------------------------------
+email-EuAll          3 paper        0.703 +- 0.030      0.766 +- 0.039-0.013 +- 0.002
+email-EuAll          3 cpp          1.001 +- 0.004      1.000 +- 0.0110.000 +- 0.000
+email-EuAll          3 paper_bd      0.485 +- 0.041      0.583 +- 0.042-0.031 +- 0.004
+email-EuAll          3 paper_ex      0.489 +- 0.044      0.591 +- 0.037-0.031 +- 0.005
+email-EuAll          5 paper        1.019 +- 0.004      1.033 +- 0.0120.001 +- 0.000
+email-EuAll          5 cpp          0.999 +- 0.005      0.997 +- 0.027-0.000 +- 0.001
+email-EuAll          5 paper_bd      0.557 +- 0.028      0.659 +- 0.033-0.025 +- 0.003
+email-EuAll          5 paper_ex      0.561 +- 0.031      0.650 +- 0.009-0.025 +- 0.004
+email-EuAll         10 paper        0.927 +- 0.077      0.960 +- 0.039-0.004 +- 0.005
+email-EuAll         10 cpp          0.999 +- 0.013      1.026 +- 0.017-0.000 +- 0.000
+email-EuAll         10 paper_bd      0.933 +- 0.083      0.954 +- 0.046-0.004 +- 0.005
+email-EuAll         10 paper_ex      0.927 +- 0.081      0.950 +- 0.041-0.004 +- 0.005
+email-EuAll        100 paper        0.951 +- 0.054      0.957 +- 0.039-0.002 +- 0.003
+email-EuAll        100 cpp          0.998 +- 0.002      0.990 +- 0.014-0.000 +- 0.001
+email-EuAll        100 paper_bd      0.961 +- 0.059      0.963 +- 0.034-0.002 +- 0.003
+email-EuAll        100 paper_ex      0.948 +- 0.062      0.945 +- 0.044-0.003 +- 0.004
+
+p2p-Gnutella31       3 paper        0.606 +- 0.065      0.608 +- 0.067-0.002 +- 0.000
+p2p-Gnutella31       3 cpp          0.982 +- 0.035      0.976 +- 0.046-0.000 +- 0.000
+p2p-Gnutella31       3 paper_bd      0.567 +- 0.011      0.578 +- 0.015-0.003 +- 0.000
+p2p-Gnutella31       3 paper_ex      0.582 +- 0.032      0.586 +- 0.033-0.002 +- 0.000
+p2p-Gnutella31       5 paper        0.887 +- 0.075      0.892 +- 0.079-0.000 +- 0.000
+p2p-Gnutella31       5 cpp          1.003 +- 0.012      1.007 +- 0.0070.000 +- 0.000
+p2p-Gnutella31       5 paper_bd      0.895 +- 0.074      0.893 +- 0.073-0.000 +- 0.000
+p2p-Gnutella31       5 paper_ex      0.510 +- 0.041      0.524 +- 0.038-0.002 +- 0.000
+p2p-Gnutella31      10 paper        0.999 +- 0.003      1.004 +- 0.007-0.000 +- 0.000
+p2p-Gnutella31      10 cpp          0.992 +- 0.016      1.005 +- 0.009-0.000 +- 0.000
+p2p-Gnutella31      10 paper_bd      0.991 +- 0.006      0.999 +- 0.006-0.000 +- 0.000
+p2p-Gnutella31      10 paper_ex      1.120 +- 0.214      1.128 +- 0.2100.000 +- 0.001
+p2p-Gnutella31     100 paper        0.995 +- 0.011      0.991 +- 0.011-0.000 +- 0.000
+p2p-Gnutella31     100 cpp          1.005 +- 0.016      1.010 +- 0.0170.000 +- 0.000
+p2p-Gnutella31     100 paper_bd      0.998 +- 0.009      1.003 +- 0.023-0.000 +- 0.000
+p2p-Gnutella31     100 paper_ex      0.999 +- 0.015      0.995 +- 0.025-0.000 +- 0.000
+
+soc-Epinions1        3 paper        0.641 +- 0.307      0.649 +- 0.302-0.007 +- 0.006
+soc-Epinions1        3 cpp          1.001 +- 0.002      1.001 +- 0.004-0.000 +- 0.000
+soc-Epinions1        3 paper_bd      0.651 +- 0.301      0.665 +- 0.300-0.007 +- 0.006
+soc-Epinions1        3 paper_ex      0.667 +- 0.328      0.675 +- 0.315-0.006 +- 0.006
+soc-Epinions1        5 paper        0.799 +- 0.095      0.813 +- 0.106-0.002 +- 0.001
+soc-Epinions1        5 cpp          0.964 +- 0.070      0.983 +- 0.048-0.000 +- 0.001
+soc-Epinions1        5 paper_bd      0.558 +- 0.056      0.570 +- 0.059-0.007 +- 0.001
+soc-Epinions1        5 paper_ex      0.558 +- 0.053      0.562 +- 0.052-0.007 +- 0.001
+soc-Epinions1       10 paper        0.800 +- 0.189      0.790 +- 0.171-0.003 +- 0.003
+soc-Epinions1       10 cpp          0.996 +- 0.009      0.994 +- 0.0200.000 +- 0.000
+soc-Epinions1       10 paper_bd      0.799 +- 0.180      0.795 +- 0.177-0.003 +- 0.003
+soc-Epinions1       10 paper_ex      0.795 +- 0.189      0.787 +- 0.184-0.003 +- 0.003
+soc-Epinions1      100 paper        0.807 +- 0.186      0.811 +- 0.205-0.003 +- 0.003
+soc-Epinions1      100 cpp          1.002 +- 0.002      0.987 +- 0.0220.000 +- 0.000
+soc-Epinions1      100 paper_bd      0.804 +- 0.186      0.785 +- 0.178-0.003 +- 0.003
+soc-Epinions1      100 paper_ex      0.801 +- 0.185      0.786 +- 0.175-0.003 +- 0.003
+
+soc-Slashdot0902     3 paper        0.686 +- 0.034      0.682 +- 0.038-0.015 +- 0.002
+soc-Slashdot0902     3 cpp          0.986 +- 0.047      0.974 +- 0.047-0.000 +- 0.002
+soc-Slashdot0902     3 paper_bd      0.683 +- 0.043      0.683 +- 0.049-0.015 +- 0.002
+soc-Slashdot0902     3 paper_ex      0.657 +- 0.016      0.656 +- 0.013-0.016 +- 0.001
+soc-Slashdot0902     5 paper        0.669 +- 0.050      0.685 +- 0.054-0.016 +- 0.003
+soc-Slashdot0902     5 cpp          1.004 +- 0.001      1.007 +- 0.0070.000 +- 0.000
+soc-Slashdot0902     5 paper_bd      0.667 +- 0.031      0.693 +- 0.039-0.016 +- 0.002
+soc-Slashdot0902     5 paper_ex      0.697 +- 0.053      0.702 +- 0.047-0.014 +- 0.003
+soc-Slashdot0902    10 paper        0.592 +- 0.087      0.595 +- 0.097-0.010 +- 0.003
+soc-Slashdot0902    10 cpp          1.003 +- 0.016      1.023 +- 0.0210.000 +- 0.000
+soc-Slashdot0902    10 paper_bd      0.585 +- 0.091      0.581 +- 0.084-0.011 +- 0.003
+soc-Slashdot0902    10 paper_ex      0.579 +- 0.101      0.578 +- 0.090-0.011 +- 0.004
+soc-Slashdot0902   100 paper        0.685 +- 0.052      0.683 +- 0.061-0.007 +- 0.001
+soc-Slashdot0902   100 cpp          0.996 +- 0.009      0.991 +- 0.017-0.000 +- 0.000
+soc-Slashdot0902   100 paper_bd      0.679 +- 0.063      0.679 +- 0.054-0.007 +- 0.002
+soc-Slashdot0902   100 paper_ex      0.684 +- 0.057      0.664 +- 0.054-0.007 +- 0.001
+
+  pooled over all (graph, k): paper/code samples = 0.798 +- 0.173   [min 0.441, max 1.022, n=48]
+  pooled over all (graph, k): cpp/code samples = 0.996 +- 0.023   [min 0.883, max 1.033, n=48]
+  pooled over all (graph, k): paper_bd/code samples = 0.738 +- 0.193   [min 0.442, max 1.005, n=48]
+  pooled over all (graph, k): paper_ex/code samples = 0.723 +- 0.214   [min 0.442, max 1.367, n=48]
+
+=== LaTeX table body (tables/topk_allocation_table.tex) ===
+            \texttt{email-EuAll} & $3$ & $1.76 \pm 0.01$ & $1.24 \pm 0.05$ & $0.70 \pm 0.03$ \\
+             & $5$ & $1.65 \pm 0.01$ & $1.68 \pm 0.01$ & $1.02 \pm 0.00$ \\
+             & $10$ & $0.98 \pm 0.05$ & $0.91 \pm 0.05$ & $0.93 \pm 0.08$ \\
+             & $100$ & $0.99 \pm 0.04$ & $0.94 \pm 0.04$ & $0.95 \pm 0.05$ \\
+            \midrule
+            \texttt{p2p-Gnutella31} & $3$ & $0.52 \pm 0.05$ & $0.31 \pm 0.00$ & $0.61 \pm 0.07$ \\
+             & $5$ & $0.76 \pm 0.01$ & $0.68 \pm 0.06$ & $0.89 \pm 0.08$ \\
+             & $10$ & $0.77 \pm 0.00$ & $0.76 \pm 0.00$ & $1.00 \pm 0.00$ \\
+             & $100$ & $0.82 \pm 0.01$ & $0.82 \pm 0.00$ & $1.00 \pm 0.01$ \\
+            \midrule
+            \texttt{soc-Epinions1} & $3$ & $1.14 \pm 0.39$ & $0.65 \pm 0.06$ & $0.64 \pm 0.31$ \\
+             & $5$ & $1.79 \pm 0.01$ & $1.43 \pm 0.16$ & $0.80 \pm 0.10$ \\
+             & $10$ & $1.32 \pm 0.34$ & $1.01 \pm 0.09$ & $0.80 \pm 0.19$ \\
+             & $100$ & $1.31 \pm 0.33$ & $1.01 \pm 0.09$ & $0.81 \pm 0.19$ \\
+            \midrule
+            \texttt{soc-Slashdot0902} & $3$ & $0.17 \pm 0.01$ & $0.12 \pm 0.00$ & $0.69 \pm 0.03$ \\
+             & $5$ & $0.17 \pm 0.01$ & $0.12 \pm 0.01$ & $0.67 \pm 0.05$ \\
+             & $10$ & $0.76 \pm 0.07$ & $0.45 \pm 0.06$ & $0.59 \pm 0.09$ \\
+             & $100$ & $0.76 \pm 0.06$ & $0.52 \pm 0.01$ & $0.68 \pm 0.05$ \\
+
+Done. Raw per-run JSON is in /home/stud/schlaierm0/rerun_fix/topk
+Re-running is incremental: existing .json files are skipped, so delete a
+file (or the whole directory) to force that measurement to be recomputed.
+  verified 252 Julia KADABRA runs in /home/stud/schlaierm0/rerun_fix/topk (kx_*.json), 0 with problems
+[2026-09-17 12:20:25] === stage D-topk: done ===
+[2026-09-17 12:20:25] === stage E-tightx: start ===
+reproduce_report.sh: threads=8 outdir=/home/stud/schlaierm0/rerun_fix/tight stage=tightx
+
+=== Stage 'tightx': KADABRA eps=1e-4 on the three largest bvk graphs ===
+[12:20:25] com-youtube (julia)
+[14:33:55] com-lj (julia)
+[01:04:52] cit-Patents (julia)
+
+!! missing runs: p2p-Gnutella31(brava), soc-Epinions1(brava), soc-Slashdot0902(brava), email-EuAll(brava), com-youtube(brava), amazon(brava), dblp(brava), cit-Patents(brava), com-lj(brava)
+
+Done. Raw per-run JSON is in /home/stud/schlaierm0/rerun_fix/tight
+Re-running is incremental: existing .json files are skipped, so delete a
+file (or the whole directory) to force that measurement to be recomputed.
+  verified 9 Julia KADABRA runs in /home/stud/schlaierm0/rerun_fix/tight (tight_julia_*.json), 0 with problems
+[2026-09-18 06:27:26] === stage E-tightx: done ===
+[2026-09-18 06:27:26] === stage F-kxl: start ===
+reproduce_report.sh: threads=8 outdir=/home/stud/schlaierm0/rerun_fix/topk stage=kxl
+
+=== Stage 'kxl': the repaired allocation on amazon/dblp, eps=1e-4 ===
+[06:27:26] kx_amazon_k0_code_s1.json
+[08:23:25] kx_amazon_k10_paper_bd_s1.json
+[09:20:55] kx_amazon_k100_paper_bd_s1.json
+[10:21:11] kx_dblp_k0_code_s1.json
+[12:33:59] kx_dblp_k10_paper_bd_s1.json
+[14:40:49] kx_dblp_k100_paper_bd_s1.json
+[16:53:12] kx_amazon_k0_code_s2.json
+[18:56:18] kx_amazon_k10_paper_bd_s2.json
+[19:52:55] kx_amazon_k100_paper_bd_s2.json
+[20:54:49] kx_dblp_k0_code_s2.json
+[23:17:58] kx_dblp_k10_paper_bd_s2.json
+[01:17:34] kx_dblp_k100_paper_bd_s2.json
+[03:17:37] kx_amazon_k0_code_s3.json
+[05:16:01] kx_amazon_k10_paper_bd_s3.json
+[06:13:16] kx_amazon_k100_paper_bd_s3.json
+[07:20:32] kx_dblp_k0_code_s3.json
+[09:46:50] kx_dblp_k10_paper_bd_s3.json
+[11:45:10] kx_dblp_k100_paper_bd_s3.json
+
+runs: 270   graphs: 6   seeds: [1, 2, 3]   threads: [8]
+
+=== raw (mean +- std over seeds) ===
+graph                k variant       samples/1e6          time [s]     tau_b
+----------------------------------------------------------------------------
+amazon               0 --       109.760 +- 0.3007100.468 +- 217.2570.924 +- 0.000
+                    10 paper_bd   52.797 +- 0.5763389.682 +- 24.2980.894 +- 0.000
+                   100 paper_bd   56.934 +- 0.4403749.907 +- 221.3440.897 +- 0.000
+
+dblp                 0 --        44.412 +- 0.1328392.601 +- 424.7060.960 +- 0.000
+                    10 paper_bd   40.113 +- 2.8127250.658 +- 272.5930.958 +- 0.002
+                   100 paper_bd   41.333 +- 1.3807450.807 +- 394.3840.959 +- 0.001
+
+email-EuAll          0 --        54.562 +- 0.332   42.158 +- 0.7600.896 +- 0.001
+                     3 code      95.892 +- 0.748   63.810 +- 0.6690.919 +- 0.001
+                     3 paper     67.411 +- 2.973   48.881 +- 2.0460.905 +- 0.001
+                     3 cpp       95.986 +- 0.371   63.795 +- 1.2910.919 +- 0.001
+                     3 paper_bd   46.539 +- 3.801   37.197 +- 2.3850.887 +- 0.004
+                     3 paper_ex   46.917 +- 4.006   37.670 +- 2.0180.887 +- 0.004
+                     5 code      90.001 +- 0.301   60.181 +- 1.0490.916 +- 0.001
+                     5 paper     91.674 +- 0.188   62.177 +- 1.7480.917 +- 0.001
+                     5 cpp       89.940 +- 0.506   60.024 +- 1.9580.916 +- 0.000
+                     5 paper_bd   50.140 +- 2.671   39.666 +- 2.5640.891 +- 0.002
+                     5 paper_ex   50.455 +- 2.917   39.136 +- 1.2280.891 +- 0.003
+                    10 code      53.739 +- 3.283   41.174 +- 1.3620.895 +- 0.003
+                    10 paper     49.708 +- 2.975   39.518 +- 1.0440.891 +- 0.003
+                    10 cpp       53.652 +- 2.600   42.238 +- 1.8960.895 +- 0.003
+                    10 paper_bd   50.021 +- 3.458   39.230 +- 1.3150.891 +- 0.003
+                    10 paper_ex   49.686 +- 3.367   39.100 +- 2.0810.891 +- 0.003
+                   100 code      53.763 +- 2.470   41.846 +- 0.8050.895 +- 0.002
+                   100 paper     51.045 +- 2.221   40.030 +- 1.6970.893 +- 0.001
+                   100 cpp       53.651 +- 2.564   41.433 +- 1.1810.895 +- 0.002
+                   100 paper_bd   51.564 +- 1.952   40.272 +- 0.7420.893 +- 0.001
+                   100 paper_ex   50.883 +- 2.411   39.520 +- 1.5830.892 +- 0.001
+
+p2p-Gnutella31       0 --        51.595 +- 0.264   93.303 +- 0.7660.995 +- 0.000
+                     3 code      26.924 +- 2.727   49.623 +- 5.0240.993 +- 0.000
+                     3 paper     16.187 +- 0.006   29.933 +- 0.3380.991 +- 0.000
+                     3 cpp       26.449 +- 2.821   48.384 +- 4.5510.993 +- 0.000
+                     3 paper_bd   15.254 +- 1.286   28.624 +- 2.3140.991 +- 0.000
+                     3 paper_ex   15.601 +- 0.792   28.993 +- 1.5280.991 +- 0.000
+                     5 code      39.289 +- 0.243   70.672 +- 0.0870.994 +- 0.000
+                     5 paper     34.849 +- 2.950   63.016 +- 5.5070.994 +- 0.000
+                     5 cpp       39.423 +- 0.244   71.151 +- 0.4340.994 +- 0.000
+                     5 paper_bd   35.181 +- 2.894   63.071 +- 5.0810.994 +- 0.000
+                     5 paper_ex   20.026 +- 1.524   37.026 +- 2.7150.992 +- 0.000
+                    10 code      39.493 +- 0.019   70.499 +- 0.1970.994 +- 0.000
+                    10 paper     39.463 +- 0.134   70.759 +- 0.4100.994 +- 0.000
+                    10 cpp       39.166 +- 0.636   70.818 +- 0.5110.994 +- 0.000
+                    10 paper_bd   39.130 +- 0.247   70.441 +- 0.4220.994 +- 0.000
+                    10 paper_ex   44.247 +- 8.421  79.519 +- 15.0200.995 +- 0.001
+                   100 code      42.408 +- 0.374   76.539 +- 0.8670.995 +- 0.000
+                   100 paper     42.195 +- 0.096   75.811 +- 0.2210.995 +- 0.000
+                   100 cpp       42.630 +- 0.434   77.270 +- 1.3710.995 +- 0.000
+                   100 paper_bd   42.302 +- 0.022   76.725 +- 1.2200.995 +- 0.000
+                   100 paper_ex   42.379 +- 0.384   76.128 +- 1.1330.995 +- 0.000
+
+soc-Epinions1        0 --        83.438 +- 0.409   74.182 +- 0.2900.969 +- 0.000
+                     3 code     95.044 +- 32.067  83.447 +- 27.0920.970 +- 0.005
+                     3 paper     54.584 +- 4.583   48.866 +- 4.1240.963 +- 0.001
+                     3 cpp      95.071 +- 31.954  83.588 +- 27.3070.970 +- 0.005
+                     3 paper_bd   55.584 +- 3.441   50.176 +- 3.3920.963 +- 0.001
+                     3 paper_ex   56.486 +- 5.105   50.716 +- 4.1520.963 +- 0.001
+                     5 code     149.550 +- 0.678  131.365 +- 1.4010.976 +- 0.000
+                     5 paper   119.454 +- 14.324 106.788 +- 13.6840.973 +- 0.002
+                     5 cpp     144.114 +- 10.746  129.158 +- 7.4740.975 +- 0.001
+                     5 paper_bd   83.502 +- 8.163   74.885 +- 7.0440.969 +- 0.001
+                     5 paper_ex   83.476 +- 7.737   73.773 +- 6.0980.969 +- 0.001
+                    10 code    109.732 +- 28.338  98.116 +- 24.8040.972 +- 0.004
+                    10 paper     84.306 +- 7.940   74.768 +- 6.9810.969 +- 0.001
+                    10 cpp     109.128 +- 27.383  97.494 +- 24.7770.972 +- 0.003
+                    10 paper_bd   84.336 +- 8.152   75.149 +- 6.7510.969 +- 0.001
+                    10 paper_ex   83.798 +- 7.946   74.284 +- 6.8870.969 +- 0.001
+                   100 code    109.102 +- 27.260  98.359 +- 24.2070.972 +- 0.003
+                   100 paper     84.702 +- 7.865   76.537 +- 5.0680.969 +- 0.001
+                   100 cpp     109.373 +- 27.448  97.033 +- 23.8000.972 +- 0.003
+                   100 paper_bd   84.430 +- 8.012   74.447 +- 6.8900.969 +- 0.001
+                   100 paper_ex   84.132 +- 8.144   74.580 +- 7.4070.969 +- 0.001
+
+soc-Slashdot0902     0 --       119.233 +- 0.589  269.853 +- 4.6460.975 +- 0.000
+                     3 code      20.849 +- 1.033   47.559 +- 2.8740.934 +- 0.002
+                     3 paper     14.275 +- 0.039   32.378 +- 0.4660.919 +- 0.000
+                     3 cpp       20.572 +- 1.687   46.304 +- 3.2840.933 +- 0.003
+                     3 paper_bd   14.210 +- 0.226   32.366 +- 0.3740.919 +- 0.001
+                     3 paper_ex   13.704 +- 0.913   31.176 +- 1.6640.918 +- 0.003
+                     5 code      20.539 +- 1.578   45.855 +- 3.0440.933 +- 0.003
+                     5 paper     13.715 +- 0.888   31.322 +- 1.9250.918 +- 0.003
+                     5 cpp       20.628 +- 1.575   46.165 +- 3.0980.934 +- 0.003
+                     5 paper_bd   13.671 +- 0.771   31.718 +- 1.4910.918 +- 0.002
+                     5 paper_ex   14.252 +- 0.044   32.097 +- 0.1490.919 +- 0.000
+                    10 code      90.254 +- 8.218 200.649 +- 17.9410.971 +- 0.002
+                    10 paper     53.242 +- 6.872 118.798 +- 16.1260.960 +- 0.003
+                    10 cpp       90.625 +- 9.692 205.432 +- 22.6040.971 +- 0.002
+                    10 paper_bd   52.562 +- 7.356 116.093 +- 13.3860.960 +- 0.003
+                    10 paper_ex   52.019 +- 7.744 115.349 +- 14.4530.960 +- 0.003
+                   100 code      90.596 +- 7.789 203.179 +- 16.6250.971 +- 0.001
+                   100 paper     61.761 +- 1.650  138.124 +- 5.1340.964 +- 0.001
+                   100 cpp       90.227 +- 7.192 201.531 +- 19.0340.971 +- 0.001
+                   100 paper_bd   61.197 +- 2.013  137.273 +- 0.2170.964 +- 0.001
+                   100 paper_ex   61.660 +- 1.695  134.387 +- 3.7830.964 +- 0.001
+
+=== (a) samples relative to k=0, paired per seed ===
+    ratio > 1 means the top-k run drew MORE samples than computing all centralities.
+graph                k variant        sample ratio          time ratio  verdict
+-----------------------------------------------------------------------------------------
+amazon              10 paper_bd      0.481 +- 0.004      0.478 +- 0.018  
+amazon             100 paper_bd      0.519 +- 0.004      0.528 +- 0.034  
+
+dblp                10 paper_bd      0.903 +- 0.062      0.867 +- 0.078  
+dblp               100 paper_bd      0.931 +- 0.029      0.891 +- 0.093  
+
+email-EuAll          3 code         1.757 +- 0.011      1.514 +- 0.031  << DEARER than k=0 (>1 std)
+email-EuAll          3 paper        1.235 +- 0.048      1.159 +- 0.041  << DEARER than k=0 (>1 std)
+email-EuAll          3 cpp          1.759 +- 0.010      1.514 +- 0.046  << DEARER than k=0 (>1 std)
+email-EuAll          3 paper_bd      0.853 +- 0.068      0.882 +- 0.047  
+email-EuAll          3 paper_ex      0.860 +- 0.072      0.894 +- 0.043  
+email-EuAll          5 code         1.650 +- 0.014      1.428 +- 0.017  << DEARER than k=0 (>1 std)
+email-EuAll          5 paper        1.680 +- 0.009      1.475 +- 0.020  << DEARER than k=0 (>1 std)
+email-EuAll          5 cpp          1.648 +- 0.012      1.424 +- 0.023  << DEARER than k=0 (>1 std)
+email-EuAll          5 paper_bd      0.919 +- 0.049      0.940 +- 0.044  
+email-EuAll          5 paper_ex      0.925 +- 0.054      0.928 +- 0.020  
+email-EuAll         10 code         0.985 +- 0.055      0.977 +- 0.044  
+email-EuAll         10 paper        0.911 +- 0.053      0.937 +- 0.014  
+email-EuAll         10 cpp          0.983 +- 0.042      1.002 +- 0.052  
+email-EuAll         10 paper_bd      0.917 +- 0.061      0.930 +- 0.018  
+email-EuAll         10 paper_ex      0.911 +- 0.060      0.927 +- 0.045  
+email-EuAll        100 code         0.985 +- 0.040      0.993 +- 0.034  
+email-EuAll        100 paper        0.935 +- 0.038      0.949 +- 0.035  
+email-EuAll        100 cpp          0.983 +- 0.042      0.983 +- 0.037  
+email-EuAll        100 paper_bd      0.945 +- 0.034      0.955 +- 0.004  
+email-EuAll        100 paper_ex      0.933 +- 0.042      0.937 +- 0.025  
+
+p2p-Gnutella31       3 code         0.522 +- 0.051      0.532 +- 0.051  
+p2p-Gnutella31       3 paper        0.314 +- 0.002      0.321 +- 0.006  
+p2p-Gnutella31       3 cpp          0.512 +- 0.052      0.519 +- 0.048  
+p2p-Gnutella31       3 paper_bd      0.296 +- 0.024      0.307 +- 0.023  
+p2p-Gnutella31       3 paper_ex      0.302 +- 0.014      0.311 +- 0.014  
+p2p-Gnutella31       5 code         0.761 +- 0.007      0.757 +- 0.007  
+p2p-Gnutella31       5 paper        0.676 +- 0.060      0.675 +- 0.058  
+p2p-Gnutella31       5 cpp          0.764 +- 0.004      0.763 +- 0.009  
+p2p-Gnutella31       5 paper_bd      0.682 +- 0.059      0.676 +- 0.053  
+p2p-Gnutella31       5 paper_ex      0.388 +- 0.028      0.397 +- 0.028  
+p2p-Gnutella31      10 code         0.765 +- 0.004      0.756 +- 0.007  
+p2p-Gnutella31      10 paper        0.765 +- 0.002      0.758 +- 0.010  
+p2p-Gnutella31      10 cpp          0.759 +- 0.013      0.759 +- 0.011  
+p2p-Gnutella31      10 paper_bd      0.758 +- 0.005      0.755 +- 0.011  
+p2p-Gnutella31      10 paper_ex      0.858 +- 0.167      0.853 +- 0.166  
+p2p-Gnutella31     100 code         0.822 +- 0.008      0.820 +- 0.004  
+p2p-Gnutella31     100 paper        0.818 +- 0.003      0.813 +- 0.006  
+p2p-Gnutella31     100 cpp          0.826 +- 0.012      0.828 +- 0.016  
+p2p-Gnutella31     100 paper_bd      0.820 +- 0.005      0.822 +- 0.019  
+p2p-Gnutella31     100 paper_ex      0.821 +- 0.004      0.816 +- 0.018  
+
+soc-Epinions1        3 code         1.140 +- 0.387      1.125 +- 0.367  dearer on average, within 1 std of 1
+soc-Epinions1        3 paper        0.654 +- 0.056      0.659 +- 0.053  
+soc-Epinions1        3 cpp          1.140 +- 0.386      1.127 +- 0.370  dearer on average, within 1 std of 1
+soc-Epinions1        3 paper_bd      0.666 +- 0.042      0.676 +- 0.043  
+soc-Epinions1        3 paper_ex      0.677 +- 0.061      0.684 +- 0.054  
+soc-Epinions1        5 code         1.792 +- 0.011      1.771 +- 0.013  << DEARER than k=0 (>1 std)
+soc-Epinions1        5 paper        1.431 +- 0.165      1.440 +- 0.188  << DEARER than k=0 (>1 std)
+soc-Epinions1        5 cpp          1.728 +- 0.135      1.741 +- 0.094  << DEARER than k=0 (>1 std)
+soc-Epinions1        5 paper_bd      1.001 +- 0.094      1.010 +- 0.099  dearer on average, within 1 std of 1
+soc-Epinions1        5 paper_ex      1.000 +- 0.089      0.995 +- 0.086  dearer on average, within 1 std of 1
+soc-Epinions1       10 code         1.315 +- 0.341      1.323 +- 0.338  dearer on average, within 1 std of 1
+soc-Epinions1       10 paper        1.010 +- 0.092      1.008 +- 0.098  dearer on average, within 1 std of 1
+soc-Epinions1       10 cpp          1.308 +- 0.329      1.315 +- 0.337  dearer on average, within 1 std of 1
+soc-Epinions1       10 paper_bd      1.011 +- 0.095      1.013 +- 0.095  dearer on average, within 1 std of 1
+soc-Epinions1       10 paper_ex      1.004 +- 0.092      1.002 +- 0.097  dearer on average, within 1 std of 1
+soc-Epinions1      100 code         1.308 +- 0.328      1.327 +- 0.330  dearer on average, within 1 std of 1
+soc-Epinions1      100 paper        1.015 +- 0.091      1.032 +- 0.072  dearer on average, within 1 std of 1
+soc-Epinions1      100 cpp          1.311 +- 0.330      1.309 +- 0.324  dearer on average, within 1 std of 1
+soc-Epinions1      100 paper_bd      1.012 +- 0.092      1.004 +- 0.097  dearer on average, within 1 std of 1
+soc-Epinions1      100 paper_ex      1.008 +- 0.094      1.006 +- 0.104  dearer on average, within 1 std of 1
+
+soc-Slashdot0902     3 code         0.175 +- 0.008      0.176 +- 0.008  
+soc-Slashdot0902     3 paper        0.120 +- 0.001      0.120 +- 0.002  
+soc-Slashdot0902     3 cpp          0.172 +- 0.013      0.172 +- 0.011  
+soc-Slashdot0902     3 paper_bd      0.119 +- 0.002      0.120 +- 0.003  
+soc-Slashdot0902     3 paper_ex      0.115 +- 0.007      0.115 +- 0.004  
+soc-Slashdot0902     5 code         0.172 +- 0.012      0.170 +- 0.010  
+soc-Slashdot0902     5 paper        0.115 +- 0.007      0.116 +- 0.005  
+soc-Slashdot0902     5 cpp          0.173 +- 0.012      0.171 +- 0.010  
+soc-Slashdot0902     5 paper_bd      0.115 +- 0.006      0.117 +- 0.004  
+soc-Slashdot0902     5 paper_ex      0.120 +- 0.001      0.119 +- 0.003  
+soc-Slashdot0902    10 code         0.757 +- 0.065      0.743 +- 0.060  
+soc-Slashdot0902    10 paper        0.447 +- 0.059      0.440 +- 0.054  
+soc-Slashdot0902    10 cpp          0.760 +- 0.078      0.761 +- 0.076  
+soc-Slashdot0902    10 paper_bd      0.441 +- 0.063      0.430 +- 0.044  
+soc-Slashdot0902    10 paper_ex      0.436 +- 0.066      0.427 +- 0.048  
+soc-Slashdot0902   100 code         0.760 +- 0.062      0.753 +- 0.056  
+soc-Slashdot0902   100 paper        0.518 +- 0.014      0.512 +- 0.013  
+soc-Slashdot0902   100 cpp          0.757 +- 0.057      0.746 +- 0.063  
+soc-Slashdot0902   100 paper_bd      0.513 +- 0.019      0.509 +- 0.009  
+soc-Slashdot0902   100 paper_ex      0.517 +- 0.015      0.498 +- 0.007  
+
+  top-k costs MORE than k=0, beyond one std, on:
+    email-EuAll k=3 (code): 1.757x
+    email-EuAll k=3 (paper): 1.235x
+    email-EuAll k=3 (cpp): 1.759x
+    email-EuAll k=5 (code): 1.650x
+    email-EuAll k=5 (paper): 1.680x
+    email-EuAll k=5 (cpp): 1.648x
+    soc-Epinions1 k=5 (code): 1.792x
+    soc-Epinions1 k=5 (paper): 1.431x
+    soc-Epinions1 k=5 (cpp): 1.728x
+
+=== (b) budget-allocation variant, paired per seed against 'code' ===
+    ratio < 1 means that variant needed FEWER samples than the C++ reference's allocation.
+graph                k variant     samples vs code        time vs code   tau_b delta
+------------------------------------------------------------------------------------
+
+
+email-EuAll          3 paper        0.703 +- 0.030      0.766 +- 0.039-0.013 +- 0.002
+email-EuAll          3 cpp          1.001 +- 0.004      1.000 +- 0.0110.000 +- 0.000
+email-EuAll          3 paper_bd      0.485 +- 0.041      0.583 +- 0.042-0.031 +- 0.004
+email-EuAll          3 paper_ex      0.489 +- 0.044      0.591 +- 0.037-0.031 +- 0.005
+email-EuAll          5 paper        1.019 +- 0.004      1.033 +- 0.0120.001 +- 0.000
+email-EuAll          5 cpp          0.999 +- 0.005      0.997 +- 0.027-0.000 +- 0.001
+email-EuAll          5 paper_bd      0.557 +- 0.028      0.659 +- 0.033-0.025 +- 0.003
+email-EuAll          5 paper_ex      0.561 +- 0.031      0.650 +- 0.009-0.025 +- 0.004
+email-EuAll         10 paper        0.927 +- 0.077      0.960 +- 0.039-0.004 +- 0.005
+email-EuAll         10 cpp          0.999 +- 0.013      1.026 +- 0.017-0.000 +- 0.000
+email-EuAll         10 paper_bd      0.933 +- 0.083      0.954 +- 0.046-0.004 +- 0.005
+email-EuAll         10 paper_ex      0.927 +- 0.081      0.950 +- 0.041-0.004 +- 0.005
+email-EuAll        100 paper        0.951 +- 0.054      0.957 +- 0.039-0.002 +- 0.003
+email-EuAll        100 cpp          0.998 +- 0.002      0.990 +- 0.014-0.000 +- 0.001
+email-EuAll        100 paper_bd      0.961 +- 0.059      0.963 +- 0.034-0.002 +- 0.003
+email-EuAll        100 paper_ex      0.948 +- 0.062      0.945 +- 0.044-0.003 +- 0.004
+
+p2p-Gnutella31       3 paper        0.606 +- 0.065      0.608 +- 0.067-0.002 +- 0.000
+p2p-Gnutella31       3 cpp          0.982 +- 0.035      0.976 +- 0.046-0.000 +- 0.000
+p2p-Gnutella31       3 paper_bd      0.567 +- 0.011      0.578 +- 0.015-0.003 +- 0.000
+p2p-Gnutella31       3 paper_ex      0.582 +- 0.032      0.586 +- 0.033-0.002 +- 0.000
+p2p-Gnutella31       5 paper        0.887 +- 0.075      0.892 +- 0.079-0.000 +- 0.000
+p2p-Gnutella31       5 cpp          1.003 +- 0.012      1.007 +- 0.0070.000 +- 0.000
+p2p-Gnutella31       5 paper_bd      0.895 +- 0.074      0.893 +- 0.073-0.000 +- 0.000
+p2p-Gnutella31       5 paper_ex      0.510 +- 0.041      0.524 +- 0.038-0.002 +- 0.000
+p2p-Gnutella31      10 paper        0.999 +- 0.003      1.004 +- 0.007-0.000 +- 0.000
+p2p-Gnutella31      10 cpp          0.992 +- 0.016      1.005 +- 0.009-0.000 +- 0.000
+p2p-Gnutella31      10 paper_bd      0.991 +- 0.006      0.999 +- 0.006-0.000 +- 0.000
+p2p-Gnutella31      10 paper_ex      1.120 +- 0.214      1.128 +- 0.2100.000 +- 0.001
+p2p-Gnutella31     100 paper        0.995 +- 0.011      0.991 +- 0.011-0.000 +- 0.000
+p2p-Gnutella31     100 cpp          1.005 +- 0.016      1.010 +- 0.0170.000 +- 0.000
+p2p-Gnutella31     100 paper_bd      0.998 +- 0.009      1.003 +- 0.023-0.000 +- 0.000
+p2p-Gnutella31     100 paper_ex      0.999 +- 0.015      0.995 +- 0.025-0.000 +- 0.000
+
+soc-Epinions1        3 paper        0.641 +- 0.307      0.649 +- 0.302-0.007 +- 0.006
+soc-Epinions1        3 cpp          1.001 +- 0.002      1.001 +- 0.004-0.000 +- 0.000
+soc-Epinions1        3 paper_bd      0.651 +- 0.301      0.665 +- 0.300-0.007 +- 0.006
+soc-Epinions1        3 paper_ex      0.667 +- 0.328      0.675 +- 0.315-0.006 +- 0.006
+soc-Epinions1        5 paper        0.799 +- 0.095      0.813 +- 0.106-0.002 +- 0.001
+soc-Epinions1        5 cpp          0.964 +- 0.070      0.983 +- 0.048-0.000 +- 0.001
+soc-Epinions1        5 paper_bd      0.558 +- 0.056      0.570 +- 0.059-0.007 +- 0.001
+soc-Epinions1        5 paper_ex      0.558 +- 0.053      0.562 +- 0.052-0.007 +- 0.001
+soc-Epinions1       10 paper        0.800 +- 0.189      0.790 +- 0.171-0.003 +- 0.003
+soc-Epinions1       10 cpp          0.996 +- 0.009      0.994 +- 0.0200.000 +- 0.000
+soc-Epinions1       10 paper_bd      0.799 +- 0.180      0.795 +- 0.177-0.003 +- 0.003
+soc-Epinions1       10 paper_ex      0.795 +- 0.189      0.787 +- 0.184-0.003 +- 0.003
+soc-Epinions1      100 paper        0.807 +- 0.186      0.811 +- 0.205-0.003 +- 0.003
+soc-Epinions1      100 cpp          1.002 +- 0.002      0.987 +- 0.0220.000 +- 0.000
+soc-Epinions1      100 paper_bd      0.804 +- 0.186      0.785 +- 0.178-0.003 +- 0.003
+soc-Epinions1      100 paper_ex      0.801 +- 0.185      0.786 +- 0.175-0.003 +- 0.003
+
+soc-Slashdot0902     3 paper        0.686 +- 0.034      0.682 +- 0.038-0.015 +- 0.002
+soc-Slashdot0902     3 cpp          0.986 +- 0.047      0.974 +- 0.047-0.000 +- 0.002
+soc-Slashdot0902     3 paper_bd      0.683 +- 0.043      0.683 +- 0.049-0.015 +- 0.002
+soc-Slashdot0902     3 paper_ex      0.657 +- 0.016      0.656 +- 0.013-0.016 +- 0.001
+soc-Slashdot0902     5 paper        0.669 +- 0.050      0.685 +- 0.054-0.016 +- 0.003
+soc-Slashdot0902     5 cpp          1.004 +- 0.001      1.007 +- 0.0070.000 +- 0.000
+soc-Slashdot0902     5 paper_bd      0.667 +- 0.031      0.693 +- 0.039-0.016 +- 0.002
+soc-Slashdot0902     5 paper_ex      0.697 +- 0.053      0.702 +- 0.047-0.014 +- 0.003
+soc-Slashdot0902    10 paper        0.592 +- 0.087      0.595 +- 0.097-0.010 +- 0.003
+soc-Slashdot0902    10 cpp          1.003 +- 0.016      1.023 +- 0.0210.000 +- 0.000
+soc-Slashdot0902    10 paper_bd      0.585 +- 0.091      0.581 +- 0.084-0.011 +- 0.003
+soc-Slashdot0902    10 paper_ex      0.579 +- 0.101      0.578 +- 0.090-0.011 +- 0.004
+soc-Slashdot0902   100 paper        0.685 +- 0.052      0.683 +- 0.061-0.007 +- 0.001
+soc-Slashdot0902   100 cpp          0.996 +- 0.009      0.991 +- 0.017-0.000 +- 0.000
+soc-Slashdot0902   100 paper_bd      0.679 +- 0.063      0.679 +- 0.054-0.007 +- 0.002
+soc-Slashdot0902   100 paper_ex      0.684 +- 0.057      0.664 +- 0.054-0.007 +- 0.001
+
+  pooled over all (graph, k): paper/code samples = 0.798 +- 0.173   [min 0.441, max 1.022, n=48]
+  pooled over all (graph, k): cpp/code samples = 0.996 +- 0.023   [min 0.883, max 1.033, n=48]
+  pooled over all (graph, k): paper_bd/code samples = 0.738 +- 0.193   [min 0.442, max 1.005, n=48]
+  pooled over all (graph, k): paper_ex/code samples = 0.723 +- 0.214   [min 0.442, max 1.367, n=48]
+
+=== LaTeX table body (tables/topk_allocation_table.tex) ===
+            \texttt{amazon} & $3$ & -- & -- & -- \\
+             & $5$ & -- & -- & -- \\
+             & $10$ & -- & -- & -- \\
+             & $100$ & -- & -- & -- \\
+            \midrule
+            \texttt{dblp} & $3$ & -- & -- & -- \\
+             & $5$ & -- & -- & -- \\
+             & $10$ & -- & -- & -- \\
+             & $100$ & -- & -- & -- \\
+            \midrule
+            \texttt{email-EuAll} & $3$ & $1.76 \pm 0.01$ & $1.24 \pm 0.05$ & $0.70 \pm 0.03$ \\
+             & $5$ & $1.65 \pm 0.01$ & $1.68 \pm 0.01$ & $1.02 \pm 0.00$ \\
+             & $10$ & $0.98 \pm 0.05$ & $0.91 \pm 0.05$ & $0.93 \pm 0.08$ \\
+             & $100$ & $0.99 \pm 0.04$ & $0.94 \pm 0.04$ & $0.95 \pm 0.05$ \\
+            \midrule
+            \texttt{p2p-Gnutella31} & $3$ & $0.52 \pm 0.05$ & $0.31 \pm 0.00$ & $0.61 \pm 0.07$ \\
+             & $5$ & $0.76 \pm 0.01$ & $0.68 \pm 0.06$ & $0.89 \pm 0.08$ \\
+             & $10$ & $0.77 \pm 0.00$ & $0.76 \pm 0.00$ & $1.00 \pm 0.00$ \\
+             & $100$ & $0.82 \pm 0.01$ & $0.82 \pm 0.00$ & $1.00 \pm 0.01$ \\
+            \midrule
+            \texttt{soc-Epinions1} & $3$ & $1.14 \pm 0.39$ & $0.65 \pm 0.06$ & $0.64 \pm 0.31$ \\
+             & $5$ & $1.79 \pm 0.01$ & $1.43 \pm 0.16$ & $0.80 \pm 0.10$ \\
+             & $10$ & $1.32 \pm 0.34$ & $1.01 \pm 0.09$ & $0.80 \pm 0.19$ \\
+             & $100$ & $1.31 \pm 0.33$ & $1.01 \pm 0.09$ & $0.81 \pm 0.19$ \\
+            \midrule
+            \texttt{soc-Slashdot0902} & $3$ & $0.17 \pm 0.01$ & $0.12 \pm 0.00$ & $0.69 \pm 0.03$ \\
+             & $5$ & $0.17 \pm 0.01$ & $0.12 \pm 0.01$ & $0.67 \pm 0.05$ \\
+             & $10$ & $0.76 \pm 0.07$ & $0.45 \pm 0.06$ & $0.59 \pm 0.09$ \\
+             & $100$ & $0.76 \pm 0.06$ & $0.52 \pm 0.01$ & $0.68 \pm 0.05$ \\
+
+Done. Raw per-run JSON is in /home/stud/schlaierm0/rerun_fix/topk
+Re-running is incremental: existing .json files are skipped, so delete a
+file (or the whole directory) to force that measurement to be recomputed.
+  verified 270 Julia KADABRA runs in /home/stud/schlaierm0/rerun_fix/topk (kx_*.json), 0 with problems
+[2026-09-19 13:47:27] === stage F-kxl: done ===
+[2026-09-19 13:47:27] === ALL STAGES FINISHED ===
