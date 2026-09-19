@@ -1,104 +1,69 @@
 # Benchmarks
 
-This folder contains the experimental setup to benchmark the runtime and accuracy of the various betweenness centrality algorithms (Julia Kadabra, C++ Kadabra, BRAVA-GNN, and Exact Brandes).
+Everything that produces, archives and summarizes the measurements in the report. To
+reproduce the report, start with `reproduce_all.sh` (see the repository's
+[README](../README.md#reproducing-the-results)); this page lists what it is built from.
 
-We use **[simexpal](https://github.com/hu-macsy/simexpal)** to cleanly manage large-scale execution on compute clusters, alongside JSON logging for precise and unified metric tracking.
+## Runners
 
-## Supported Algorithms
-The `simexpal` pipeline (`experiments.yml`) currently evaluates:
-- `kadabra-cpp`: Original Kadabra implementation in C++
-- `kadabra-julia`: Our custom Julia Kadabra implementation
-- `brava-julia`: GNN-based inference (requires `.jld2` weights inside `cache/`)
-- `brandes-julia`: Exact algorithm serving as the ground-truth baseline (via `Graphs.jl`)
+| file | what |
+| --- | --- |
+| `simexpal_runners/run_experiments.jl` | one Julia run (KADABRA, BRAVA-GNN or exact Brandes) → one JSON with runtime, samples and accuracy against the ground truth |
+| `simexpal_runners/run_experiments.cpp` | the same for the authors' C++ KADABRA (`make -C simexpal_runners build`); `-centralities 1` also writes the per-vertex scores |
+| `scripts/BenchmarkUtils.jl` | graph loading shared by the runners |
 
-## Execution Metrics
-Each execution yields a standardized `stats.json` file inside the `output/` directory containing:
-- `execution_time_seconds`: Pure algorithmic computation time (fair comparison)
-- `io_time_seconds`: Graph parsing and memory loading time
-- `num_samples`: Algorithm sample counts (e.g., pairs used for Kadabra)
-- `tau_overall`: Kendall Tau correlation across all nodes compared to exact Brandes
-- `tau_topk`: Kendall Tau restricted strictly to the top-k nodes
-- `overlap_topk`: Cardinality of intersection between approx and exact top-k nodes
-- `max_ae`: Maximum Absolute Error vs exact Brandes
-- `mae`: Mean Absolute Error vs exact Brandes
-- `ndcg_topk`: Normalized Discounted Cumulative Gain for ranking quality
-- `parameters`: Metadata (threads, graph parameters, epsilon, etc.)
+Every run writes `execution_time_seconds`, `io_time_seconds`, `num_samples`, `tau_overall`,
+`tau_topk`, `overlap_topk`, `max_ae`, `mae`, `ndcg_topk` and `parameters` (graph, epsilon,
+delta, k, seed, and the **actual** thread count).
 
-*Note: Centrality arrays themselves are intentionally omitted to maintain tiny artifact sizes and prevent disk I/O bottlenecks.*
+## Running measurements
 
----
+| script | what |
+| --- | --- |
+| `reproduce_all.sh` | every measurement, table and figure of the report, in order; `--help` for the steps |
+| `reproduce_report.sh --stage …` | one measurement stage (`tight`, `tightx`, `bvk`, `kx`, `kxs`, `kxb`, `kxc`, `kxl`) |
+| `rerun_after_fix.sh` | the sequence that produced `results/rerun_fix/` (2026-09-16 to 09-19) |
+| `run_seed_check.sh` | the experiment behind the stopping-coordination fix (`results/seed_check/`) |
+| `archive_runs.py` | collects runs from the server into a committable directory |
 
-## The Master Pipeline Script (`run_pipeline.sh`)
+Run on the benchmark server, inside `tmux`, with nothing else on the machine during timed
+stages.
 
-We provide a single root script `run_pipeline.sh` that automates the entire end-to-end evaluation. It:
-1. Activates the python `venv`.
-2. Executes `simexpal launch` (can be skipped).
-3. Evaluates and aggregates all JSON results into a CSV via `evaluate_all_runs.jl`.
-4. Plots the final benchmark results using `plot_results.py`.
+## From runs to the report
 
-**Usage:**
+| script | emits |
+| --- | --- |
+| `update_report_from_rerun.py` | all table bodies and figures, written into `../Report/` or `--report DIR` |
+| `summarize_reproduce.py {tight,tightx,bvk}` | Tables 1, 5 and the quoted ranges; `tightx` checks Section 6.4's claim |
+| `summarize_seeds.py` | Table 2 (mean ± std over seeds) |
+| `summarize_threads.py` | the thread-scaling numbers of Section 6.1 |
+| `summarize_topk.py`, `summarize_topk_claims.py` | Table 6 and the numbers of Section 6.3 |
+| `summarize_cpp_quality.py`, `score_cpp_centralities.py`, `check_burnin_bias.py` | Table 8 (Appendix A.7) |
+| `summarize_seed_check.py` | the seed experiment |
+| `make_plots.py {threads,bvk,topk}` | Figures 1–3 |
+
+## Diagnostics
+
+| script | what |
+| --- | --- |
+| `eval_brava_paper.jl [checkpoint]` | a BRAVA-GNN checkpoint against the paper's Table 2 |
+| `diagnose_brava_mask.jl`, `diagnose_brava_nopr.jl` | the 2×2 diagnostic behind the BRAVA-GNN fix |
+| `diagnose_topk_delta.jl` | per-vertex view of why the top-$k$ allocations differ |
+| `diagnose_topk_oracle.jl` | how much an exact ranking could save top-$k$ mode (`results/topk_oracle/`) |
+
+## Data
+
+`results/` holds every run the report uses; see [`results/README.md`](results/README.md).
+`cache/` holds exact-betweenness caches and, once installed, the BRAVA-GNN checkpoints
+(both gitignored).
+
+`experiments.yml` is the original `simexpal` configuration. The report's runs were made with
+the shell scripts above, which call the runners directly.
+
+Scripts and results from before August 2026 were removed because they predate the sampling
+fixes in `src/kadabra.jl` and the retrained BRAVA-GNN. Recover any of them from git:
+
 ```bash
-# Run the complete pipeline (launch + evaluate + plot)
-bash run_pipeline.sh
-
-# Skip simexpal launch (if runs are managed on a cluster/server)
-bash run_pipeline.sh --no-run
-```
-
----
-
-## Managing Experiments with `simexpal`
-
-All benchmarks are orchestrated through `experiments.yml` and launched natively via `simexpal`.
-
-### 1. Launching
-Build necessary programs and launch all pending experiments:
-```bash
-cd simexpal_runners && make build && cd ..
-../venv/bin/simex e launch
-```
-
-### 2. Checking Status
-View the status of experiments (running, finished, failed):
-```bash
-../venv/bin/simex e list
-```
-
-### 3. Purging (Deleting Runs)
-If you need to delete and re-run experiments, use the `purge` command with `-f` (force).
-
-**Purge everything:**
-```bash
-../venv/bin/simex e purge --all -f
-```
-
-**Purge a specific algorithm/experiment:**
-```bash
-../venv/bin/simex e purge --experiment brandes-julia -f
-```
-
-**Purge a specific graph instance:**
-```bash
-../venv/bin/simex e purge --instance p2p-Gnutella31 -f
-```
-
-**Purge a combination of Experiment and Instance:**
-```bash
-../venv/bin/simex e purge --experiment brandes-julia --instance p2p-Gnutella31 -f
-```
-
-**Purge all failed runs:**
-*(Useful for restarting only crashed executions)*
-```bash
-../venv/bin/simex e purge --failed -f
-```
-
-**Purge an exact run string:**
-```bash
-../venv/bin/simex e purge --run "brandes-julia~err1,k0,t1,undirected/p2p-Gnutella31[0]" -f
-```
-
-**Purge an exact run string:**
-```bash
-../venv/bin/simex e purge --run "brandes-julia~err1,k0,t1,undirected/p2p-Gnutella31[0]" -f
+git log --diff-filter=D --oneline -- benchmark
+git checkout <commit>^ -- <path>
 ```

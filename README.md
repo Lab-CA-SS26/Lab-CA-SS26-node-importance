@@ -93,13 +93,13 @@ by them directly, and the numbers in the prose are taken from what they print.
 
 | what | version we used | for |
 | --- | --- | --- |
-| Julia | 1.12 (`Manifest.toml` pins 1.12.5) | `src/` and the Julia runner |
+| Julia | 1.12 (the runs used 1.12.6) | `src/` and the Julia runner |
 | g++ with OpenMP | 11.4 on Linux; clang + Homebrew `libomp` on macOS | the C++ reference runner |
 | Python 3 with `numpy`, `scipy`, `matplotlib` | 3.10 | summarizers and plots |
 | CUDA + cuDNN | via `CUDA.jl` | BRAVA-GNN GPU runs and training (inference falls back to CPU) |
 
 ```bash
-julia --project=. -e 'using Pkg; Pkg.instantiate()'   # Julia packages, pinned by Manifest.toml
+julia --project=. -e 'using Pkg; Pkg.instantiate()'   # Julia packages from Project.toml
 make -C benchmark/simexpal_runners build              # C++ runner; the reference and nlohmann/json are vendored in cpp_reference/
 ```
 
@@ -119,7 +119,9 @@ python3 -m venv venv && source venv/bin/activate && pip install -r BRAVA-GNN-A0B
   `com-youtube`, `com-lj`, `cit-Patents`) into `Instances/ABCDE/`.
 - **Exact ground truth**, `Instances/ground_truth/test_instances/<graph>_bet.csv` with
   columns `node,betweenness`, needed for every accuracy number. For the five ABCDE graphs it
-  was provided by the BRAVA-GNN authors. For `p2p-Gnutella31`, `soc-Epinions1`,
+  was provided by the BRAVA-GNN authors as pickles, converted to CSV with
+  `scripts/convert_ground_truth_pickle.py` (`scripts/convert_abcde_scores.py` converts the
+  ABCDE release's own `-score.txt` files). For `p2p-Gnutella31`, `soc-Epinions1`,
   `soc-Slashdot0902` and `email-EuAll` we computed it with `Graphs.jl`'s exact
   `betweenness_centrality`, which takes hours to days per graph (report, Appendix A.2).
   These files are not distributed with the repository.
