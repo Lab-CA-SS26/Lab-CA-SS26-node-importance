@@ -161,8 +161,22 @@ Graphs.jl clone checked out next to this repository, for its `testdata/` and
 
 ## Reproducing the report
 
-Every number in the report comes from `benchmark/reproduce_report.sh`. Nothing is
-hand-typed into the LaTeX.
+One command re-runs every measurement and regenerates every table, figure and quoted
+number (~4 days on the benchmark server, so run it inside tmux):
+
+```bash
+./benchmark/reproduce_all.sh                 # everything, into ~/reproduce_all
+./benchmark/reproduce_all.sh --dry-run       # print every command instead
+./benchmark/reproduce_all.sh --only report   # only rebuild tables/figures from existing runs
+```
+
+Tables and figures land in `~/reproduce_all/report/`, the numbers the prose quotes in
+`~/reproduce_all/claims/`. `benchmark/reproduce_all.sh --help` lists the steps, which report
+section each feeds, and what is deliberately not re-run (the exact ground truth). Run on the
+archived data in `benchmark/results/`, the `report` step reproduces the report's tables and
+figures byte for byte.
+
+The individual stages it chains can also be run on their own:
 
 ```bash
 cd benchmark
