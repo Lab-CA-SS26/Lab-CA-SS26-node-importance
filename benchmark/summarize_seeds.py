@@ -10,7 +10,8 @@ reports a single draw for each:
     *training* seed, i.e. from three separately trained models.
 
 Quoting +/- for one and not the other would imply the other is deterministic, so this
-computes both. The two spreads mean different things and the caption must say so.
+computes both. The two spreads mean different things and the report must say so (Section 6.4's
+opening paragraph does; the table caption is kept short and is not written by this script).
 
 Inputs
 ------
