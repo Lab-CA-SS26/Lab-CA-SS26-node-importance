@@ -37,21 +37,22 @@ which is what Algorithm 2 goes on to consult: separating v_i from v_{i+1} requir
 `b̃(v_i) − f(v_i) ≥ b̃(v_{i+1}) + g(v_{i+1})`, so it is v_i's *lower* deviation that must clear
 the gap *below* it, and its upper deviation that must be cleared from above.
 
-`Probabilistic.cpp` pairs them the other way round, and three further consequences follow:
+`Probabilistic.cpp` pairs them the other way round; the table also lists two further places
+where it departs from the paper:
 
 | | paper (§5.2 / Algorithm 2) | reference implementation |
 | --- | --- | --- |
 | λ_U(v_i), i ≤ k | gap **above** v_i | gap **below** |
 | λ_L(v_i), i ≤ k | gap **below** v_i | gap **above** |
-| top vertex v₁ | λ_L = gap, λ_U unconstrained | λ_L **unconstrained**, λ_U = gap |
+| top vertex v₁ | λ_L = gap, λ_U undefined (no v₀) | λ_L **unconstrained**, λ_U = gap |
 | λ_U(v_i), i > k | `b̃(v_k) − λ_L(v_k) − b̃(v_i)` | `b̃(v_k)` **+** `λ_L(v_k)` − `b̃(v_i)` |
 | external exclusion test | `b̃(v_k) − f(v_k)` | `b̃(v_k) − ` **`g`** `(v_k)` |
 
-The v₁ case is the sharpest: it genuinely has no rank neighbour above it, so one of its two
-budgets is unconstrained — but the code leaves λ_L(v₁) unconstrained rather than λ_U(v₁).
-Since `computeDelta` allocates δ in proportion to `exp(−C·λ²/b̃)`, an unconstrained λ drives
-that vertex's δ to its numerical floor and its deviation bound to a maximum. The one bound
-v₁'s own stopping test depends on ends up the loosest in the graph.
+The v₁ row is the transposition at i = 1, and its sharpest consequence: v₁ has no rank
+neighbour above it, so the paper's rule gives it only a lower target, but the code leaves
+λ_L(v₁) unconstrained instead. Since `computeDelta` sets each δ to roughly `exp(−C·λ²/b̃)`, an
+unconstrained λ drives that δ to its numerical floor and the bound to its maximum — and f(v₁)
+is the only one of v₁'s bounds that its separation test uses.
 
 ### What it costs
 
@@ -67,9 +68,7 @@ cancels.
 **Top-*k* accuracy is identical** — same overlap with the exact ranking, same Kendall τ over
 the top *k* to three decimals. Only the sample count moves.
 
-The `g(v_k)`-for-`f(v_k)` substitution turns out to be inert (1.00 ± 0.02), because the
-vertices that finish last are almost always resolved by the `f, g ≤ λ` fallback rather than by
-exclusion, so which deviation is subtracted is rarely consulted.
+The `g(v_k)`-for-`f(v_k)` substitution turns out to be inert (1.00 ± 0.02).
 
 ---
 
@@ -87,22 +86,22 @@ No restriction on *i*. The reference implements it as two loops — adjacent pai
 two loops and is never collapsed**, and it is the one pair the external-exclusion test is
 built around.
 
-### Why that deadlocks
+### Why that costs samples
 
-Whenever `b̃(v_k) − b̃(v_{k+1}) < 2λ`, exclusion is *arithmetically* unsatisfiable: it needs
-`f(v_k) + g(v_{k+1})` to fall below that gap, and neither is ever budgeted below λ. So
-v_{k+1} must use the `f, g ≤ λ` fallback — but the allocation has written off its lower bound
-(λ_L = ∞ for every vertex outside the top *k*), so `f(v_{k+1})` is pinned near its maximum and
-the fallback is out of reach too. v_k is stuck symmetrically: it fails the same separation,
-and its own λ_U was sized by the wider gap above it, so its fallback fails on `g`.
+For every vertex outside the top *k* the allocation writes off the lower bound (λ_L = 1 in the
+paper, 10 in the code), driving δ_L to its numerical floor. That is harmless while the vertex
+is excluded, since exclusion consults only its upper bound. But excluding v_{k+1} rests on the
+single gap `b̃(v_k) − b̃(v_{k+1})` and needs `f(v_k) + g(v_{k+1})` to fall below it: when the
+gap is under 2λ, the two bounds must on average become tighter than λ. Meanwhile neither vertex
+has budgets aimed at the `f, g ≤ λ` fallback — v_{k+1}'s lower bound was written off, and
+v_k's upper target was sized by the wider gap above it. So both can only be resolved by
+separating them, which takes more samples than the λ criterion at k = 0.
 
-Both vertices are therefore unresolvable, and the run samples far past where either criterion
-was budgeted for. Collapsing the pair — exactly the paper's rule, applied at i = k — gives all
-four bounds a real budget and breaks the deadlock. We verified that collapsing only half a
-pair changes nothing: it takes all four.
-
-Concretely, on `soc-Epinions1` at k = 5: gap = 1.43λ, exclusion misses by 8e-6,
-δ_L(v₆) = 3.3e-10 against a required `f < λ`.
+Concretely, replaying seed 1 of `soc-Epinions1` at k = 5 under the paper's allocation with the
+burn-in estimates held fixed (`diagnose_topk_delta.jl`): the gap is 1.43λ, and 3% before the
+run stops f(v₆) = 1.52λ (δ_L = 3.3e-10, the floor), g(v₅) = 1.52λ, and exclusion misses
+narrowly, with f(v₅) + g(v₆) = 1.48λ. Collapsing the pair — exactly the paper's rule, applied
+at i = k — resets all four targets to λ, so both vertices can fall back as they would at k = 0.
 
 ### What it costs
 
@@ -161,7 +160,7 @@ never formed. An absolute runtime of "under an hour" on IMDB looks entirely reas
 whether or not the run drew twice the samples it needed to.
 
 There is a second reason the top-*k* runs might not have shown it even if a baseline had
-existed. The deadlock needs `b̃(v_k) − b̃(v_{k+1})` to fall below 2λ, which depends on where
+existed. The effect needs `b̃(v_k) − b̃(v_{k+1})` to fall below 2λ, which depends on where
 the centrality distribution happens to sit at the cut. At λ = 0.0002 on two graph families it
 may simply not have arisen; in our grid it appears on two of four graphs, and only at some *k*.
 
@@ -186,7 +185,7 @@ Both fixes together, against the reference implementation's behaviour:
   fewer samples costs on the vertices top-*k* mode was never asked to rank.
 
 Our Julia port implements both, and both are in the pull request we have open against
-`JuliaGraphs/Graphs.jl` (#518), each in its own commit with the reasoning.
+`JuliaGraphs/Graphs.jl` (#518), with the reasoning in the commit message and at the call sites.
 
 ---
 
