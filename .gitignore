@@ -73,3 +73,7 @@ test.json
 output.json
 
 Report/
+# private working notes
+HANDOFF_TIGHT_EXTRA.md
+KADABRA_DELTA_PROBLEM.md
+KADABRA_TOPK_FINDINGS.md
