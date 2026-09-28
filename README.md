@@ -1,5 +1,7 @@
 # Node Importance — KADABRA and BRAVA-GNN in Julia
 
+**Report:** [report.pdf](report.pdf) &nbsp;·&nbsp; **Interactive demo:** [https://projectsschmachtin.github.io/betweenness-demo/](https://projectsschmachtin.github.io/betweenness-demo/)
+
 Lab course project (SS26, Computational Analytics, University of Bonn). We reimplemented two
 approximate betweenness-centrality algorithms in Julia and evaluated them against each other,
 against the authors' C++ reference, and against exact betweenness:
@@ -8,9 +10,6 @@ against the authors' C++ reference, and against exact betweenness:
   (Borassi & Natale, *JEA 2019*).
 - **BRAVA-GNN** — a graph neural network that learns betweenness *rankings*
   (Dachille, Rossi et al., *CIKM '26*).
-
-The report is [`report.pdf`](report.pdf). An extended version of the talk's interactive demo runs
-in the browser at <https://projectsschmachtin.github.io/betweenness-demo/>.
 
 This README covers [what we did](#what-we-did), [what you need](#prerequisites) to
 reproduce it, and [how to reproduce it](#reproducing-the-results). Every number in the
