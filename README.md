@@ -5,7 +5,7 @@ approximate betweenness-centrality algorithms in Julia and evaluated them agains
 against the authors' C++ reference, and against exact betweenness:
 
 - **KADABRA** — adaptive sampling with an $(\varepsilon, \delta)$ guarantee
-  (Borassi & Natale, *ESA 2016 / JEA 2019*).
+  (Borassi & Natale, *JEA 2019*).
 - **BRAVA-GNN** — a graph neural network that learns betweenness *rankings*
   (Dachille, Rossi et al., *CIKM '26*).
 
@@ -37,43 +37,36 @@ by them directly, and the numbers in the prose are taken from what they print.
 | report | experiment | instances |
 | --- | --- | --- |
 | 6.1, Table 1 | C++ reference vs. Julia port at $\varepsilon = 10^{-4}$: runtime and samples | 6 graphs |
-| 6.1, Figure 1 | thread scaling, 1–48 threads, both implementations | 4 graphs × 8 thread counts × 3 seeds |
-| 6.3, Figure 2, Table 6 | cost of top-$k$ mode relative to $k = 0$, under five budget allocations | 4 graphs × $k \in \{3,5,10,100\}$, plus `amazon` and `dblp` at $k \in \{10,100\}$; 3 seeds |
+| 6.2, Figure 1 | thread scaling, 1–48 threads, both implementations | 4 graphs × 8 thread counts × 3 seeds |
+| 6.3, Figure 2, Table 5 | cost of top-$k$ mode relative to $k = 0$, under the reference's, the paper's and the repaired budget allocation | 4 graphs × $k \in \{3,5,10,100\}$, plus `amazon` and `dblp` at $k \in \{10,100\}$; 3 seeds |
 | 6.4, Table 2, Figure 3 | BRAVA-GNN vs. KADABRA at $\varepsilon = 10^{-2}$: Kendall $\tau_b$, top-100 overlap, runtime | 9 graphs × 3 seeds |
-| 6.4, Table 5 | KADABRA at $\varepsilon = 10^{-4}$ against BRAVA-GNN | 9 graphs |
-| A.7, Table 8 | per-vertex accuracy of the C++ reference vs. the port | 6 graphs |
+| A.4, Table 4 | KADABRA at $\varepsilon = 10^{-4}$ against BRAVA-GNN | 9 graphs |
+| A.7, Table 7 | per-vertex accuracy of the C++ reference vs. the port | 6 graphs |
 
 ### Results in brief
 
 - **The Julia port matches the C++ reference.** At $\varepsilon = 10^{-4}$ it draws 1.003×
   the reference's samples (range 0.996–1.012) and takes 0.90× its time (0.75–1.04), and it
   ranks equally well (top-100 overlap 98–100, $\tau_b$ within 0.003).
-- **BRAVA-GNN reproduces the paper** after two fixes (finding 1): mean $\tau_b$ 87.3 against
-  the paper's 87.7 over three training seeds. Against KADABRA at $\varepsilon = 10^{-2}$,
-  BRAVA-GNN has the higher $\tau_b$ on all 9 graphs, KADABRA the higher top-100 overlap on
-  all 9.
+- **BRAVA-GNN vs. KADABRA.** At $\varepsilon = 10^{-2}$, BRAVA-GNN has the higher $\tau_b$ on
+  all 9 graphs, KADABRA the higher top-100 overlap on all 9. At $\varepsilon = 10^{-4}$,
+  KADABRA takes the overlap on all 9 and $\tau_b$ on 8 of 9 (not `email-EuAll`), at
+  35–1353× BRAVA-GNN's runtime.
 
 ### Findings
 
-1. **BRAVA-GNN: two bugs that only mattered together.** Our first version scored mean
-   $\tau_b$ 73.5. It had a PageRank input channel the paper does not have, and it masked the
-   adjacency matrix differently at inference ($A'D$) than in training ($DA'$). Either fix
-   alone leaves `email-EuAll` at 0.460; both together give 0.991. Details:
-   `benchmark/results/brava_retrained/README.md`.
-2. **KADABRA's top-$k$ budget allocation: the paper, the C++ reference and NetworKit
+1. **KADABRA's top-$k$ budget allocation: the paper, the C++ reference and NetworKit
    disagree.** The reference swaps the lower and upper confidence budgets relative to the
    paper, and NetworKit copies the reference. The tie-collapse guard also skips the one rank
    pair $(v_k, v_{k+1})$ that the stopping test depends on. With both repaired (our default,
    `topk_variant = :paper_bd`), top-$k$ mode needs on average 0.69× the samples of $k = 0$,
    against 0.97–0.98× with the reference's allocation, and returns the same top-$k$ answer.
-   The $(\varepsilon,\delta)$ guarantee holds either way. Details: `KADABRA_TOPK_FINDINGS.md`.
-3. **A burn-in normalisation bias in the reference.** The reference discards the burn-in
+   The $(\varepsilon,\delta)$ guarantee holds either way. Details: report, Section 3.3.3 and
+   Appendix A.5.
+2. **A burn-in normalisation bias in the reference.** The reference discards the burn-in
    samples but still divides by them, so every score comes out too low by the burn-in
    fraction (2.9–7.7%). The maximum absolute error was 3.5–12.3 $\varepsilon$; after the fix
    it is 0.19–0.44 $\varepsilon$. Rankings and stopping are unchanged.
-4. **Stopping coordination in the parallel port.** Threads kept sampling after the stop, and
-   checks ignored unfinished batches, costing 3–6% extra samples. Both are fixed, and every
-   KADABRA number in the report was re-measured afterwards.
 
 ---
 
@@ -123,7 +116,8 @@ python3 -m venv venv && source venv/bin/activate && pip install -r BRAVA-GNN-A0B
   `scripts/convert_ground_truth_pickle.py` (`scripts/convert_abcde_scores.py` converts the
   ABCDE release's own `-score.txt` files). For `p2p-Gnutella31`, `soc-Epinions1`,
   `soc-Slashdot0902` and `email-EuAll` we computed it with `Graphs.jl`'s exact
-  `betweenness_centrality`, which takes hours to days per graph (report, Appendix A.2).
+  `betweenness_centrality`, which took between 26 minutes and 3 hours per graph (report,
+  Appendix A.2).
   These files are not distributed with the repository.
 - **BRAVA-GNN training graphs**, only for retraining:
   `python3 scripts/generate_training_data.py --datasets SF_10_Dir SF_10_Sym --num_nodes 100000`.
@@ -165,9 +159,9 @@ tmux new-session -d -s repro './benchmark/reproduce_all.sh 2>&1 | tee -a ~/repro
 | `threads` | thread scaling, C++ and Julia — **timed** | Figure 1 | ~4 h |
 | `bvk` | BRAVA-GNN vs KADABRA at $\varepsilon = 10^{-2}$ — **timed** | Table 2, Figure 3 | ~1 h |
 | `brava-seeds` | the three checkpoints against the paper's Table 2 | Table 2 | ~30 min |
-| `topk` | top-$k$ sweeps, and the C++ binary in top-$k$ mode | Figure 2, Table 6 | ~10 h |
-| `cpp-quality` | C++ per-vertex output scored against the ground truth | Table 8 | ~6 h |
-| `tightx` | KADABRA at $\varepsilon = 10^{-4}$ on the three largest graphs | Table 5 | ~18 h |
+| `topk` | top-$k$ sweeps, and the C++ binary in top-$k$ mode | Figure 2, Table 5 | ~10 h |
+| `cpp-quality` | C++ per-vertex output scored against the ground truth | Table 7 | ~6 h |
+| `tightx` | KADABRA at $\varepsilon = 10^{-4}$ on the three largest graphs | Table 4 | ~18 h |
 | `kxl` | top-$k$ on `amazon` and `dblp` | Figure 2 | ~40 h |
 | `report` | tables, figures and quoted numbers | all | seconds |
 
@@ -201,7 +195,6 @@ cites only as history (the single-seed top-$k$ sweep and the runs from before th
 | `summarize_seeds.py`, `summarize_topk.py`, `summarize_topk_claims.py`, `summarize_threads.py`, `summarize_cpp_quality.py` | the other sections' tables and quoted numbers |
 | `make_plots.py {threads,bvk,topk} <dir> <outdir>` | the figures |
 | `eval_brava_paper.jl [checkpoint]` | scores a BRAVA-GNN checkpoint against the paper's Table 2 |
-| `diagnose_brava_mask.jl`, `diagnose_brava_nopr.jl` | the 2×2 diagnostic behind finding 1 |
 | `diagnose_topk_delta.jl <graph>` | why the top-$k$ allocations differ, per vertex |
 
 ---
@@ -279,8 +272,7 @@ fork checked out next to this repository.
 | `scripts/` | dataset download, training-data generation, instance tables |
 | `test/` | unit tests and the `Graphs.jl`-style suite |
 | `Instances/` | graphs and ground truth — not in git |
-| `KADABRA_TOPK_FINDINGS.md` | standalone write-up of finding 2 |
-| `presentation/` | the slides of the final talk (16 September 2026, without speaker notes) and the interactive demo shown in it; open `presentation_demo/betweenness_demo.html` in a browser, or use the slides' demo buttons with the folder kept next to the PDF |
+| `presentation/` | the slides of the final talk (16 September 2026, without speaker notes) and the interactive demo shown in it; open `presentation/presentation_demo/betweenness_demo.html` in a browser, or use the slides' demo buttons with the folder kept next to the PDF |
 
 ### Committed run data
 
@@ -289,8 +281,7 @@ fork checked out next to this repository.
 | `benchmark/results/rerun_fix/` | 531 | **what the report uses**: every KADABRA measurement after the fixes, plus the reused C++ and BRAVA-GNN runs |
 | `benchmark/results/brava_retrained/` | 27 | the retrained BRAVA-GNN: runs, 3 checkpoints, evaluation logs |
 | `benchmark/results/cpp_quality/` | | the C++ reference's scored per-vertex output (Appendix A.7) |
-| `benchmark/results/topk_variant/measured/` | 333 | top-$k$ runs before the stopping fix, including the C++ binary in top-$k$ mode |
-| `benchmark/results/seed_check/` | 120 | the experiment that located the stopping overshoot (finding 4) |
+| `benchmark/results/topk_variant/measured/` | 333 | earlier top-$k$ runs, including the C++ binary in top-$k$ mode |
 | `benchmark/results/report_runs/` | 252 | the original runs from before the fixes, cited as history |
 
 Per-vertex centralities are stripped from the stored JSON; the metrics are kept.
@@ -299,22 +290,23 @@ Per-vertex centralities are stripped from the stored JSON; the metrics are kept.
 
 ## Pitfalls
 
-- **Thread count.** `-t N` on `run_experiments.jl` is only recorded, not applied; Julia's
-  threads come from `JULIA_NUM_THREADS`, which the scripts set. A single-threaded run is
-  valid JSON with ~30% fewer samples, so check `parameters.threads` in the output.
-- **Directed graphs in the C++ runner.** Only `-d` works; `--directed` is silently ignored
-  and the graph is loaded undirected. The scripts translate this.
-- **Missing BRAVA-GNN weights** fall back to an untrained model (see above);
-  its `weights` step refuses to continue without them.
-- **Stopping runs over SSH.** `pkill -f run_experiments.jl` also kills your own SSH
-  command; anchor the pattern: `pkill -f "^julia --project"`.
+- **Missing BRAVA-GNN weights.** Without a checkpoint, `brava_centrality` silently runs an
+  untrained model (see [BRAVA-GNN](#brava-gnn)); `reproduce_all.sh` installs the committed ones.
+- **Thread count.** Julia's thread count comes from `JULIA_NUM_THREADS`, not from the
+  runner's `-t` flag, which is only recorded. The scripts set it; if you call the runner
+  yourself, check `parameters.threads` in its output.
 
 ---
 
 ## References
 
 - M. Borassi, E. Natale. *KADABRA is an ADaptive Algorithm for Betweenness via Random
-  Approximation.* ESA 2016 / ACM JEA 24, 2019.
-- Dachille, Rossi et al. *BRAVA-GNN.* CIKM 2026.
-- M. Borassi, P. Crescenzi, M. Habib, W. Kosters, A. Marino, F. Takes. *Fast diameter and
-  radius BFS-based computation in (weakly connected) real-world graphs.* TCS 586, 2015.
+  Approximation.* ACM Journal of Experimental Algorithmics 24(1), 2019.
+  [doi:10.1145/3284359](https://doi.org/10.1145/3284359)
+- J. Dachille, A. Rossi, S. K. Maurya, F. Mallmann-Trenn, X. Liu, F. Giroire, T. Murata,
+  E. Natale. *Degree-Mass Message Passing for Betweenness Ranking in Directed and Undirected
+  Networks.* CIKM 2026. [arXiv:2602.09716](https://arxiv.org/abs/2602.09716)
+- U. Brandes. *A faster algorithm for betweenness centrality.* Journal of Mathematical
+  Sociology 25(2), 2001. [doi:10.1080/0022250X.2001.9990249](https://doi.org/10.1080/0022250X.2001.9990249)
+- J. Leskovec, A. Krevl. *SNAP Datasets: Stanford Large Network Dataset Collection.* 2014.
+  <http://snap.stanford.edu/data>
