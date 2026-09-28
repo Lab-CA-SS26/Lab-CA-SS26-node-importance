@@ -9,7 +9,7 @@ against the authors' C++ reference, and against exact betweenness:
 - **BRAVA-GNN** — a graph neural network that learns betweenness *rankings*
   (Dachille, Rossi et al., *CIKM '26*).
 
-The report is [`report/report.pdf`](report/report.pdf).
+The report is [`report.pdf`](report.pdf).
 
 This README covers [what we did](#what-we-did), [what you need](#prerequisites) to
 reproduce it, and [how to reproduce it](#reproducing-the-results). Every number in the
@@ -274,7 +274,7 @@ fork checked out next to this repository.
 | `scripts/` | dataset download, training-data generation, instance tables |
 | `test/` | unit tests and the `Graphs.jl`-style suite |
 | `Instances/` | graphs and ground truth — not in git |
-| `report/` | the final lab report (PDF) |
+| `report.pdf` | the final lab report |
 | `presentation/` | the slides of the final talk (16 September 2026, without speaker notes) and the interactive demo shown in it; open `presentation/presentation_demo/betweenness_demo.html` in a browser, or use the slides' demo buttons with the folder kept next to the PDF |
 
 ### Committed run data
